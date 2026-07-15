@@ -1,0 +1,165 @@
+# Replit Prompt — Bilingual Personal Website with Full CMS Admin Panel
+
+Copy everything below the line and paste it into Replit AI (Agent).
+
+---
+
+Build a complete, professional, bilingual (Arabic and English) personal website for a Technical Project Manager and Contract Manager, with a backend admin panel that gives the owner full control: edit any page and any content, add and remove sections, and add and remove images in each section, all without touching code.
+
+## Tech stack (keep it simple and Replit-friendly)
+
+- Node.js with Express for the backend
+- SQLite for the database (single file, no external service)
+- EJS templates for server-rendered pages
+- Plain CSS and vanilla JavaScript on the frontend (no React, no build step)
+- Session-based admin authentication
+- Multer (or similar) for image uploads, stored in `/public/uploads`
+
+## Part 1 — Bilingual behavior (very important)
+
+- **Arabic is the primary and default language.** The site loads in Arabic at `/` with full RTL layout (`dir="rtl"`, `lang="ar"`).
+- English version is available via a language switcher in the header (for example `/en/...` routes with LTR layout).
+- Every piece of content in the database has two fields: Arabic and English (content_ar, content_en, title_ar, title_en, and so on).
+- Use a proper Arabic web font (Cairo or IBM Plex Sans Arabic from Google Fonts) for Arabic, and a matching sans-serif for English.
+- All layout, spacing, icons, and timeline direction must mirror correctly in RTL. Test both directions.
+- The admin panel itself can stay in English, but every content field must have side-by-side Arabic and English inputs.
+
+## Part 2 — Public website
+
+### Design direction
+- Professional, corporate-engineering aesthetic. Precision and structure, not flashy.
+- Color palette: deep navy or charcoal base, white content areas, one accent color (steel blue or amber) used sparingly.
+- Strong typography hierarchy, fully responsive (mobile-first), sticky top navigation.
+- Navigation is dynamic: homepage section links plus any published custom pages marked "show in navigation".
+- Downloadable CV button placeholder (link to `#` for now).
+- Proper meta tags and Open Graph tags in both languages.
+
+### Homepage content (seed data — exact content, both languages)
+Use ONLY the content below. Do not invent projects, employers, numbers, tools, or achievements not written here. Keep [PLACEHOLDER] markers visible; they will be filled in later from the admin panel.
+
+**1. Hero**
+- Name: Mohammad Ghanayem / محمد غنايم
+- Title: Technical Project Manager | Contract Manager / مدير مشاريع تقني | مدير عقود
+- Tagline EN: "13+ years delivering complex projects across Oil & Gas, ICT infrastructure, security systems, and telecommunications."
+- Tagline AR: "أكثر من 13 عامًا في تنفيذ مشاريع معقدة في قطاعات النفط والغاز، والبنية التحتية لتقنية المعلومات والاتصالات، والأنظمة الأمنية، والاتصالات."
+- Location: Al Khobar, Eastern Province, Saudi Arabia / الخبر، المنطقة الشرقية، المملكة العربية السعودية
+- Buttons: "View Experience" / "الخبرات" and "Contact Me" / "تواصل معي"
+
+**2. About / نبذة عني**
+Short professional summary (3-4 sentences in each language) built strictly from this:
+- 13+ years of experience across Saudi Arabia, Iraq, and Jordan / أكثر من 13 عامًا من الخبرة في السعودية والعراق والأردن
+- Career spanning Naizak Global Engineering Systems, Huawei Technologies, and Motorola Solutions / مسيرة مهنية في شركة نيزك العالمية للأنظمة الهندسية وهواوي وموتورولا سوليوشنز
+- Combines technical project delivery with commercial and contract management / يجمع بين التنفيذ التقني للمشاريع والإدارة التجارية وإدارة العقود
+- PMP and PMO-CP certified / حاصل على شهادتي PMP وPMO-CP
+- Master's in Business Entrepreneurship and Bachelor's in Telecommunications Engineering, both from Princess Sumaya University for Technology, Jordan / ماجستير في ريادة الأعمال وبكالوريوس في هندسة الاتصالات من جامعة الأميرة سمية للتكنولوجيا في الأردن
+
+**3. Experience / الخبرات العملية (timeline layout)**
+Use [DATES PLACEHOLDER] for every role.
+
+Contract Manager — Naizak Global Engineering Systems, Al Khobar / مدير عقود — شركة نيزك العالمية للأنظمة الهندسية، الخبر [DATES PLACEHOLDER]
+- EN: Contract Manager on the Emarah Maintenance Project, promoted from Technical Project Manager
+- AR: مدير عقود في مشروع صيانة الإمارة، بعد ترقية من منصب مدير مشاريع تقني
+- EN: Contract administration, commercial oversight, and vendor management for a multi-million SAR portfolio
+- AR: إدارة العقود والإشراف التجاري وإدارة الموردين لمحفظة مشاريع بقيمة ملايين الريالات
+
+Technical Project Manager — Naizak Global Engineering Systems / مدير مشاريع تقني — نيزك [DATES PLACEHOLDER]
+- EN: Managed 10 concurrent projects with a 17-person team / AR: إدارة 10 مشاريع متزامنة مع فريق من 17 شخصًا
+- EN: Reduced proposal development time by 60% / AR: تقليص مدة إعداد العروض بنسبة 60%
+- EN: Improved resource efficiency by 50-85% / AR: تحسين كفاءة الموارد بنسبة تتراوح بين 50% و85%
+- EN: Maintained ±3% budget adherence and 9/10 client satisfaction / AR: الالتزام بالميزانية ضمن ±3% وتحقيق رضا العملاء بدرجة 9 من 10
+
+Huawei Technologies — Iraq (Erbil) and Jordan / هواوي — العراق (أربيل) والأردن [DATES PLACEHOLDER]
+- EN: Project delivery roles in telecommunications and ICT infrastructure / AR: أدوار في تنفيذ مشاريع الاتصالات والبنية التحتية لتقنية المعلومات
+- [DETAILS PLACEHOLDER — content to be added]
+
+Motorola Solutions — Jordan / موتورولا سوليوشنز — الأردن [DATES PLACEHOLDER]
+- EN: Project roles in telecommunications and mission-critical communication systems / AR: أدوار في مشاريع الاتصالات وأنظمة الاتصالات الحيوية
+- [DETAILS PLACEHOLDER — content to be added]
+
+**4. Skills / المهارات (grouped grid, no percentage bars)**
+- Contract administration and commercial management / إدارة العقود والإدارة التجارية
+- Project and portfolio management / إدارة المشاريع ومحافظ المشاريع
+- PMO leadership and governance / قيادة مكاتب إدارة المشاريع (PMO) والحوكمة
+- Commercial tendering and proposal development / إعداد العطاءات والعروض التجارية
+- Vendor and procurement management / إدارة الموردين والمشتريات
+- Financial oversight and budget control / الإشراف المالي وضبط الميزانية
+- Stakeholder and client relationship management / إدارة العلاقات مع أصحاب المصلحة والعملاء
+- Cross-industry delivery: Oil & Gas, ICT infrastructure, security systems, telecommunications / تنفيذ مشاريع في قطاعات النفط والغاز والبنية التحتية لتقنية المعلومات والأنظمة الأمنية والاتصالات
+
+**5. Strengths / نقاط القوة (cards with icons)**
+- Dual technical and commercial perspective in one role / الجمع بين المنظورين التقني والتجاري في دور واحد
+- Multi-project leadership under tight budgets and timelines / قيادة مشاريع متعددة ضمن ميزانيات وجداول زمنية دقيقة
+- Structured, governance-driven approach to delivery / منهجية تنفيذ منظمة قائمة على الحوكمة
+- Regional experience across Saudi Arabia, Iraq, and Jordan / خبرة إقليمية في السعودية والعراق والأردن
+- Bilingual: Arabic and English / إجادة اللغتين العربية والإنجليزية
+
+**6. Services / الخدمات (cards, one-line descriptions)**
+- Contract Management / إدارة العقود: administration, negotiation support, and commercial oversight across the contract lifecycle / إدارة العقود ودعم التفاوض والإشراف التجاري طوال دورة حياة العقد
+- Project and Portfolio Management / إدارة المشاريع والمحافظ: planning, execution, and control of concurrent complex projects / تخطيط وتنفيذ ومتابعة مشاريع معقدة متزامنة
+- PMO Setup and Governance / تأسيس وحوكمة مكاتب إدارة المشاريع: establishing structures, reporting, and delivery standards / بناء الهياكل والتقارير ومعايير التنفيذ
+- Tendering and Proposals / العطاءات والعروض: commercial proposal development and bid management / إعداد العروض التجارية وإدارة المناقصات
+- Vendor and Procurement Management / إدارة الموردين والمشتريات: supplier selection, performance, and cost control / اختيار الموردين ومتابعة الأداء وضبط التكاليف
+- Financial Oversight / الإشراف المالي: budgeting, cost tracking, and margin protection / إعداد الميزانيات وتتبع التكاليف وحماية الهوامش
+
+**7. Certifications and Education / الشهادات والتعليم**
+- PMP (Project Management Professional), PMI / شهادة PMP في إدارة المشاريع من معهد PMI
+- PMO-CP (PMO Certified Practitioner) / شهادة PMO-CP
+- Master's in Business Entrepreneurship, Princess Sumaya University for Technology, Jordan / ماجستير في ريادة الأعمال، جامعة الأميرة سمية للتكنولوجيا، الأردن
+- Bachelor's in Telecommunications Engineering, Princess Sumaya University for Technology, Jordan / بكالوريوس في هندسة الاتصالات، جامعة الأميرة سمية للتكنولوجيا، الأردن
+
+**8. Contact / تواصل معي**
+- Email: mghanayem80@gmail.com (mailto link)
+- LinkedIn: linkedin.com/in/mohammad-ghanayem (opens in new tab)
+- Location: Al Khobar / Dammam, Eastern Province, Saudi Arabia / الخبر - الدمام، المنطقة الشرقية، المملكة العربية السعودية
+- Simple contact strip, no contact form needed
+
+## Part 3 — Admin panel (full CMS control)
+
+### Access and security
+- Admin panel at `/admin`, protected by session auth. All `/admin` routes require login.
+- Seed the database with a default admin account: username `Admin`, password `admin`. The password must still be stored hashed with bcrypt, never in plain text.
+- After the first login with the default password, show a clear banner prompting the admin to change it.
+- Include an **Account Settings** page where the admin can change both the username and the password (require current password to confirm).
+- Secure httpOnly session cookies, logout button, and basic rate limiting on the login route.
+
+### Section-based content model (the core of the CMS)
+Every page on the site, including the homepage, is built from an ordered list of **sections**. The admin has full control:
+
+- **Add a section** to any page, choosing a section type:
+  - Text (title + rich text)
+  - Text with image (image left or right)
+  - Image gallery (one or more images with captions)
+  - Cards grid (repeating items with icon/title/description, used for Skills, Strengths, Services)
+  - Timeline (repeating entries with heading, subheading, date field, and bullet list, used for Experience)
+  - Contact strip
+- **Edit any section**: every text field has side-by-side Arabic and English inputs; rich text via a lightweight editor (Quill or a markdown editor with preview)
+- **Reorder sections** with up/down controls or drag-and-drop
+- **Remove any section** (with a confirmation dialog)
+- **Images per section**: upload images (jpg, png, webp) into any section that supports them, replace an image, or remove an image. Validate file type and size (max 5 MB). Store files in `/public/uploads` and clean up files when an image is removed.
+- **Show/hide a section** without deleting it (visibility toggle)
+
+### Pages manager
+- Create, edit, publish/unpublish, and delete pages
+- Each page has: title (AR + EN), URL slug, ordered sections (as above), published status, and a "show in navigation" toggle
+- Published pages are served at `/p/:slug` (Arabic) and `/en/p/:slug` (English) using the site's design
+- The homepage appears in the pages manager as a special, non-deletable page so its sections can be edited the same way
+
+### Dashboard home
+- Overview: number of pages, published vs draft, quick link to create a new page
+
+### Database schema (SQLite)
+- `users`: id, username, password_hash
+- `pages`: id, title_ar, title_en, slug (unique), is_published, show_in_nav, is_homepage, created_at, updated_at
+- `sections`: id, page_id, type, sort_order, is_visible, data (JSON holding all AR/EN fields and image references)
+- `images`: id, section_id, filename, caption_ar, caption_en, sort_order
+- Seed on first run with the homepage sections and content from Part 2, plus the default admin user
+
+## Rules
+1. Arabic is the default language; English is secondary. RTL must be correct everywhere.
+2. Do not add any specific monetary amounts anywhere. "Multi-million SAR portfolio" / "بقيمة ملايين الريالات" is the only allowed financial phrasing.
+3. Do not add software tools or methodologies (no Primavera, MS Project, Agile, Scrum, or similar) anywhere in the public site content.
+4. Do not invent achievements, metrics, clients, or project names beyond what is written above.
+5. Keep all [PLACEHOLDER] markers visible so they can be replaced from the admin panel.
+6. Sanitize all admin-entered content before rendering to prevent XSS. Validate uploads strictly.
+7. Clean project structure: server.js, routes/, views/, public/ (css, js, uploads), database file.
+8. After building, tell me exactly how to log in for the first time (Admin / admin) and where to change the password.
