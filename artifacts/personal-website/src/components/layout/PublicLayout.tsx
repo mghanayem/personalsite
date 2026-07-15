@@ -100,8 +100,15 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       <footer className="border-t bg-muted/40 py-12 mt-20">
-        <div className="container mx-auto px-4 md:px-8 text-center text-muted-foreground text-sm">
+        <div className="container mx-auto px-4 md:px-8 text-center text-muted-foreground text-sm space-y-3">
           <p>© {new Date().getFullYear()} {lang === "ar" ? "محمد غنايم. جميع الحقوق محفوظة." : "Mohammad Ghanayem. All rights reserved."}</p>
+          <a
+            href="/admin"
+            className="inline-block text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            title={lang === "ar" ? "لوحة التحكم" : "Site owner"}
+          >
+            {lang === "ar" ? "أنت صاحب الموقع؟" : "Are you the owner?"}
+          </a>
         </div>
       </footer>
     </div>
