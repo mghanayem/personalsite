@@ -1,0 +1,240 @@
+import DOMPurify from "dompurify";
+import { useLanguage } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import { SectionWithImages } from "@workspace/api-client-react";
+import { MapPin, Mail, Linkedin, ArrowRight, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
+
+/** Sanitize HTML before dangerouslySetInnerHTML — defense-in-depth. */
+function safeHtml(html: string | undefined): string {
+  if (!html) return "";
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ["b", "i", "em", "strong", "u", "p", "br", "ul", "ol", "li",
+      "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "code", "pre", "span", "a"],
+    ALLOWED_ATTR: ["href", "title", "target"],
+  });
+}
+
+export function RenderSection({ section }: { section: SectionWithImages }) {
+  const { lang, dir } = useLanguage();
+  const d = section.data;
+
+  const t = (ar?: string, en?: string) => lang === "ar" ? (ar || "") : (en || "");
+
+  if (section.type === "hero") {
+    return (
+      <section className="relative overflow-hidden bg-primary text-primary-foreground py-24 md:py-32">
+        <div className="container mx-auto px-4 md:px-8 relative z-10">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+              {t(d.titleAr, d.titleEn)}
+            </h1>
+            <p className="text-xl md:text-2xl text-primary-foreground/80 mb-8 font-medium leading-relaxed">
+              {t(d.contentAr, d.contentEn)}
+            </p>
+            <div className="flex flex-wrap items-center gap-4 text-sm text-primary-foreground/60 mb-10">
+              {(d.locationAr || d.locationEn) && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  <span>{t(d.locationAr, d.locationEn)}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-4">
+              <Button size="lg" asChild className="bg-ring text-primary-foreground hover:bg-ring/90">
+                <a href="#experience">
+                  {lang === "ar" ? "استعرض الخبرات" : "View Experience"}
+                  {lang === "ar" ? <ArrowLeft className="mr-2 w-4 h-4" /> : <ArrowRight className="ml-2 w-4 h-4" />}
+                </a>
+              </Button>
+              <Button size="lg" variant="outline" asChild className="border-primary-foreground/20 hover:bg-primary-foreground/10 text-primary-foreground">
+                <a href="#contact">
+                  {lang === "ar" ? "تواصل معي" : "Contact Me"}
+                </a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (section.type === "text") {
+    return (
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4 md:px-8 max-w-4xl">
+          {(d.titleAr || d.titleEn) && (
+            <h2 className="text-3xl font-bold mb-8 text-foreground">{t(d.titleAr, d.titleEn)}</h2>
+          )}
+          <div 
+            className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground prose-p:leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: safeHtml(t(d.contentAr, d.contentEn)) }}
+          />
+        </div>
+      </section>
+    );
+  }
+
+  if (section.type === "text_with_image") {
+    const isImageLeft = d.imagePosition === "left";
+    const image = section.images[0];
+    
+    return (
+      <section className="py-16 md:py-24 bg-muted/30">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className={`grid md:grid-cols-2 gap-12 items-center ${isImageLeft ? "md:flex-row-reverse" : ""}`}>
+            <div className={`${isImageLeft ? "md:order-2" : "md:order-1"}`}>
+              {(d.titleAr || d.titleEn) && (
+                <h2 className="text-3xl font-bold mb-6 text-foreground">{t(d.titleAr, d.titleEn)}</h2>
+              )}
+              <div 
+                className="prose prose-lg dark:prose-invert text-muted-foreground prose-p:leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: safeHtml(t(d.contentAr, d.contentEn)) }}
+              />
+            </div>
+            {image && (
+              <div className={`${isImageLeft ? "md:order-1" : "md:order-2"}`}>
+                <figure>
+                  <img src={image.url} alt={t(image.captionAr, image.captionEn)} className="rounded-xl shadow-lg w-full object-cover aspect-[4/3]" />
+                  {(image.captionAr || image.captionEn) && (
+                    <figcaption className="text-sm text-center text-muted-foreground mt-4">{t(image.captionAr, image.captionEn)}</figcaption>
+                  )}
+                </figure>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (section.type === "cards_grid") {
+    return (
+      <section id="experience" className="py-16 md:py-24">
+        <div className="container mx-auto px-4 md:px-8">
+          {(d.titleAr || d.titleEn) && (
+            <div className="max-w-3xl mb-12">
+              <h2 className="text-3xl font-bold mb-4 text-foreground">{t(d.titleAr, d.titleEn)}</h2>
+              {(d.contentAr || d.contentEn) && (
+                <p className="text-lg text-muted-foreground">{t(d.contentAr, d.contentEn)}</p>
+              )}
+            </div>
+          )}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {d.items?.map((item) => (
+              <div key={item.id} className="bg-card border border-border rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow">
+                {item.icon && (
+                  <div className="w-12 h-12 rounded-lg bg-primary/5 text-primary flex items-center justify-center mb-6 text-xl">
+                    {/* Render icon if string matching lucide maybe? Keep simple for now */}
+                    <span className="opacity-70">{item.icon.charAt(0)}</span>
+                  </div>
+                )}
+                <h3 className="text-xl font-bold mb-3">{t(item.titleAr, item.titleEn)}</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {t(item.descriptionAr, item.descriptionEn)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (section.type === "timeline") {
+    return (
+      <section className="py-16 md:py-24 bg-primary text-primary-foreground">
+        <div className="container mx-auto px-4 md:px-8 max-w-4xl">
+          {(d.titleAr || d.titleEn) && (
+            <h2 className="text-3xl font-bold mb-12 text-center">{t(d.titleAr, d.titleEn)}</h2>
+          )}
+          <div className="space-y-12">
+            {d.items?.map((item, i) => (
+              <div key={item.id} className="relative pl-8 md:pl-0 rtl:pr-8 rtl:md:pr-0 rtl:md:pl-0">
+                <div className="md:grid md:grid-cols-5 md:gap-8 items-start">
+                  <div className="md:col-span-1 md:text-right rtl:md:text-left mb-2 md:mb-0 pt-1">
+                    <span className="text-ring font-bold whitespace-nowrap">{item.date}</span>
+                  </div>
+                  <div className="md:col-span-4 relative pb-12 border-l-2 rtl:border-l-0 rtl:border-r-2 border-primary-foreground/20 pl-8 rtl:pr-8 rtl:pl-0">
+                    <div className="absolute w-4 h-4 rounded-full bg-ring -left-[9px] rtl:-right-[9px] top-1.5 ring-4 ring-primary" />
+                    <h3 className="text-2xl font-bold mb-1">{t(item.titleAr, item.titleEn)}</h3>
+                    <h4 className="text-lg text-primary-foreground/70 mb-4">{t(item.subheadingAr, item.subheadingEn)}</h4>
+                    <p className="text-primary-foreground/80 mb-6">{t(item.descriptionAr, item.descriptionEn)}</p>
+                    
+                    {item.bullets && item.bullets.length > 0 && (
+                      <ul className="space-y-3">
+                        {item.bullets.map((bullet) => (
+                          <li key={bullet.id} className="flex items-start gap-3 text-primary-foreground/90">
+                            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-ring/60 shrink-0" />
+                            <span>{t(bullet.textAr, bullet.textEn)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (section.type === "image_gallery") {
+    if (!section.images.length) return null;
+    return (
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4 md:px-8">
+          {(d.titleAr || d.titleEn) && (
+            <h2 className="text-3xl font-bold mb-10 text-foreground text-center">{t(d.titleAr, d.titleEn)}</h2>
+          )}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {section.images.map((img) => (
+              <figure key={img.id} className="group relative overflow-hidden rounded-xl aspect-square bg-muted">
+                <img src={img.url} alt={t(img.captionAr, img.captionEn)} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                {(img.captionAr || img.captionEn) && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                    <figcaption className="text-white text-sm font-medium">{t(img.captionAr, img.captionEn)}</figcaption>
+                  </div>
+                )}
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (section.type === "contact_strip") {
+    return (
+      <section id="contact" className="py-12 bg-card border-t border-border">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-muted-foreground">
+            <div>
+              {(d.titleAr || d.titleEn) && (
+                <h3 className="text-xl font-bold text-foreground">{t(d.titleAr, d.titleEn)}</h3>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-8 text-sm font-medium">
+              {d.email && (
+                <a href={`mailto:${d.email}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                  <Mail className="w-5 h-5" />
+                  <span>{d.email}</span>
+                </a>
+              )}
+              {d.linkedin && (
+                <a href={d.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
+                  <Linkedin className="w-5 h-5" />
+                  <span>LinkedIn</span>
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return null;
+}

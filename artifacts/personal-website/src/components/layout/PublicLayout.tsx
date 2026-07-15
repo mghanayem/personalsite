@@ -1,0 +1,109 @@
+import { useGetPublicNav } from "@workspace/api-client-react";
+import { Link, useLocation } from "wouter";
+import { useLanguage } from "@/lib/i18n";
+import { Menu, X, Globe } from "lucide-react";
+import { useState } from "react";
+
+export function PublicLayout({ children }: { children: React.ReactNode }) {
+  const { lang, setLang } = useLanguage();
+  const [location, setLocation] = useLocation();
+  const { data: navItems = [] } = useGetPublicNav();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleLanguage = () => {
+    const newLang = lang === "ar" ? "en" : "ar";
+    if (newLang === "en") {
+      setLocation(location === "/" ? "/en/" : `/en${location}`);
+    } else {
+      setLocation(location.startsWith("/en") ? location.replace("/en", "") || "/" : location);
+    }
+  };
+
+  const navLinks = navItems.map((item) => {
+    let path = item.isHomepage ? "/" : `/p/${item.slug}`;
+    if (lang === "en") {
+      path = item.isHomepage ? "/en/" : `/en/p/${item.slug}`;
+    }
+    return {
+      title: lang === "ar" ? item.titleAr : item.titleEn,
+      path,
+    };
+  });
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col font-sans">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+          <div className="font-bold text-xl tracking-tight text-foreground flex items-center gap-2">
+            <Link href={lang === "ar" ? "/" : "/en/"} className="hover:text-primary transition-colors">
+              {lang === "ar" ? "محمد غنايم" : "Mohammad Ghanayem"}
+            </Link>
+          </div>
+          
+          <nav className="hidden md:flex items-center gap-8 font-medium text-sm">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                href={link.path}
+                className={`transition-colors hover:text-primary ${
+                  location === link.path ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                {link.title}
+              </Link>
+            ))}
+            <button 
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Globe className="w-4 h-4" />
+              <span>{lang === "ar" ? "English" : "العربية"}</span>
+            </button>
+          </nav>
+
+          <button
+            className="md:hidden p-2 -mr-2 text-foreground"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X /> : <Menu />}
+          </button>
+        </div>
+      </header>
+
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-b bg-background px-4 py-4 space-y-4 shadow-sm animate-in slide-in-from-top-2">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              href={link.path}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block text-foreground font-medium py-2 border-b border-border/50"
+            >
+              {link.title}
+            </Link>
+          ))}
+          <button 
+            onClick={() => {
+              toggleLanguage();
+              setIsMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-2 text-foreground font-medium py-2 w-full text-left rtl:text-right"
+          >
+            <Globe className="w-4 h-4" />
+            <span>{lang === "ar" ? "English" : "العربية"}</span>
+          </button>
+        </div>
+      )}
+
+      <main className="flex-1 w-full max-w-full">
+        {children}
+      </main>
+
+      <footer className="border-t bg-muted/40 py-12 mt-20">
+        <div className="container mx-auto px-4 md:px-8 text-center text-muted-foreground text-sm">
+          <p>© {new Date().getFullYear()} {lang === "ar" ? "محمد غنايم. جميع الحقوق محفوظة." : "Mohammad Ghanayem. All rights reserved."}</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
