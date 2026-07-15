@@ -15,6 +15,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app: Express = express();
 
+// Replit (and most PaaS) sits behind a proxy that sets X-Forwarded-For.
+// Without this, express-rate-limit throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
+app.set("trust proxy", 1);
+
 // ── Allowed origins ───────────────────────────────────────────────────────
 // Build the list from env vars.  In Replit dev the proxy domain is injected as
 // REPLIT_DEV_DOMAIN (e.g. "abc-replit.replit.dev"); in production set ORIGIN.
@@ -70,7 +74,8 @@ app.use(
     store: new PgSession({
       pool,
       tableName: "session",
-      createTableIfMissing: true,
+      // Table is created manually at startup in index.ts — esbuild does not
+      // bundle the table.sql asset that createTableIfMissing relies on.
     }),
     secret: sessionSecret,
     resave: false,
