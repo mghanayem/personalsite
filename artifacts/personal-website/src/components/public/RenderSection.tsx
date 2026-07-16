@@ -1,7 +1,15 @@
 import DOMPurify from "dompurify";
 import { useLanguage } from "@/lib/i18n";
-import { SectionWithImages } from "@workspace/api-client-react";
-import { MapPin, Mail, Linkedin, ArrowRight, ArrowLeft } from "lucide-react";
+import { SectionWithImages, useSubmitContactForm } from "@workspace/api-client-react";
+import { MapPin, Mail, Linkedin, ArrowRight, ArrowLeft, Send, CheckCircle, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+
+interface ContactFormValues {
+  name: string;
+  email: string;
+  message: string;
+}
 
 /** Sanitize HTML before dangerouslySetInnerHTML — defense-in-depth. */
 function safeHtml(html: string | undefined): string {
@@ -239,34 +247,196 @@ export function RenderSection({ section }: { section: SectionWithImages }) {
   }
 
   if (section.type === "contact_strip") {
-    return (
-      <section id="contact" className="py-12 bg-card border-t border-border">
-        <div className="container mx-auto px-4 md:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-muted-foreground">
-            <div>
-              {(d.titleAr || d.titleEn) && (
-                <h3 className="text-xl font-bold text-foreground">{t(d.titleAr, d.titleEn)}</h3>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-8 text-sm font-medium">
-              {d.email && (
-                <a href={`mailto:${d.email}`} className="flex items-center gap-2 hover:text-primary transition-colors">
-                  <Mail className="w-5 h-5" />
-                  <span>{d.email}</span>
-                </a>
-              )}
-              {d.linkedin && (
-                <a href={d.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors">
-                  <Linkedin className="w-5 h-5" />
-                  <span>LinkedIn</span>
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-    );
+    return <ContactStripSection d={d} lang={lang} t={t} />;
   }
 
   return null;
+}
+
+// ── Contact Strip with embedded form ─────────────────────────────────────────
+
+interface ContactStripProps {
+  d: SectionWithImages["data"];
+  lang: string;
+  t: (ar?: string, en?: string) => string;
+}
+
+function ContactStripSection({ d, lang, t }: ContactStripProps) {
+  const [submitted, setSubmitted] = useState(false);
+  const mutation = useSubmitContactForm();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<ContactFormValues>();
+
+  const labels = {
+    name:        lang === "ar" ? "الاسم"          : "Name",
+    email:       lang === "ar" ? "البريد الإلكتروني" : "Email",
+    message:     lang === "ar" ? "الرسالة"         : "Message",
+    send:        lang === "ar" ? "إرسال الرسالة"    : "Send Message",
+    sending:     lang === "ar" ? "جارٍ الإرسال…"   : "Sending…",
+    successTitle:lang === "ar" ? "تم إرسال رسالتك!" : "Message sent!",
+    successBody: lang === "ar" ? "شكراً لتواصلك. سأرد عليك في أقرب وقت." : "Thanks for reaching out. I'll get back to you soon.",
+    sendAnother: lang === "ar" ? "إرسال رسالة أخرى" : "Send another",
+    required:    lang === "ar" ? "هذا الحقل مطلوب" : "This field is required",
+    invalidEmail:lang === "ar" ? "بريد إلكتروني غير صحيح" : "Invalid email address",
+    tooLong:     (max: number) => lang === "ar" ? `الحد الأقصى ${max} حرفًا` : `Max ${max} characters`,
+  };
+
+  const onSubmit = async (values: ContactFormValues) => {
+    await mutation.mutateAsync(
+      { data: values },
+      {
+        onSuccess: () => {
+          setSubmitted(true);
+          reset();
+        },
+      },
+    );
+  };
+
+  return (
+    <section id="contact" className="py-16 md:py-24 bg-card border-t border-border">
+      <div className="container mx-auto px-4 md:px-8 max-w-3xl">
+        {/* Header */}
+        <div className="mb-10 text-center">
+          {(d.titleAr || d.titleEn) && (
+            <h2 className="text-3xl font-bold text-foreground mb-3">
+              {t(d.titleAr, d.titleEn)}
+            </h2>
+          )}
+          {/* Social links */}
+          <div className="flex flex-wrap justify-center items-center gap-6 mt-4 text-sm text-muted-foreground font-medium">
+            {d.email && (
+              <a
+                href={`mailto:${d.email}`}
+                className="flex items-center gap-2 hover:text-primary transition-colors"
+              >
+                <Mail className="w-4 h-4" />
+                <span>{d.email}</span>
+              </a>
+            )}
+            {d.linkedin && (
+              <a
+                href={d.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:text-primary transition-colors"
+              >
+                <Linkedin className="w-4 h-4" />
+                <span>LinkedIn</span>
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Success state */}
+        {submitted ? (
+          <div className="flex flex-col items-center gap-4 py-10 text-center">
+            <CheckCircle className="w-14 h-14 text-green-500" />
+            <h3 className="text-xl font-bold text-foreground">{labels.successTitle}</h3>
+            <p className="text-muted-foreground">{labels.successBody}</p>
+            <button
+              onClick={() => setSubmitted(false)}
+              className="mt-2 text-sm text-primary underline hover:no-underline"
+            >
+              {labels.sendAnother}
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+            {/* Error banner */}
+            {mutation.isError && (
+              <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>
+                  {(mutation.error as Error)?.message ||
+                    (lang === "ar"
+                      ? "حدث خطأ. يرجى المحاولة لاحقًا."
+                      : "Something went wrong. Please try again.")}
+                </span>
+              </div>
+            )}
+
+            {/* Name */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                {labels.name}
+              </label>
+              <input
+                type="text"
+                {...register("name", {
+                  required: labels.required,
+                  maxLength: { value: 100, message: labels.tooLong(100) },
+                })}
+                className="w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder={lang === "ar" ? "أدخل اسمك" : "Your name"}
+              />
+              {errors.name && (
+                <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>
+              )}
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                {labels.email}
+              </label>
+              <input
+                type="email"
+                {...register("email", {
+                  required: labels.required,
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: labels.invalidEmail,
+                  },
+                  maxLength: { value: 254, message: labels.tooLong(254) },
+                })}
+                className="w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder={lang === "ar" ? "example@email.com" : "your@email.com"}
+                dir="ltr"
+              />
+              {errors.email && (
+                <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>
+              )}
+            </div>
+
+            {/* Message */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                {labels.message}
+              </label>
+              <textarea
+                rows={5}
+                {...register("message", {
+                  required: labels.required,
+                  maxLength: { value: 5000, message: labels.tooLong(5000) },
+                })}
+                className="w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                placeholder={
+                  lang === "ar" ? "اكتب رسالتك هنا…" : "Write your message here…"
+                }
+              />
+              {errors.message && (
+                <p className="mt-1 text-xs text-destructive">{errors.message.message}</p>
+              )}
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={isSubmitting || mutation.isPending}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send className="w-4 h-4" />
+              {isSubmitting || mutation.isPending ? labels.sending : labels.send}
+            </button>
+          </form>
+        )}
+      </div>
+    </section>
+  );
 }

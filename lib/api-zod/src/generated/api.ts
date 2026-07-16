@@ -877,3 +877,25 @@ export const GetPublicHomepageResponse = zod.object({
 })
 
 
+/**
+ * @summary Submit the visitor contact form
+ */
+export const submitContactFormBodyNameMax = 100;
+
+export const submitContactFormBodyEmailMax = 254;
+
+export const submitContactFormBodyMessageMax = 5000;
+
+
+
+export const SubmitContactFormBody = zod.object({
+  "name": zod.string().min(1).max(submitContactFormBodyNameMax),
+  "email": zod.string().max(submitContactFormBodyEmailMax),
+  "message": zod.string().min(1).max(submitContactFormBodyMessageMax)
+})
+
+export const SubmitContactFormResponse = zod.object({
+  "message": zod.string()
+})
+
+

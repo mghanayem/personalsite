@@ -124,6 +124,16 @@ const loginLimiter = rateLimit({
 });
 app.use("/api/auth/login", loginLimiter);
 
+// ── Rate limiting on contact form ─────────────────────────────────────────
+const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5,
+  message: { error: "Too many messages sent. Please wait before trying again." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/public/contact", contactLimiter);
+
 // ── Static uploads ────────────────────────────────────────────────────────
 const uploadsDir = getUploadsDir();
 app.use("/uploads", express.static(uploadsDir));

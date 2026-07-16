@@ -24,6 +24,7 @@ import type {
   ApiError,
   BrandingSettings,
   BrandingUpdate,
+  ContactRequest,
   DashboardStats,
   HealthStatus,
   ImageUpdate,
@@ -2061,4 +2062,75 @@ export function useGetPublicHomepage<TData = Awaited<ReturnType<typeof getPublic
 
 
 
+
+export const getSubmitContactFormUrl = () => {
+
+
+
+
+  return `/api/public/contact`
+}
+
+/**
+ * @summary Submit the visitor contact form
+ */
+export const submitContactForm = async (contactRequest: ContactRequest, options?: RequestInit): Promise<MessageResponse> => {
+
+  return customFetch<MessageResponse>(getSubmitContactFormUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(contactRequest)
+  }
+);}
+
+
+
+
+
+export const getSubmitContactFormMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitContactForm>>, TError,{data: BodyType<ContactRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitContactForm>>, TError,{data: BodyType<ContactRequest>}, TContext> => {
+
+const mutationKey = ['submitContactForm'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitContactForm>>, {data: BodyType<ContactRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  submitContactForm(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitContactFormMutationResult = NonNullable<Awaited<ReturnType<typeof submitContactForm>>>
+    export type SubmitContactFormMutationBody = BodyType<ContactRequest>
+    export type SubmitContactFormMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Submit the visitor contact form
+ */
+export const useSubmitContactForm = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitContactForm>>, TError,{data: BodyType<ContactRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitContactForm>>,
+        TError,
+        {data: BodyType<ContactRequest>},
+        TContext
+      > => {
+      return useMutation(getSubmitContactFormMutationOptions(options));
+    }
 

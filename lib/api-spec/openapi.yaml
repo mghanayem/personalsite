@@ -627,6 +627,43 @@ paths:
               schema:
                 $ref: "#/components/schemas/PublicPage"
 
+  /public/contact:
+    post:
+      operationId: submitContactForm
+      tags: [public]
+      summary: Submit the visitor contact form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactRequest"
+      responses:
+        "200":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: Email delivery unavailable (not configured)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 components:
   schemas:
     # ── Generic ───────────────────────────────────────────────────────────
@@ -1025,6 +1062,23 @@ components:
           pattern: "^#[0-9a-fA-F]{6}$"
 
     # ── Public ────────────────────────────────────────────────────────────
+    # ── Contact ───────────────────────────────────────────────────────────────
+    ContactRequest:
+      type: object
+      required: [name, email, message]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          maxLength: 254
+        message:
+          type: string
+          minLength: 1
+          maxLength: 5000
+
     NavItem:
       type: object
       required: [id, titleAr, titleEn, slug, isHomepage]

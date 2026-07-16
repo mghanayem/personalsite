@@ -252,6 +252,21 @@ export interface BrandingUpdate {
   cta2TextColor?: string;
 }
 
+export interface ContactRequest {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+  /** @maxLength 254 */
+  email: string;
+  /**
+     * @minLength 1
+     * @maxLength 5000
+     */
+  message: string;
+}
+
 export interface NavItem {
   id: number;
   titleAr: string;
