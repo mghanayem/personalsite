@@ -9,6 +9,8 @@ interface ContactFormValues {
   name: string;
   email: string;
   message: string;
+  /** Honeypot — hidden from real users; bots fill it and get silently rejected. */
+  website?: string;
 }
 
 /** Sanitize HTML before dangerouslySetInnerHTML — defense-in-depth. */
@@ -348,6 +350,18 @@ function ContactStripSection({ d, lang, t }: ContactStripProps) {
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+            {/* Honeypot — visually hidden, never filled by real users */}
+            <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", overflow: "hidden" }}>
+              <label htmlFor="hp-website">Website</label>
+              <input
+                id="hp-website"
+                type="text"
+                {...register("website")}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
+
             {/* Error banner */}
             {mutation.isError && (
               <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">

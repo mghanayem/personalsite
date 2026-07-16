@@ -1207,6 +1207,9 @@ components:
           type: string
           minLength: 1
           maxLength: 5000
+        website:
+          type: string
+          description: Honeypot field — must be empty; bots that fill it are silently rejected.
 
     NavItem:
       type: object

@@ -17,7 +17,14 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // POST /public/contact
 router.post("/public/contact", async (req: Request, res: Response): Promise<void> => {
-  const { name, email, message } = req.body ?? {};
+  const { name, email, message, website } = req.body ?? {};
+
+  // Honeypot check — bots typically fill hidden fields; real users never see this field.
+  // Silently pretend success so bots don't know they were filtered.
+  if (typeof website === "string" && website.length > 0) {
+    res.json({ message: "Message sent successfully." });
+    return;
+  }
 
   // Basic validation
   if (
