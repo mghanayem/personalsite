@@ -92,25 +92,26 @@ app.use(
 );
 
 // ── CSRF guard ────────────────────────────────────────────────────────────
-// For every state-changing request to /api, verify the Origin header is one
-// of our allowed origins. Requests with no Origin header are same-origin and
-// are allowed. This is defense-in-depth on top of sameSite: lax.
+// For every state-changing request, verify the Origin is trusted.
+// "Trusted" means: no Origin header (same-origin in older browsers / curl),
+// OR Origin matches a configured allowed origin,
+// OR Origin matches the request's own host (same-origin in production where
+// the frontend and API share one domain behind Replit's proxy).
 app.use("/api", (req: Request, res: Response, next: NextFunction): void => {
   const stateChanging = ["POST", "PUT", "PATCH", "DELETE"].includes(req.method);
   if (!stateChanging) { next(); return; }
 
   const originHeader = req.headers.origin;
-  if (!originHeader) {
-    // No Origin header → same-origin or server-to-server request; allow
-    next(); return;
-  }
+  if (!originHeader) { next(); return; }
 
-  if (hasConfiguredOrigin && !rawOrigins.includes(originHeader)) {
-    res.status(403).json({ error: "Forbidden: origin not allowed" });
-    return;
-  }
+  // Allow same-origin: Origin matches the host this request arrived on.
+  const selfOrigin = `${req.protocol}://${req.hostname}`;
+  if (originHeader === selfOrigin) { next(); return; }
 
-  next();
+  // Allow explicitly configured origins (dev domain, custom ORIGIN env var).
+  if (hasConfiguredOrigin && rawOrigins.includes(originHeader)) { next(); return; }
+
+  res.status(403).json({ error: "Forbidden: origin not allowed" });
 });
 
 // ── Rate limiting on login ────────────────────────────────────────────────
