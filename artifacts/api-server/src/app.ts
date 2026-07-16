@@ -22,10 +22,16 @@ app.set("trust proxy", 1);
 // ── Allowed origins ───────────────────────────────────────────────────────
 // Build the list from env vars.  In Replit dev the proxy domain is injected as
 // REPLIT_DEV_DOMAIN (e.g. "abc-replit.replit.dev"); in production set ORIGIN.
+const replitDevDomain = process.env.REPLIT_DEV_DOMAIN;
+
+// Expo web preview runs from PREFIX.expo.SUFFIX where PREFIX.SUFFIX == REPLIT_DEV_DOMAIN
+const expoDevOrigin = replitDevDomain
+  ? `https://${replitDevDomain.replace(/^([^.]+)\./, "$1.expo.")}`
+  : undefined;
+
 const rawOrigins = [
-  process.env.REPLIT_DEV_DOMAIN
-    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-    : undefined,
+  replitDevDomain ? `https://${replitDevDomain}` : undefined,
+  expoDevOrigin,
   process.env.ORIGIN,
 ].filter((o): o is string => Boolean(o));
 
