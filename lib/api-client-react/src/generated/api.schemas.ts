@@ -258,7 +258,8 @@ export interface ContactMessage {
   email: string;
   message: string;
   isRead: boolean;
-  createdAt: string;
+  isArchived: boolean;
+  receivedAt: string;
 }
 
 export interface ContactRequest {

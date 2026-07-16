@@ -2064,6 +2064,373 @@ export function useGetPublicHomepage<TData = Awaited<ReturnType<typeof getPublic
 
 
 
+export const getListMessagesUrl = () => {
+
+
+
+
+  return `/api/messages`
+}
+
+/**
+ * @summary List all non-archived contact messages (newest first)
+ */
+export const listMessages = async ( options?: RequestInit): Promise<ContactMessage[]> => {
+
+  return customFetch<ContactMessage[]>(getListMessagesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMessagesQueryKey = () => {
+    return [
+    `/api/messages`
+    ] as const;
+    }
+
+
+export const getListMessagesQueryOptions = <TData = Awaited<ReturnType<typeof listMessages>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMessagesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMessages>>> = ({ signal }) => listMessages({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listMessages>>>
+export type ListMessagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all non-archived contact messages (newest first)
+ */
+
+export function useListMessages<TData = Awaited<ReturnType<typeof listMessages>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMessagesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListArchivedMessagesUrl = () => {
+
+
+
+
+  return `/api/messages/archived`
+}
+
+/**
+ * @summary List archived contact messages
+ */
+export const listArchivedMessages = async ( options?: RequestInit): Promise<ContactMessage[]> => {
+
+  return customFetch<ContactMessage[]>(getListArchivedMessagesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListArchivedMessagesQueryKey = () => {
+    return [
+    `/api/messages/archived`
+    ] as const;
+    }
+
+
+export const getListArchivedMessagesQueryOptions = <TData = Awaited<ReturnType<typeof listArchivedMessages>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listArchivedMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListArchivedMessagesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listArchivedMessages>>> = ({ signal }) => listArchivedMessages({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listArchivedMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListArchivedMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listArchivedMessages>>>
+export type ListArchivedMessagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List archived contact messages
+ */
+
+export function useListArchivedMessages<TData = Awaited<ReturnType<typeof listArchivedMessages>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listArchivedMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListArchivedMessagesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getMarkMessageReadUrl = (id: number,) => {
+
+
+
+
+  return `/api/messages/${id}/read`
+}
+
+/**
+ * @summary Mark a message as read
+ */
+export const markMessageRead = async (id: number, options?: RequestInit): Promise<ContactMessage> => {
+
+  return customFetch<ContactMessage>(getMarkMessageReadUrl(id),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+
+export const getMarkMessageReadMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markMessageRead>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markMessageRead>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['markMessageRead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markMessageRead>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  markMessageRead(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkMessageReadMutationResult = NonNullable<Awaited<ReturnType<typeof markMessageRead>>>
+
+    export type MarkMessageReadMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Mark a message as read
+ */
+export const useMarkMessageRead = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markMessageRead>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markMessageRead>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getMarkMessageReadMutationOptions(options));
+    }
+
+export const getArchiveMessageUrl = (id: number,) => {
+
+
+
+
+  return `/api/messages/${id}/archive`
+}
+
+/**
+ * @summary Archive a message
+ */
+export const archiveMessage = async (id: number, options?: RequestInit): Promise<ContactMessage> => {
+
+  return customFetch<ContactMessage>(getArchiveMessageUrl(id),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+
+export const getArchiveMessageMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveMessage>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveMessage>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['archiveMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveMessage>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  archiveMessage(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveMessageMutationResult = NonNullable<Awaited<ReturnType<typeof archiveMessage>>>
+
+    export type ArchiveMessageMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Archive a message
+ */
+export const useArchiveMessage = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveMessage>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiveMessage>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getArchiveMessageMutationOptions(options));
+    }
+
+export const getUnarchiveMessageUrl = (id: number,) => {
+
+
+
+
+  return `/api/messages/${id}/unarchive`
+}
+
+/**
+ * @summary Restore a message from archive
+ */
+export const unarchiveMessage = async (id: number, options?: RequestInit): Promise<ContactMessage> => {
+
+  return customFetch<ContactMessage>(getUnarchiveMessageUrl(id),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+
+export const getUnarchiveMessageMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unarchiveMessage>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unarchiveMessage>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['unarchiveMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unarchiveMessage>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  unarchiveMessage(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnarchiveMessageMutationResult = NonNullable<Awaited<ReturnType<typeof unarchiveMessage>>>
+
+    export type UnarchiveMessageMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Restore a message from archive
+ */
+export const useUnarchiveMessage = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unarchiveMessage>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unarchiveMessage>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getUnarchiveMessageMutationOptions(options));
+    }
+
 export const getSubmitContactFormUrl = () => {
 
 
@@ -2133,224 +2500,5 @@ export const useSubmitContactForm = <TError = ErrorType<ApiError>,
         TContext
       > => {
       return useMutation(getSubmitContactFormMutationOptions(options));
-    }
-
-export const getListMessagesUrl = () => {
-
-
-
-
-  return `/api/messages`
-}
-
-/**
- * @summary List all contact messages (admin)
- */
-export const listMessages = async ( options?: RequestInit): Promise<ContactMessage[]> => {
-
-  return customFetch<ContactMessage[]>(getListMessagesUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListMessagesQueryKey = () => {
-    return [
-    `/api/messages`
-    ] as const;
-    }
-
-
-export const getListMessagesQueryOptions = <TData = Awaited<ReturnType<typeof listMessages>>, TError = ErrorType<ApiError>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListMessagesQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMessages>>> = ({ signal }) => listMessages({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type ListMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listMessages>>>
-export type ListMessagesQueryError = ErrorType<ApiError>
-
-
-/**
- * @summary List all contact messages (admin)
- */
-
-export function useListMessages<TData = Awaited<ReturnType<typeof listMessages>>, TError = ErrorType<ApiError>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getListMessagesQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getMarkMessageReadUrl = (id: number,) => {
-
-
-
-
-  return `/api/messages/${id}/read`
-}
-
-/**
- * @summary Mark a message as read (admin)
- */
-export const markMessageRead = async (id: number, options?: RequestInit): Promise<ContactMessage> => {
-
-  return customFetch<ContactMessage>(getMarkMessageReadUrl(id),
-  {
-    ...options,
-    method: 'PATCH'
-
-
-  }
-);}
-
-
-
-
-
-export const getMarkMessageReadMutationOptions = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markMessageRead>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof markMessageRead>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['markMessageRead'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markMessageRead>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  markMessageRead(id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type MarkMessageReadMutationResult = NonNullable<Awaited<ReturnType<typeof markMessageRead>>>
-
-    export type MarkMessageReadMutationError = ErrorType<ApiError>
-
-    /**
- * @summary Mark a message as read (admin)
- */
-export const useMarkMessageRead = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markMessageRead>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof markMessageRead>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getMarkMessageReadMutationOptions(options));
-    }
-
-export const getDeleteMessageUrl = (id: number,) => {
-
-
-
-
-  return `/api/messages/${id}`
-}
-
-/**
- * @summary Delete a message (admin)
- */
-export const deleteMessage = async (id: number, options?: RequestInit): Promise<MessageResponse> => {
-
-  return customFetch<MessageResponse>(getDeleteMessageUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-
-export const getDeleteMessageMutationOptions = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMessage>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteMessage>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['deleteMessage'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMessage>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  deleteMessage(id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteMessageMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMessage>>>
-
-    export type DeleteMessageMutationError = ErrorType<ApiError>
-
-    /**
- * @summary Delete a message (admin)
- */
-export const useDeleteMessage = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMessage>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof deleteMessage>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getDeleteMessageMutationOptions(options));
     }
 

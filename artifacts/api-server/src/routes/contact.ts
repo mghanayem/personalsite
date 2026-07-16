@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { Resend } from "resend";
-import { db, messagesTable } from "@workspace/db";
+import { db, contactMessagesTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -29,30 +29,33 @@ router.post("/public/contact", async (req: Request, res: Response): Promise<void
     return;
   }
 
-  const contactEmail = process.env.CONTACT_EMAIL;
-  if (!contactEmail) {
-    res.status(503).json({ error: "Contact form is not configured yet." });
-    return;
-  }
-
-  const client = getResend();
-  if (!client) {
-    res.status(503).json({ error: "Email delivery is not configured yet." });
-    return;
-  }
-
   const cleanName = name.trim();
   const cleanEmail = email.trim().toLowerCase();
   const cleanMessage = message.trim();
 
-  // Persist to database regardless of email outcome
-  await db.insert(messagesTable).values({
+  // Always save to DB first — independent of email delivery.
+  await db.insert(contactMessagesTable).values({
     name: cleanName,
     email: cleanEmail,
     message: cleanMessage,
   });
 
-  const { error } = await client.emails.send({
+  const contactEmail = process.env.CONTACT_EMAIL;
+  if (!contactEmail) {
+    // Message saved; email delivery not configured.
+    res.json({ message: "Message sent successfully." });
+    return;
+  }
+
+  const client = getResend();
+  if (!client) {
+    // Message saved; email delivery not configured.
+    res.json({ message: "Message sent successfully." });
+    return;
+  }
+
+  // Best-effort email — do not fail the response if this errors.
+  await client.emails.send({
     from: "Website Contact Form <onboarding@resend.dev>",
     to: contactEmail,
     replyTo: cleanEmail,
@@ -65,11 +68,6 @@ router.post("/public/contact", async (req: Request, res: Response): Promise<void
     `,
     text: `Name: ${cleanName}\nEmail: ${cleanEmail}\n\nMessage:\n${cleanMessage}`,
   });
-
-  if (error) {
-    res.status(500).json({ error: "Failed to send message. Please try again later." });
-    return;
-  }
 
   res.json({ message: "Message sent successfully." });
 });

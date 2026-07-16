@@ -1,166 +1,230 @@
-import { AdminLayout } from "@/components/layout/AdminLayout";
+import { useState } from "react";
 import {
   useListMessages,
+  useListArchivedMessages,
   useMarkMessageRead,
-  useDeleteMessage,
-  getListMessagesQueryKey,
+  useArchiveMessage,
+  useUnarchiveMessage,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Inbox, Mail, MailOpen, Trash2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Mail,
+  MailOpen,
+  Archive,
+  ArchiveRestore,
+  Loader2,
+  Inbox,
+} from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  getListMessagesQueryKey,
+  getListArchivedMessagesQueryKey,
+} from "@workspace/api-client-react";
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+interface MessageCardProps {
+  msg: {
+    id: number;
+    name: string;
+    email: string;
+    message: string;
+    isRead: boolean;
+    isArchived: boolean;
+    receivedAt: string;
+  };
+  isArchived?: boolean;
+}
+
+function MessageCard({ msg, isArchived = false }: MessageCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  const queryClient = useQueryClient();
+
+  const markRead = useMarkMessageRead({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListMessagesQueryKey() });
+      },
+    },
+  });
+
+  const archive = useArchiveMessage({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListMessagesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListArchivedMessagesQueryKey() });
+      },
+    },
+  });
+
+  const unarchive = useUnarchiveMessage({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListMessagesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListArchivedMessagesQueryKey() });
+      },
+    },
+  });
+
+  const handleExpand = () => {
+    setExpanded((v) => !v);
+    if (!msg.isRead && !isArchived) {
+      markRead.mutate({ id: msg.id });
+    }
+  };
+
+  return (
+    <Card
+      className={`transition-colors ${!msg.isRead && !isArchived ? "border-primary/40 bg-primary/5" : ""}`}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-2">
+          <button
+            onClick={handleExpand}
+            className="flex-1 text-left space-y-0.5"
+          >
+            <div className="flex items-center gap-2 flex-wrap">
+              {!msg.isRead && !isArchived ? (
+                <Mail className="w-4 h-4 text-primary shrink-0" />
+              ) : (
+                <MailOpen className="w-4 h-4 text-muted-foreground shrink-0" />
+              )}
+              <CardTitle className="text-base font-semibold">{msg.name}</CardTitle>
+              {!msg.isRead && !isArchived && (
+                <Badge variant="default" className="text-xs">New</Badge>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">{msg.email}</p>
+            <p className="text-xs text-muted-foreground">{formatDate(msg.receivedAt)}</p>
+          </button>
+
+          <div className="flex gap-1 shrink-0">
+            {!isArchived ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Archive"
+                disabled={archive.isPending}
+                onClick={() => archive.mutate({ id: msg.id })}
+              >
+                {archive.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Archive className="w-4 h-4" />
+                )}
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Restore"
+                disabled={unarchive.isPending}
+                onClick={() => unarchive.mutate({ id: msg.id })}
+              >
+                {unarchive.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ArchiveRestore className="w-4 h-4" />
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+
+      {expanded && (
+        <CardContent className="pt-0">
+          <div className="border-t pt-3 mt-1">
+            <p className="text-sm whitespace-pre-wrap text-foreground">{msg.message}</p>
+            <a
+              href={`mailto:${msg.email}`}
+              className="mt-3 inline-block text-sm text-primary hover:underline"
+            >
+              Reply to {msg.email}
+            </a>
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+      <Inbox className="w-10 h-10 mb-3 opacity-40" />
+      <p className="text-sm">{text}</p>
+    </div>
+  );
+}
 
 export default function Messages() {
-  const queryClient = useQueryClient();
-  const { data: messages, isLoading, isError } = useListMessages();
-  const markRead = useMarkMessageRead();
-  const deleteMsg = useDeleteMessage();
+  const { data: inbox, isLoading: loadingInbox } = useListMessages();
+  const { data: archived, isLoading: loadingArchived } = useListArchivedMessages();
 
-  const [expanded, setExpanded] = useState<number | null>(null);
-
-  const unreadCount = messages?.filter((m) => !m.isRead).length ?? 0;
-
-  function handleExpand(id: number) {
-    setExpanded((prev) => (prev === id ? null : id));
-    // Mark as read when opened (fire-and-forget)
-    const msg = messages?.find((m) => m.id === id);
-    if (msg && !msg.isRead) {
-      markRead.mutate(
-        { id },
-        { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListMessagesQueryKey() }) }
-      );
-    }
-  }
-
-  function handleDelete(id: number) {
-    deleteMsg.mutate(
-      { id },
-      {
-        onSuccess: () => {
-          if (expanded === id) setExpanded(null);
-          queryClient.invalidateQueries({ queryKey: getListMessagesQueryKey() });
-        },
-      }
-    );
-  }
+  const unreadCount = inbox?.filter((m) => !m.isRead).length ?? 0;
 
   return (
     <AdminLayout>
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Contact form submissions from your visitors
-            {unreadCount > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5">
-                {unreadCount} new
-              </span>
-            )}
+          <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
+          <p className="text-muted-foreground mt-1">
+            Contact form submissions from visitors.
           </p>
         </div>
 
-        {isLoading && (
-          <div className="flex items-center gap-2 text-muted-foreground py-12 justify-center">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Loading messages…</span>
-          </div>
-        )}
+        <Tabs defaultValue="inbox">
+          <TabsList>
+            <TabsTrigger value="inbox" className="gap-2">
+              Inbox
+              {unreadCount > 0 && (
+                <Badge variant="default" className="text-xs px-1.5">
+                  {unreadCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="archived">Archived</TabsTrigger>
+          </TabsList>
 
-        {isError && (
-          <div className="rounded-md bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 text-sm">
-            Failed to load messages. Please refresh the page.
-          </div>
-        )}
+          <TabsContent value="inbox" className="mt-4 space-y-3">
+            {loadingInbox ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : inbox && inbox.length > 0 ? (
+              inbox.map((msg) => <MessageCard key={msg.id} msg={msg} />)
+            ) : (
+              <EmptyState text="No messages yet." />
+            )}
+          </TabsContent>
 
-        {!isLoading && !isError && messages?.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground gap-3">
-            <Inbox className="w-10 h-10 opacity-40" />
-            <p className="text-sm">No messages yet. When visitors fill out the contact form, they'll appear here.</p>
-          </div>
-        )}
-
-        {!isLoading && !isError && messages && messages.length > 0 && (
-          <div className="rounded-lg border bg-card divide-y divide-border overflow-hidden">
-            {messages.map((msg) => {
-              const isOpen = expanded === msg.id;
-              const date = new Date(msg.createdAt).toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              });
-
-              return (
-                <div key={msg.id} className={`transition-colors ${!msg.isRead ? "bg-primary/5" : ""}`}>
-                  <button
-                    className="w-full text-left px-4 py-4 flex items-start gap-3 hover:bg-muted/40 transition-colors"
-                    onClick={() => handleExpand(msg.id)}
-                  >
-                    <span className="mt-0.5 shrink-0 text-muted-foreground">
-                      {msg.isRead ? (
-                        <MailOpen className="w-4 h-4" />
-                      ) : (
-                        <Mail className="w-4 h-4 text-primary" />
-                      )}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-sm font-medium truncate ${!msg.isRead ? "text-foreground" : "text-foreground/80"}`}>
-                          {msg.name}
-                        </span>
-                        <span className="text-xs text-muted-foreground shrink-0">{date}</span>
-                        {!msg.isRead && (
-                          <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 font-semibold leading-none">
-                            New
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">{msg.email}</p>
-                      {!isOpen && (
-                        <p className="text-sm text-muted-foreground mt-1 truncate">{msg.message}</p>
-                      )}
-                    </div>
-                    <span className="ml-2 shrink-0 text-muted-foreground">
-                      {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </span>
-                  </button>
-
-                  {isOpen && (
-                    <div className="px-4 pb-4 space-y-3">
-                      <div className="rounded-md bg-muted/60 p-4 text-sm whitespace-pre-wrap leading-relaxed border border-border/50">
-                        {msg.message}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <a
-                          href={`mailto:${msg.email}?subject=Re: your message`}
-                          className="text-sm font-medium text-primary hover:underline"
-                        >
-                          Reply to {msg.email}
-                        </a>
-                        <div className="flex-1" />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
-                          onClick={() => handleDelete(msg.id)}
-                          disabled={deleteMsg.isPending}
-                        >
-                          {deleteMsg.isPending ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-3.5 h-3.5" />
-                          )}
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+          <TabsContent value="archived" className="mt-4 space-y-3">
+            {loadingArchived ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : archived && archived.length > 0 ? (
+              archived.map((msg) => (
+                <MessageCard key={msg.id} msg={msg} isArchived />
+              ))
+            ) : (
+              <EmptyState text="No archived messages." />
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   );

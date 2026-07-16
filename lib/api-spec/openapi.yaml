@@ -27,7 +27,7 @@ tags:
   - name: public
     description: Public website endpoints
   - name: messages
-    description: Visitor contact messages
+    description: Contact message inbox
 
 paths:
   /healthz:
@@ -629,6 +629,112 @@ paths:
               schema:
                 $ref: "#/components/schemas/PublicPage"
 
+  # ── Messages (admin inbox) ────────────────────────────────────────────────
+  /messages:
+    get:
+      operationId: listMessages
+      tags: [messages]
+      summary: List all non-archived contact messages (newest first)
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContactMessage"
+
+  /messages/archived:
+    get:
+      operationId: listArchivedMessages
+      tags: [messages]
+      summary: List archived contact messages
+      responses:
+        "200":
+          description: List of archived messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContactMessage"
+
+  /messages/{id}/read:
+    patch:
+      operationId: markMessageRead
+      tags: [messages]
+      summary: Mark a message as read
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactMessage"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /messages/{id}/archive:
+    patch:
+      operationId: archiveMessage
+      tags: [messages]
+      summary: Archive a message
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactMessage"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /messages/{id}/unarchive:
+    patch:
+      operationId: unarchiveMessage
+      tags: [messages]
+      summary: Restore a message from archive
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactMessage"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
   /public/contact:
     post:
       operationId: submitContactForm
@@ -661,89 +767,6 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "503":
           description: Email delivery unavailable (not configured)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-
-  /messages:
-    get:
-      operationId: listMessages
-      tags: [messages]
-      summary: List all contact messages (admin)
-      responses:
-        "200":
-          description: All messages newest first
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ContactMessage"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-
-  /messages/{id}/read:
-    patch:
-      operationId: markMessageRead
-      tags: [messages]
-      summary: Mark a message as read (admin)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Updated message
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ContactMessage"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "404":
-          description: Message not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-
-  /messages/{id}:
-    delete:
-      operationId: deleteMessage
-      tags: [messages]
-      summary: Delete a message (admin)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Deleted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MessageResponse"
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "404":
-          description: Message not found
           content:
             application/json:
               schema:
@@ -1146,10 +1169,12 @@ components:
           type: string
           pattern: "^#[0-9a-fA-F]{6}$"
 
+    # ── Public ────────────────────────────────────────────────────────────
+    # ── Contact ───────────────────────────────────────────────────────────────
     # ── Messages ──────────────────────────────────────────────────────────────
     ContactMessage:
       type: object
-      required: [id, name, email, message, isRead, createdAt]
+      required: [id, name, email, message, isRead, isArchived, receivedAt]
       properties:
         id:
           type: integer
@@ -1161,12 +1186,12 @@ components:
           type: string
         isRead:
           type: boolean
-        createdAt:
+        isArchived:
+          type: boolean
+        receivedAt:
           type: string
           format: date-time
 
-    # ── Public ────────────────────────────────────────────────────────────
-    # ── Contact ───────────────────────────────────────────────────────────────
     ContactRequest:
       type: object
       required: [name, email, message]

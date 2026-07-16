@@ -12,5 +12,6 @@ export interface ContactMessage {
   email: string;
   message: string;
   isRead: boolean;
-  createdAt: Date;
+  isArchived: boolean;
+  receivedAt: Date;
 }

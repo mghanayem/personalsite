@@ -1,61 +1,96 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db, messagesTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { db, contactMessagesTable } from "@workspace/db";
+import { eq, and, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
-// GET /messages — admin: list all messages newest first
+// GET /messages — list all non-archived messages (newest first)
 router.get("/messages", requireAuth, async (_req: Request, res: Response): Promise<void> => {
   const messages = await db
     .select()
-    .from(messagesTable)
-    .orderBy(desc(messagesTable.createdAt));
+    .from(contactMessagesTable)
+    .where(eq(contactMessagesTable.isArchived, false))
+    .orderBy(desc(contactMessagesTable.receivedAt));
 
   res.json(messages);
 });
 
-// PATCH /messages/:id/read — admin: mark a message as read
+// GET /messages/archived — list archived messages
+router.get("/messages/archived", requireAuth, async (_req: Request, res: Response): Promise<void> => {
+  const messages = await db
+    .select()
+    .from(contactMessagesTable)
+    .where(eq(contactMessagesTable.isArchived, true))
+    .orderBy(desc(contactMessagesTable.receivedAt));
+
+  res.json(messages);
+});
+
+// PATCH /messages/:id/read — mark a message as read
 router.patch("/messages/:id/read", requireAuth, async (req: Request, res: Response): Promise<void> => {
-  const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid message id" });
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid message ID." });
     return;
   }
 
   const [updated] = await db
-    .update(messagesTable)
+    .update(contactMessagesTable)
     .set({ isRead: true })
-    .where(eq(messagesTable.id, id))
+    .where(eq(contactMessagesTable.id, id))
     .returning();
 
   if (!updated) {
-    res.status(404).json({ error: "Message not found" });
+    res.status(404).json({ error: "Message not found." });
     return;
   }
 
   res.json(updated);
 });
 
-// DELETE /messages/:id — admin: delete a message
-router.delete("/messages/:id", requireAuth, async (req: Request, res: Response): Promise<void> => {
-  const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid message id" });
+// PATCH /messages/:id/archive — archive a message
+router.patch("/messages/:id/archive", requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid message ID." });
     return;
   }
 
-  const [deleted] = await db
-    .delete(messagesTable)
-    .where(eq(messagesTable.id, id))
+  const [updated] = await db
+    .update(contactMessagesTable)
+    .set({ isArchived: true, isRead: true })
+    .where(and(eq(contactMessagesTable.id, id), eq(contactMessagesTable.isArchived, false)))
     .returning();
 
-  if (!deleted) {
-    res.status(404).json({ error: "Message not found" });
+  if (!updated) {
+    res.status(404).json({ error: "Message not found or already archived." });
     return;
   }
 
-  res.json({ message: "Deleted" });
+  res.json(updated);
+});
+
+// PATCH /messages/:id/unarchive — restore a message from archive
+router.patch("/messages/:id/unarchive", requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid message ID." });
+    return;
+  }
+
+  const [updated] = await db
+    .update(contactMessagesTable)
+    .set({ isArchived: false })
+    .where(and(eq(contactMessagesTable.id, id), eq(contactMessagesTable.isArchived, true)))
+    .returning();
+
+  if (!updated) {
+    res.status(404).json({ error: "Message not found or not archived." });
+    return;
+  }
+
+  res.json(updated);
 });
 
 export default router;
