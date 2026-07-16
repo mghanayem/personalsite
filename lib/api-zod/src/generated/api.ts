@@ -700,7 +700,11 @@ export const ChangeUsernameResponse = zod.object({
  */
 export const GetBrandingSettingsResponse = zod.object({
   "primaryColor": zod.string().describe('Hex color for the primary theme color (e.g. #0e1a2a)'),
-  "accentColor": zod.string().describe('Hex color for the accent theme color (e.g. #f1f5f9)')
+  "accentColor": zod.string().describe('Hex color for the accent theme color (e.g. #f1f5f9)'),
+  "cta1BgColor": zod.string().describe('Hex background color for the primary hero button'),
+  "cta1TextColor": zod.string().describe('Hex text color for the primary hero button'),
+  "cta2BgColor": zod.string().describe('Hex background color for the secondary hero button'),
+  "cta2TextColor": zod.string().describe('Hex text color for the secondary hero button')
 })
 
 
@@ -709,16 +713,28 @@ export const GetBrandingSettingsResponse = zod.object({
  */
 export const updateBrandingSettingsBodyPrimaryColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const updateBrandingSettingsBodyAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateBrandingSettingsBodyCta1BgColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateBrandingSettingsBodyCta1TextColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateBrandingSettingsBodyCta2BgColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateBrandingSettingsBodyCta2TextColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 
 
 export const UpdateBrandingSettingsBody = zod.object({
   "primaryColor": zod.string().regex(updateBrandingSettingsBodyPrimaryColorRegExp).optional(),
-  "accentColor": zod.string().regex(updateBrandingSettingsBodyAccentColorRegExp).optional()
+  "accentColor": zod.string().regex(updateBrandingSettingsBodyAccentColorRegExp).optional(),
+  "cta1BgColor": zod.string().regex(updateBrandingSettingsBodyCta1BgColorRegExp).optional(),
+  "cta1TextColor": zod.string().regex(updateBrandingSettingsBodyCta1TextColorRegExp).optional(),
+  "cta2BgColor": zod.string().regex(updateBrandingSettingsBodyCta2BgColorRegExp).optional(),
+  "cta2TextColor": zod.string().regex(updateBrandingSettingsBodyCta2TextColorRegExp).optional()
 })
 
 export const UpdateBrandingSettingsResponse = zod.object({
   "primaryColor": zod.string().describe('Hex color for the primary theme color (e.g. #0e1a2a)'),
-  "accentColor": zod.string().describe('Hex color for the accent theme color (e.g. #f1f5f9)')
+  "accentColor": zod.string().describe('Hex color for the accent theme color (e.g. #f1f5f9)'),
+  "cta1BgColor": zod.string().describe('Hex background color for the primary hero button'),
+  "cta1TextColor": zod.string().describe('Hex text color for the primary hero button'),
+  "cta2BgColor": zod.string().describe('Hex background color for the secondary hero button'),
+  "cta2TextColor": zod.string().describe('Hex text color for the secondary hero button')
 })
 
 

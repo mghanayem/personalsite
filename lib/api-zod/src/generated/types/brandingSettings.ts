@@ -11,4 +11,12 @@ export interface BrandingSettings {
   primaryColor: string;
   /** Hex color for the accent theme color (e.g. #f1f5f9) */
   accentColor: string;
+  /** Hex background color for the primary hero button */
+  cta1BgColor: string;
+  /** Hex text color for the primary hero button */
+  cta1TextColor: string;
+  /** Hex background color for the secondary hero button */
+  cta2BgColor: string;
+  /** Hex text color for the secondary hero button */
+  cta2TextColor: string;
 }

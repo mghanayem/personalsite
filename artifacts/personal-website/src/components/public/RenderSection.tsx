@@ -1,9 +1,7 @@
 import DOMPurify from "dompurify";
 import { useLanguage } from "@/lib/i18n";
-import { Button } from "@/components/ui/button";
 import { SectionWithImages } from "@workspace/api-client-react";
 import { MapPin, Mail, Linkedin, ArrowRight, ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
 
 /** Sanitize HTML before dangerouslySetInnerHTML — defense-in-depth. */
 function safeHtml(html: string | undefined): string {
@@ -16,7 +14,7 @@ function safeHtml(html: string | undefined): string {
 }
 
 export function RenderSection({ section }: { section: SectionWithImages }) {
-  const { lang, dir } = useLanguage();
+  const { lang } = useLanguage();
   const d = section.data;
 
   const t = (ar?: string, en?: string) => lang === "ar" ? (ar || "") : (en || "");
@@ -49,15 +47,30 @@ export function RenderSection({ section }: { section: SectionWithImages }) {
                 )}
               </div>
               <div className="flex flex-wrap gap-4">
-                <Button size="lg" asChild className="bg-ring text-primary-foreground hover:bg-ring/90">
-                  <a href={cta1Href}>
-                    {cta1Label}
-                    {lang === "ar" ? <ArrowLeft className="mr-2 w-4 h-4" /> : <ArrowRight className="ml-2 w-4 h-4" />}
-                  </a>
-                </Button>
-                <Button size="lg" variant="outline" asChild className="border-primary-foreground/20 hover:bg-primary-foreground/10 text-primary-foreground">
-                  <a href={cta2Href}>{cta2Label}</a>
-                </Button>
+                {/* Primary CTA — background + text driven by branding CSS vars */}
+                <a
+                  href={cta1Href}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-base font-semibold transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  style={{
+                    backgroundColor: "var(--hero-cta1-bg, #5b91c8)",
+                    color: "var(--hero-cta1-text, #ffffff)",
+                  }}
+                >
+                  {cta1Label}
+                  {lang === "ar" ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                </a>
+
+                {/* Secondary CTA — solid fill for guaranteed readability */}
+                <a
+                  href={cta2Href}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-base font-semibold transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  style={{
+                    backgroundColor: "var(--hero-cta2-bg, #ffffff)",
+                    color: "var(--hero-cta2-text, #0e1a2a)",
+                  }}
+                >
+                  {cta2Label}
+                </a>
               </div>
             </div>
 
@@ -145,7 +158,6 @@ export function RenderSection({ section }: { section: SectionWithImages }) {
               <div key={item.id} className="bg-card border border-border rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow">
                 {item.icon && (
                   <div className="w-12 h-12 rounded-lg bg-primary/5 text-primary flex items-center justify-center mb-6 text-xl">
-                    {/* Render icon if string matching lucide maybe? Keep simple for now */}
                     <span className="opacity-70">{item.icon.charAt(0)}</span>
                   </div>
                 )}
@@ -169,7 +181,7 @@ export function RenderSection({ section }: { section: SectionWithImages }) {
             <h2 className="text-3xl font-bold mb-12 text-center">{t(d.titleAr, d.titleEn)}</h2>
           )}
           <div className="space-y-12">
-            {d.items?.map((item, i) => (
+            {d.items?.map((item) => (
               <div key={item.id} className="relative pl-8 md:pl-0 rtl:pr-8 rtl:md:pr-0 rtl:md:pl-0">
                 <div className="md:grid md:grid-cols-5 md:gap-8 items-start">
                   <div className="md:col-span-1 md:text-right rtl:md:text-left mb-2 md:mb-0 pt-1">

@@ -27,8 +27,8 @@ function BrandingLoader() {
     fetch('/api/settings/branding')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data?.primaryColor && data?.accentColor) {
-          applyBrandingColors(data.primaryColor, data.accentColor);
+        if (data?.primaryColor) {
+          applyBrandingColors(data);
         }
       })
       .catch(() => { /* fallback to CSS defaults */ });

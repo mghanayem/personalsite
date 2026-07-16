@@ -8,27 +8,77 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Save, Palette } from "lucide-react";
 import { applyBrandingColors } from "@/lib/branding";
 
+function ColorPicker({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-semibold">{label}</Label>
+      <div className="flex items-center gap-3">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-12 h-12 rounded-lg border border-border cursor-pointer p-1 bg-transparent shrink-0"
+        />
+        <div className="flex-1 space-y-1">
+          <Input
+            value={value}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (/^#[0-9a-fA-F]{0,6}$/.test(v)) onChange(v);
+            }}
+            className="font-mono uppercase"
+            maxLength={7}
+          />
+          <p className="text-xs text-muted-foreground">{hint}</p>
+        </div>
+        <div
+          className="w-16 h-12 rounded-lg border border-border shadow-sm shrink-0"
+          style={{ backgroundColor: value }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function Branding() {
   const { data: settings, isLoading } = useGetBrandingSettings();
   const update = useUpdateBrandingSettings();
 
   const [primaryColor, setPrimaryColor] = useState("#0e1a2a");
   const [accentColor, setAccentColor] = useState("#f1f5f9");
+  const [cta1BgColor, setCta1BgColor] = useState("#5b91c8");
+  const [cta1TextColor, setCta1TextColor] = useState("#ffffff");
+  const [cta2BgColor, setCta2BgColor] = useState("#ffffff");
+  const [cta2TextColor, setCta2TextColor] = useState("#0e1a2a");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (settings) {
       setPrimaryColor(settings.primaryColor);
       setAccentColor(settings.accentColor);
+      setCta1BgColor(settings.cta1BgColor);
+      setCta1TextColor(settings.cta1TextColor);
+      setCta2BgColor(settings.cta2BgColor);
+      setCta2TextColor(settings.cta2TextColor);
     }
   }, [settings]);
 
   const handleSave = () => {
     update.mutate(
-      { data: { primaryColor, accentColor } },
+      { data: { primaryColor, accentColor, cta1BgColor, cta1TextColor, cta2BgColor, cta2TextColor } },
       {
         onSuccess: (data) => {
-          applyBrandingColors(data.primaryColor, data.accentColor);
+          applyBrandingColors(data);
           setSaved(true);
           setTimeout(() => setSaved(false), 2500);
         },
@@ -59,124 +109,121 @@ export default function Branding() {
           </p>
         </div>
 
+        {/* Theme Colors */}
         <Card>
           <CardHeader>
-            <CardTitle>Color Palette</CardTitle>
+            <CardTitle>Theme Colors</CardTitle>
             <CardDescription>
-              The primary color is used for the hero background, buttons, and active states.
-              The accent color is used for subtle highlights and backgrounds.
+              Controls the hero background, active navigation states, and the timeline section.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Primary Color */}
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold">Primary Color</Label>
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="w-14 h-14 rounded-xl border border-border cursor-pointer p-1 bg-transparent"
-                  />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <Input
-                    value={primaryColor}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setPrimaryColor(v);
-                    }}
-                    className="font-mono uppercase"
-                    maxLength={7}
-                    placeholder="#0e1a2a"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Used for: hero section, primary buttons, active nav, timeline
-                  </p>
-                </div>
-                {/* Preview swatch */}
-                <div
-                  className="w-20 h-14 rounded-lg border border-border shadow-sm flex items-center justify-center text-xs font-medium"
-                  style={{ backgroundColor: primaryColor, color: "#fff" }}
-                >
-                  Aa
-                </div>
-              </div>
-            </div>
+          <CardContent className="space-y-5">
+            <ColorPicker
+              label="Primary Color"
+              hint="Hero section background, active nav, timeline background"
+              value={primaryColor}
+              onChange={setPrimaryColor}
+            />
+            <ColorPicker
+              label="Accent Color"
+              hint="Subtle section backgrounds and hover states"
+              value={accentColor}
+              onChange={setAccentColor}
+            />
 
-            {/* Accent Color */}
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold">Accent Color</Label>
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
-                    className="w-14 h-14 rounded-xl border border-border cursor-pointer p-1 bg-transparent"
-                  />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <Input
-                    value={accentColor}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setAccentColor(v);
-                    }}
-                    className="font-mono uppercase"
-                    maxLength={7}
-                    placeholder="#f1f5f9"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Used for: subtle section backgrounds, hover states
-                  </p>
-                </div>
-                {/* Preview swatch */}
-                <div
-                  className="w-20 h-14 rounded-lg border border-border shadow-sm flex items-center justify-center text-xs font-medium"
-                  style={{ backgroundColor: accentColor, color: "#333" }}
-                >
-                  Aa
-                </div>
+            {/* Theme preview */}
+            <div className="rounded-xl overflow-hidden border border-border shadow-sm mt-2">
+              <div className="px-5 py-3 text-sm font-semibold" style={{ backgroundColor: primaryColor, color: "#fff" }}>
+                Hero background
               </div>
-            </div>
-
-            {/* Combined preview */}
-            <div className="rounded-xl overflow-hidden border border-border shadow-sm">
-              <div
-                className="px-6 py-4 text-white text-sm font-semibold"
-                style={{ backgroundColor: primaryColor }}
-              >
-                Hero section preview
+              <div className="px-5 py-3 text-sm text-gray-600" style={{ backgroundColor: accentColor }}>
+                Accent area
               </div>
-              <div
-                className="px-6 py-4 text-sm text-gray-600"
-                style={{ backgroundColor: accentColor }}
-              >
-                Accent / background area
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2">
-              <div>
-                {saved && (
-                  <p className="text-sm text-green-600 font-medium">
-                    ✓ Colors saved and applied to the live site
-                  </p>
-                )}
-              </div>
-              <Button onClick={handleSave} disabled={update.isPending} className="gap-2">
-                {update.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                Save Colors
-              </Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Hero Button Colors */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Hero Buttons</CardTitle>
+            <CardDescription>
+              Controls the two call-to-action buttons in your hero section. Both have a solid fill for guaranteed readability.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Primary Button</p>
+              <ColorPicker
+                label="Background"
+                hint="Fill color of the primary action button"
+                value={cta1BgColor}
+                onChange={setCta1BgColor}
+              />
+              <ColorPicker
+                label="Text"
+                hint="Label color on the primary action button"
+                value={cta1TextColor}
+                onChange={setCta1TextColor}
+              />
+            </div>
+
+            <div className="space-y-4 pt-4 border-t">
+              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Secondary Button</p>
+              <ColorPicker
+                label="Background"
+                hint="Fill color of the secondary action button"
+                value={cta2BgColor}
+                onChange={setCta2BgColor}
+              />
+              <ColorPicker
+                label="Text"
+                hint="Label color on the secondary action button"
+                value={cta2TextColor}
+                onChange={setCta2TextColor}
+              />
+            </div>
+
+            {/* Live button preview */}
+            <div className="rounded-xl p-5 mt-2" style={{ backgroundColor: primaryColor }}>
+              <p className="text-xs mb-4 font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>
+                Live preview against hero background
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <span
+                  className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-semibold"
+                  style={{ backgroundColor: cta1BgColor, color: cta1TextColor }}
+                >
+                  Primary Button →
+                </span>
+                <span
+                  className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-semibold"
+                  style={{ backgroundColor: cta2BgColor, color: cta2TextColor }}
+                >
+                  Secondary Button
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex items-center justify-between">
+          <div>
+            {saved && (
+              <p className="text-sm text-green-600 font-medium">
+                ✓ Colors saved and applied to the live site
+              </p>
+            )}
+          </div>
+          <Button onClick={handleSave} disabled={update.isPending} className="gap-2">
+            {update.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            Save All Colors
+          </Button>
+        </div>
       </div>
     </AdminLayout>
   );

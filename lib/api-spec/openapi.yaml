@@ -981,7 +981,7 @@ components:
     # ── Settings ──────────────────────────────────────────────────────────
     BrandingSettings:
       type: object
-      required: [primaryColor, accentColor]
+      required: [primaryColor, accentColor, cta1BgColor, cta1TextColor, cta2BgColor, cta2TextColor]
       properties:
         primaryColor:
           type: string
@@ -989,6 +989,18 @@ components:
         accentColor:
           type: string
           description: "Hex color for the accent theme color (e.g. #f1f5f9)"
+        cta1BgColor:
+          type: string
+          description: "Hex background color for the primary hero button"
+        cta1TextColor:
+          type: string
+          description: "Hex text color for the primary hero button"
+        cta2BgColor:
+          type: string
+          description: "Hex background color for the secondary hero button"
+        cta2TextColor:
+          type: string
+          description: "Hex text color for the secondary hero button"
 
     BrandingUpdate:
       type: object
@@ -997,6 +1009,18 @@ components:
           type: string
           pattern: "^#[0-9a-fA-F]{6}$"
         accentColor:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
+        cta1BgColor:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
+        cta1TextColor:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
+        cta2BgColor:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
+        cta2TextColor:
           type: string
           pattern: "^#[0-9a-fA-F]{6}$"
 

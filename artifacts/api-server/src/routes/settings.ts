@@ -6,6 +6,24 @@ const router: IRouter = Router();
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
+type BrandingFields = {
+  primaryColor?: string;
+  accentColor?: string;
+  cta1BgColor?: string;
+  cta1TextColor?: string;
+  cta2BgColor?: string;
+  cta2TextColor?: string;
+};
+
+const BRANDING_FIELD_LABELS: Record<keyof BrandingFields, string> = {
+  primaryColor: "primaryColor",
+  accentColor: "accentColor",
+  cta1BgColor: "cta1BgColor",
+  cta1TextColor: "cta1TextColor",
+  cta2BgColor: "cta2BgColor",
+  cta2TextColor: "cta2TextColor",
+};
+
 /** Fetch current settings row, creating defaults on first call. */
 async function getOrCreateSettings() {
   const rows = await db.select().from(settingsTable);
@@ -14,28 +32,37 @@ async function getOrCreateSettings() {
   return created;
 }
 
+function brandingResponse(row: typeof settingsTable.$inferSelect) {
+  return {
+    primaryColor: row.primaryColor,
+    accentColor: row.accentColor,
+    cta1BgColor: row.cta1BgColor,
+    cta1TextColor: row.cta1TextColor,
+    cta2BgColor: row.cta2BgColor,
+    cta2TextColor: row.cta2TextColor,
+  };
+}
+
 // GET /settings/branding — public
 router.get("/settings/branding", async (_req, res): Promise<void> => {
   const settings = await getOrCreateSettings();
-  res.json({ primaryColor: settings.primaryColor, accentColor: settings.accentColor });
+  res.json(brandingResponse(settings));
 });
 
 // PATCH /settings/branding — admin only
 router.patch("/settings/branding", requireAuth, async (req, res): Promise<void> => {
-  const { primaryColor, accentColor } = req.body as { primaryColor?: string; accentColor?: string };
+  const body = req.body as BrandingFields;
+  const updates: Partial<BrandingFields> = {};
 
-  if (primaryColor !== undefined && !HEX_RE.test(primaryColor)) {
-    res.status(400).json({ error: "primaryColor must be a valid 6-digit hex color (e.g. #0e1a2a)" });
-    return;
+  for (const key of Object.keys(BRANDING_FIELD_LABELS) as (keyof BrandingFields)[]) {
+    const val = body[key];
+    if (val === undefined) continue;
+    if (!HEX_RE.test(val)) {
+      res.status(400).json({ error: `${key} must be a valid 6-digit hex color (e.g. #0e1a2a)` });
+      return;
+    }
+    updates[key] = val;
   }
-  if (accentColor !== undefined && !HEX_RE.test(accentColor)) {
-    res.status(400).json({ error: "accentColor must be a valid 6-digit hex color (e.g. #f1f5f9)" });
-    return;
-  }
-
-  const updates: Partial<{ primaryColor: string; accentColor: string }> = {};
-  if (primaryColor) updates.primaryColor = primaryColor;
-  if (accentColor) updates.accentColor = accentColor;
 
   if (Object.keys(updates).length === 0) {
     res.status(400).json({ error: "No fields to update" });
@@ -44,7 +71,7 @@ router.patch("/settings/branding", requireAuth, async (req, res): Promise<void> 
 
   await getOrCreateSettings(); // ensure row 1 exists
   const [updated] = await db.update(settingsTable).set(updates).returning();
-  res.json({ primaryColor: updated.primaryColor, accentColor: updated.accentColor });
+  res.json(brandingResponse(updated));
 });
 
 export default router;

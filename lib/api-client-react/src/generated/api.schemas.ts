@@ -227,6 +227,14 @@ export interface BrandingSettings {
   primaryColor: string;
   /** Hex color for the accent theme color (e.g. #f1f5f9) */
   accentColor: string;
+  /** Hex background color for the primary hero button */
+  cta1BgColor: string;
+  /** Hex text color for the primary hero button */
+  cta1TextColor: string;
+  /** Hex background color for the secondary hero button */
+  cta2BgColor: string;
+  /** Hex text color for the secondary hero button */
+  cta2TextColor: string;
 }
 
 export interface BrandingUpdate {
@@ -234,6 +242,14 @@ export interface BrandingUpdate {
   primaryColor?: string;
   /** @pattern ^#[0-9a-fA-F]{6}$ */
   accentColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  cta1BgColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  cta1TextColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  cta2BgColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  cta2TextColor?: string;
 }
 
 export interface NavItem {

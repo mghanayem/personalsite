@@ -26,20 +26,44 @@ export function hexToHslVars(hex: string): string {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+export interface BrandingColors {
+  primaryColor: string;
+  accentColor: string;
+  cta1BgColor: string;
+  cta1TextColor: string;
+  cta2BgColor: string;
+  cta2TextColor: string;
+}
+
 /**
  * Injects branding colors as CSS custom properties on :root.
- * Called once at app startup with values from the API.
+ * Called once at app startup with values from the API, and again on admin saves.
  */
-export function applyBrandingColors(primaryColor: string, accentColor: string) {
+export function applyBrandingColors(colors: BrandingColors) {
   const root = document.documentElement;
-  if (primaryColor && /^#[0-9a-fA-F]{6}$/.test(primaryColor)) {
-    const hsl = hexToHslVars(primaryColor);
+
+  if (colors.primaryColor && HEX_RE.test(colors.primaryColor)) {
+    const hsl = hexToHslVars(colors.primaryColor);
     root.style.setProperty("--primary", hsl);
-    // Keep sidebar consistent with primary
     root.style.setProperty("--sidebar", hsl);
   }
-  if (accentColor && /^#[0-9a-fA-F]{6}$/.test(accentColor)) {
-    const hsl = hexToHslVars(accentColor);
-    root.style.setProperty("--accent", hsl);
+  if (colors.accentColor && HEX_RE.test(colors.accentColor)) {
+    root.style.setProperty("--accent", hexToHslVars(colors.accentColor));
+  }
+
+  // Button color CSS vars — consumed by RenderSection hero buttons
+  if (colors.cta1BgColor && HEX_RE.test(colors.cta1BgColor)) {
+    root.style.setProperty("--hero-cta1-bg", colors.cta1BgColor);
+  }
+  if (colors.cta1TextColor && HEX_RE.test(colors.cta1TextColor)) {
+    root.style.setProperty("--hero-cta1-text", colors.cta1TextColor);
+  }
+  if (colors.cta2BgColor && HEX_RE.test(colors.cta2BgColor)) {
+    root.style.setProperty("--hero-cta2-bg", colors.cta2BgColor);
+  }
+  if (colors.cta2TextColor && HEX_RE.test(colors.cta2TextColor)) {
+    root.style.setProperty("--hero-cta2-text", colors.cta2TextColor);
   }
 }

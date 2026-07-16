@@ -11,4 +11,12 @@ export interface BrandingUpdate {
   primaryColor?: string;
   /** @pattern ^#[0-9a-fA-F]{6}$ */
   accentColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  cta1BgColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  cta1TextColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  cta2BgColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  cta2TextColor?: string;
 }
