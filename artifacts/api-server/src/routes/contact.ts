@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { Resend } from "resend";
+import { db, messagesTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -41,20 +42,28 @@ router.post("/public/contact", async (req: Request, res: Response): Promise<void
   }
 
   const cleanName = name.trim();
+  const cleanEmail = email.trim().toLowerCase();
   const cleanMessage = message.trim();
+
+  // Persist to database regardless of email outcome
+  await db.insert(messagesTable).values({
+    name: cleanName,
+    email: cleanEmail,
+    message: cleanMessage,
+  });
 
   const { error } = await client.emails.send({
     from: "Website Contact Form <onboarding@resend.dev>",
     to: contactEmail,
-    replyTo: email,
+    replyTo: cleanEmail,
     subject: `New message from ${cleanName}`,
     html: `
       <p><strong>Name:</strong> ${escapeHtml(cleanName)}</p>
-      <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+      <p><strong>Email:</strong> ${escapeHtml(cleanEmail)}</p>
       <p><strong>Message:</strong></p>
       <p style="white-space:pre-wrap">${escapeHtml(cleanMessage)}</p>
     `,
-    text: `Name: ${cleanName}\nEmail: ${email}\n\nMessage:\n${cleanMessage}`,
+    text: `Name: ${cleanName}\nEmail: ${cleanEmail}\n\nMessage:\n${cleanMessage}`,
   });
 
   if (error) {

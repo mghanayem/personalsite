@@ -899,3 +899,46 @@ export const SubmitContactFormResponse = zod.object({
 })
 
 
+/**
+ * @summary List all contact messages (admin)
+ */
+export const ListMessagesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "message": zod.string(),
+  "isRead": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+export const ListMessagesResponse = zod.array(ListMessagesResponseItem)
+
+
+/**
+ * @summary Mark a message as read (admin)
+ */
+export const MarkMessageReadParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const MarkMessageReadResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "message": zod.string(),
+  "isRead": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a message (admin)
+ */
+export const DeleteMessageParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteMessageResponse = zod.object({
+  "message": zod.string()
+})
+
+

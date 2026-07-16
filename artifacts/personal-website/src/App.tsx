@@ -12,6 +12,7 @@ import PagesList from '@/pages/admin/PagesList';
 import PageEditor from '@/pages/admin/PageEditor';
 import Account from '@/pages/admin/Account';
 import Branding from '@/pages/admin/Branding';
+import Messages from '@/pages/admin/Messages';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,6 +58,7 @@ function Router() {
       <Route path="/admin/pages" component={PagesList} />
       <Route path="/admin/pages/:id" component={PageEditor} />
       <Route path="/admin/account" component={Account} />
+      <Route path="/admin/messages" component={Messages} />
       <Route path="/admin/branding" component={Branding} />
 
       {/* Public English Routes */}

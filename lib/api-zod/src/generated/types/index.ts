@@ -11,6 +11,7 @@ export * from './apiError';
 export * from './brandingSettings';
 export * from './brandingUpdate';
 export * from './bulletItem';
+export * from './contactMessage';
 export * from './contactRequest';
 export * from './dashboardStats';
 export * from './healthStatus';

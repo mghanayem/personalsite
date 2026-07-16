@@ -252,6 +252,15 @@ export interface BrandingUpdate {
   cta2TextColor?: string;
 }
 
+export interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export interface ContactRequest {
   /**
      * @minLength 1

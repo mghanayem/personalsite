@@ -1,2 +1,3 @@
 - [Bilingual website stack](bilingual-website-stack.md) — key decisions for the personal website + CMS project
 - [OpenAPI codegen fixes](openapi-codegen-fixes.md) — fixes required to avoid looseObject and multipart collision errors in Orval+Zod
+- [Drizzle session table exclusion](drizzle-session-table.md) — tablesFilter required in drizzle.config.ts; db import path; api-client-react index duplicate guard

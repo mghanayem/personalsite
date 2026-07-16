@@ -9,6 +9,7 @@ import accountRouter from "./account";
 import publicRouter from "./public";
 import contactRouter from "./contact";
 import settingsRouter from "./settings";
+import messagesRouter from "./messages";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(accountRouter);
 router.use(settingsRouter);
 router.use(publicRouter);
 router.use(contactRouter);
+router.use(messagesRouter);
 
 export default router;
