@@ -1,6 +1,6 @@
 import { useGetAdminSession, useAdminLogout, getGetAdminSessionQueryKey } from "@workspace/api-client-react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, Settings, LogOut, Loader2, AlertCircle } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, LogOut, Loader2, AlertCircle, Palette } from "lucide-react";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const nav = [
     { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     { title: "Pages", href: "/admin/pages", icon: FileText },
+    { title: "Branding", href: "/admin/branding", icon: Palette },
     { title: "Account Settings", href: "/admin/account", icon: Settings },
   ];
 

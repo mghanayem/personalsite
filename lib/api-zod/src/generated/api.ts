@@ -139,6 +139,12 @@ export const GetPageResponse = zod.object({
   "linkedin": zod.string().optional(),
   "locationAr": zod.string().optional(),
   "locationEn": zod.string().optional(),
+  "cta1Ar": zod.string().optional(),
+  "cta1En": zod.string().optional(),
+  "cta1Url": zod.string().optional(),
+  "cta2Ar": zod.string().optional(),
+  "cta2En": zod.string().optional(),
+  "cta2Url": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "titleAr": zod.string().optional(),
@@ -235,6 +241,12 @@ export const ListSectionsResponseItem = zod.object({
   "linkedin": zod.string().optional(),
   "locationAr": zod.string().optional(),
   "locationEn": zod.string().optional(),
+  "cta1Ar": zod.string().optional(),
+  "cta1En": zod.string().optional(),
+  "cta1Url": zod.string().optional(),
+  "cta2Ar": zod.string().optional(),
+  "cta2En": zod.string().optional(),
+  "cta2Url": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "titleAr": zod.string().optional(),
@@ -284,6 +296,12 @@ export const CreateSectionBody = zod.object({
   "linkedin": zod.string().optional(),
   "locationAr": zod.string().optional(),
   "locationEn": zod.string().optional(),
+  "cta1Ar": zod.string().optional(),
+  "cta1En": zod.string().optional(),
+  "cta1Url": zod.string().optional(),
+  "cta2Ar": zod.string().optional(),
+  "cta2En": zod.string().optional(),
+  "cta2Url": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "titleAr": zod.string().optional(),
@@ -319,6 +337,12 @@ export const CreateSectionResponse = zod.object({
   "linkedin": zod.string().optional(),
   "locationAr": zod.string().optional(),
   "locationEn": zod.string().optional(),
+  "cta1Ar": zod.string().optional(),
+  "cta1En": zod.string().optional(),
+  "cta1Url": zod.string().optional(),
+  "cta2Ar": zod.string().optional(),
+  "cta2En": zod.string().optional(),
+  "cta2Url": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "titleAr": zod.string().optional(),
@@ -371,6 +395,12 @@ export const GetSectionResponse = zod.object({
   "linkedin": zod.string().optional(),
   "locationAr": zod.string().optional(),
   "locationEn": zod.string().optional(),
+  "cta1Ar": zod.string().optional(),
+  "cta1En": zod.string().optional(),
+  "cta1Url": zod.string().optional(),
+  "cta2Ar": zod.string().optional(),
+  "cta2En": zod.string().optional(),
+  "cta2Url": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "titleAr": zod.string().optional(),
@@ -418,6 +448,12 @@ export const UpdateSectionBody = zod.object({
   "linkedin": zod.string().optional(),
   "locationAr": zod.string().optional(),
   "locationEn": zod.string().optional(),
+  "cta1Ar": zod.string().optional(),
+  "cta1En": zod.string().optional(),
+  "cta1Url": zod.string().optional(),
+  "cta2Ar": zod.string().optional(),
+  "cta2En": zod.string().optional(),
+  "cta2Url": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "titleAr": zod.string().optional(),
@@ -453,6 +489,12 @@ export const UpdateSectionResponse = zod.object({
   "linkedin": zod.string().optional(),
   "locationAr": zod.string().optional(),
   "locationEn": zod.string().optional(),
+  "cta1Ar": zod.string().optional(),
+  "cta1En": zod.string().optional(),
+  "cta1Url": zod.string().optional(),
+  "cta2Ar": zod.string().optional(),
+  "cta2En": zod.string().optional(),
+  "cta2Url": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "titleAr": zod.string().optional(),
@@ -519,6 +561,12 @@ export const ToggleSectionVisibilityResponse = zod.object({
   "linkedin": zod.string().optional(),
   "locationAr": zod.string().optional(),
   "locationEn": zod.string().optional(),
+  "cta1Ar": zod.string().optional(),
+  "cta1En": zod.string().optional(),
+  "cta1Url": zod.string().optional(),
+  "cta2Ar": zod.string().optional(),
+  "cta2En": zod.string().optional(),
+  "cta2Url": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "titleAr": zod.string().optional(),
@@ -648,6 +696,33 @@ export const ChangeUsernameResponse = zod.object({
 
 
 /**
+ * @summary Get site branding colors (public)
+ */
+export const GetBrandingSettingsResponse = zod.object({
+  "primaryColor": zod.string().describe('Hex color for the primary theme color (e.g. #0e1a2a)'),
+  "accentColor": zod.string().describe('Hex color for the accent theme color (e.g. #f1f5f9)')
+})
+
+
+/**
+ * @summary Update site branding colors (admin only)
+ */
+export const updateBrandingSettingsBodyPrimaryColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateBrandingSettingsBodyAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const UpdateBrandingSettingsBody = zod.object({
+  "primaryColor": zod.string().regex(updateBrandingSettingsBodyPrimaryColorRegExp).optional(),
+  "accentColor": zod.string().regex(updateBrandingSettingsBodyAccentColorRegExp).optional()
+})
+
+export const UpdateBrandingSettingsResponse = zod.object({
+  "primaryColor": zod.string().describe('Hex color for the primary theme color (e.g. #0e1a2a)'),
+  "accentColor": zod.string().describe('Hex color for the accent theme color (e.g. #f1f5f9)')
+})
+
+
+/**
  * @summary Get published navigation pages
  */
 export const GetPublicNavResponseItem = zod.object({
@@ -689,6 +764,12 @@ export const GetPublicPageResponse = zod.object({
   "linkedin": zod.string().optional(),
   "locationAr": zod.string().optional(),
   "locationEn": zod.string().optional(),
+  "cta1Ar": zod.string().optional(),
+  "cta1En": zod.string().optional(),
+  "cta1Url": zod.string().optional(),
+  "cta2Ar": zod.string().optional(),
+  "cta2En": zod.string().optional(),
+  "cta2Url": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "titleAr": zod.string().optional(),
@@ -744,6 +825,12 @@ export const GetPublicHomepageResponse = zod.object({
   "linkedin": zod.string().optional(),
   "locationAr": zod.string().optional(),
   "locationEn": zod.string().optional(),
+  "cta1Ar": zod.string().optional(),
+  "cta1En": zod.string().optional(),
+  "cta1Url": zod.string().optional(),
+  "cta2Ar": zod.string().optional(),
+  "cta2En": zod.string().optional(),
+  "cta2Url": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "titleAr": zod.string().optional(),

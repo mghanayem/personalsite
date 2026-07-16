@@ -22,37 +22,57 @@ export function RenderSection({ section }: { section: SectionWithImages }) {
   const t = (ar?: string, en?: string) => lang === "ar" ? (ar || "") : (en || "");
 
   if (section.type === "hero") {
+    const profilePhoto = section.images[0];
+    const cta1Label = t(d.cta1Ar, d.cta1En) || (lang === "ar" ? "استعرض الخبرات" : "View Experience");
+    const cta1Href  = d.cta1Url || "#experience";
+    const cta2Label = t(d.cta2Ar, d.cta2En) || (lang === "ar" ? "تواصل معي" : "Contact Me");
+    const cta2Href  = d.cta2Url || "#contact";
+
     return (
       <section className="relative overflow-hidden bg-primary text-primary-foreground py-24 md:py-32">
         <div className="container mx-auto px-4 md:px-8 relative z-10">
-          <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-              {t(d.titleAr, d.titleEn)}
-            </h1>
-            <p className="text-xl md:text-2xl text-primary-foreground/80 mb-8 font-medium leading-relaxed">
-              {t(d.contentAr, d.contentEn)}
-            </p>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-primary-foreground/60 mb-10">
-              {(d.locationAr || d.locationEn) && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <span>{t(d.locationAr, d.locationEn)}</span>
+          <div className={`flex flex-col gap-12 ${profilePhoto ? "md:flex-row md:items-center" : ""}`}>
+            {/* Text content */}
+            <div className="flex-1 max-w-3xl">
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+                {t(d.titleAr, d.titleEn)}
+              </h1>
+              <p className="text-xl md:text-2xl text-primary-foreground/80 mb-8 font-medium leading-relaxed">
+                {t(d.contentAr, d.contentEn)}
+              </p>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-primary-foreground/60 mb-10">
+                {(d.locationAr || d.locationEn) && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    <span>{t(d.locationAr, d.locationEn)}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-4">
+                <Button size="lg" asChild className="bg-ring text-primary-foreground hover:bg-ring/90">
+                  <a href={cta1Href}>
+                    {cta1Label}
+                    {lang === "ar" ? <ArrowLeft className="mr-2 w-4 h-4" /> : <ArrowRight className="ml-2 w-4 h-4" />}
+                  </a>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="border-primary-foreground/20 hover:bg-primary-foreground/10 text-primary-foreground">
+                  <a href={cta2Href}>{cta2Label}</a>
+                </Button>
+              </div>
+            </div>
+
+            {/* Profile photo */}
+            {profilePhoto && (
+              <div className="flex-shrink-0 flex justify-center md:justify-end">
+                <div className="w-52 h-52 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-primary-foreground/20 shadow-2xl">
+                  <img
+                    src={profilePhoto.url}
+                    alt={t(profilePhoto.captionAr, profilePhoto.captionEn) || t(d.titleAr, d.titleEn)}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-4">
-              <Button size="lg" asChild className="bg-ring text-primary-foreground hover:bg-ring/90">
-                <a href="#experience">
-                  {lang === "ar" ? "استعرض الخبرات" : "View Experience"}
-                  {lang === "ar" ? <ArrowLeft className="mr-2 w-4 h-4" /> : <ArrowRight className="ml-2 w-4 h-4" />}
-                </a>
-              </Button>
-              <Button size="lg" variant="outline" asChild className="border-primary-foreground/20 hover:bg-primary-foreground/10 text-primary-foreground">
-                <a href="#contact">
-                  {lang === "ar" ? "تواصل معي" : "Contact Me"}
-                </a>
-              </Button>
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

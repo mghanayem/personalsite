@@ -22,6 +22,8 @@ import type {
 import type {
   AdminSession,
   ApiError,
+  BrandingSettings,
+  BrandingUpdate,
   DashboardStats,
   HealthStatus,
   ImageUpdate,
@@ -1679,6 +1681,154 @@ export const useChangeUsername = <TError = ErrorType<ApiError>,
         TContext
       > => {
       return useMutation(getChangeUsernameMutationOptions(options));
+    }
+
+export const getGetBrandingSettingsUrl = () => {
+
+
+
+
+  return `/api/settings/branding`
+}
+
+/**
+ * @summary Get site branding colors (public)
+ */
+export const getBrandingSettings = async ( options?: RequestInit): Promise<BrandingSettings> => {
+
+  return customFetch<BrandingSettings>(getGetBrandingSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBrandingSettingsQueryKey = () => {
+    return [
+    `/api/settings/branding`
+    ] as const;
+    }
+
+
+export const getGetBrandingSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getBrandingSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBrandingSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBrandingSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBrandingSettings>>> = ({ signal }) => getBrandingSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBrandingSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBrandingSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getBrandingSettings>>>
+export type GetBrandingSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get site branding colors (public)
+ */
+
+export function useGetBrandingSettings<TData = Awaited<ReturnType<typeof getBrandingSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBrandingSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBrandingSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateBrandingSettingsUrl = () => {
+
+
+
+
+  return `/api/settings/branding`
+}
+
+/**
+ * @summary Update site branding colors (admin only)
+ */
+export const updateBrandingSettings = async (brandingUpdate: BrandingUpdate, options?: RequestInit): Promise<BrandingSettings> => {
+
+  return customFetch<BrandingSettings>(getUpdateBrandingSettingsUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(brandingUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateBrandingSettingsMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBrandingSettings>>, TError,{data: BodyType<BrandingUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBrandingSettings>>, TError,{data: BodyType<BrandingUpdate>}, TContext> => {
+
+const mutationKey = ['updateBrandingSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBrandingSettings>>, {data: BodyType<BrandingUpdate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateBrandingSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBrandingSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateBrandingSettings>>>
+    export type UpdateBrandingSettingsMutationBody = BodyType<BrandingUpdate>
+    export type UpdateBrandingSettingsMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Update site branding colors (admin only)
+ */
+export const useUpdateBrandingSettings = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBrandingSettings>>, TError,{data: BodyType<BrandingUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateBrandingSettings>>,
+        TError,
+        {data: BodyType<BrandingUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateBrandingSettingsMutationOptions(options));
     }
 
 export const getGetPublicNavUrl = () => {

@@ -111,6 +111,12 @@ export interface SectionData {
   linkedin?: string;
   locationAr?: string;
   locationEn?: string;
+  cta1Ar?: string;
+  cta1En?: string;
+  cta1Url?: string;
+  cta2Ar?: string;
+  cta2En?: string;
+  cta2Url?: string;
   items?: SectionDataItem[];
 }
 
@@ -214,6 +220,20 @@ export interface UsernameChange {
   /** @minLength 3 */
   newUsername: string;
   currentPassword: string;
+}
+
+export interface BrandingSettings {
+  /** Hex color for the primary theme color (e.g. #0e1a2a) */
+  primaryColor: string;
+  /** Hex color for the accent theme color (e.g. #f1f5f9) */
+  accentColor: string;
+}
+
+export interface BrandingUpdate {
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  primaryColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  accentColor?: string;
 }
 
 export interface NavItem {

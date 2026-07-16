@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { LanguageProvider } from '@/lib/i18n';
+import { useEffect } from 'react';
+import { applyBrandingColors } from '@/lib/branding';
 
 import Home from '@/pages/public/Home';
 import Page from '@/pages/public/Page';
@@ -9,6 +11,7 @@ import Dashboard from '@/pages/admin/Dashboard';
 import PagesList from '@/pages/admin/PagesList';
 import PageEditor from '@/pages/admin/PageEditor';
 import Account from '@/pages/admin/Account';
+import Branding from '@/pages/admin/Branding';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,6 +20,21 @@ const queryClient = new QueryClient({
     }
   }
 });
+
+/** Fetches branding colors from the API and injects them as CSS vars at startup. */
+function BrandingLoader() {
+  useEffect(() => {
+    fetch('/api/settings/branding')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.primaryColor && data?.accentColor) {
+          applyBrandingColors(data.primaryColor, data.accentColor);
+        }
+      })
+      .catch(() => { /* fallback to CSS defaults */ });
+  }, []);
+  return null;
+}
 
 function NotFound() {
   return (
@@ -39,6 +57,7 @@ function Router() {
       <Route path="/admin/pages" component={PagesList} />
       <Route path="/admin/pages/:id" component={PageEditor} />
       <Route path="/admin/account" component={Account} />
+      <Route path="/admin/branding" component={Branding} />
 
       {/* Public English Routes */}
       <Route path="/en" component={Home} />
@@ -48,7 +67,7 @@ function Router() {
       {/* Public Arabic Routes */}
       <Route path="/" component={Home} />
       <Route path="/p/:slug" component={Page} />
-      
+
       <Route component={NotFound} />
     </Switch>
   );
@@ -59,6 +78,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, '') || ''}>
         <LanguageProvider>
+          <BrandingLoader />
           <Router />
         </LanguageProvider>
       </WouterRouter>

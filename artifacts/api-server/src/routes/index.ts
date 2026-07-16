@@ -7,6 +7,7 @@ import sectionsRouter from "./sections";
 import imagesRouter from "./images";
 import accountRouter from "./account";
 import publicRouter from "./public";
+import settingsRouter from "./settings";
 
 const router: IRouter = Router();
 
@@ -17,6 +18,7 @@ router.use(pagesRouter);
 router.use(sectionsRouter);
 router.use(imagesRouter);
 router.use(accountRouter);
+router.use(settingsRouter);
 router.use(publicRouter);
 
 export default router;

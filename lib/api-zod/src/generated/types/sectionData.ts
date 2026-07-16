@@ -17,5 +17,11 @@ export interface SectionData {
   linkedin?: string;
   locationAr?: string;
   locationEn?: string;
+  cta1Ar?: string;
+  cta1En?: string;
+  cta1Url?: string;
+  cta2Ar?: string;
+  cta2En?: string;
+  cta2Url?: string;
   items?: SectionDataItem[];
 }

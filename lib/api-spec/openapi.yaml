@@ -22,6 +22,8 @@ tags:
     description: Admin account settings
   - name: dashboard
     description: Admin dashboard
+  - name: settings
+    description: Site branding settings
   - name: public
     description: Public website endpoints
 
@@ -534,6 +536,43 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+  # ── Settings ──────────────────────────────────────────────────────────────
+  /settings/branding:
+    get:
+      operationId: getBrandingSettings
+      tags: [settings]
+      summary: Get site branding colors (public)
+      responses:
+        "200":
+          description: Branding settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandingSettings"
+    patch:
+      operationId: updateBrandingSettings
+      tags: [settings]
+      summary: Update site branding colors (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrandingUpdate"
+      responses:
+        "200":
+          description: Updated branding settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandingSettings"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
   # ── Public endpoints ──────────────────────────────────────────────────────
   /public/nav:
     get:
@@ -799,6 +838,18 @@ components:
           type: string
         locationEn:
           type: string
+        cta1Ar:
+          type: string
+        cta1En:
+          type: string
+        cta1Url:
+          type: string
+        cta2Ar:
+          type: string
+        cta2En:
+          type: string
+        cta2Url:
+          type: string
         items:
           type: array
           items:
@@ -926,6 +977,28 @@ components:
           minLength: 3
         currentPassword:
           type: string
+
+    # ── Settings ──────────────────────────────────────────────────────────
+    BrandingSettings:
+      type: object
+      required: [primaryColor, accentColor]
+      properties:
+        primaryColor:
+          type: string
+          description: "Hex color for the primary theme color (e.g. #0e1a2a)"
+        accentColor:
+          type: string
+          description: "Hex color for the accent theme color (e.g. #f1f5f9)"
+
+    BrandingUpdate:
+      type: object
+      properties:
+        primaryColor:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
+        accentColor:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
 
     # ── Public ────────────────────────────────────────────────────────────
     NavItem:

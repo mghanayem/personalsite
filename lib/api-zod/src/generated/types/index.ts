@@ -8,6 +8,8 @@
 
 export * from './adminSession';
 export * from './apiError';
+export * from './brandingSettings';
+export * from './brandingUpdate';
 export * from './bulletItem';
 export * from './dashboardStats';
 export * from './healthStatus';

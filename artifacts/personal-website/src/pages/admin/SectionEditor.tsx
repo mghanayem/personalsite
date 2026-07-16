@@ -99,16 +99,56 @@ export function SectionEditor({ section, pageId }: { section: SectionWithImages,
 
             {/* Specific Fields */}
             {t === "hero" && (
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Location (English)</Label>
-                  <Input value={data.locationEn || ""} onChange={e => updateData({ locationEn: e.target.value })} />
+              <>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Location (English)</Label>
+                    <Input value={data.locationEn || ""} onChange={e => updateData({ locationEn: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Location (Arabic)</Label>
+                    <Input value={data.locationAr || ""} onChange={e => updateData({ locationAr: e.target.value })} dir="rtl" />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Location (Arabic)</Label>
-                  <Input value={data.locationAr || ""} onChange={e => updateData({ locationAr: e.target.value })} dir="rtl" />
+
+                {/* CTA Button 1 */}
+                <div className="space-y-3 pt-2 border-t">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Primary Button (CTA 1)</p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Label (English)</Label>
+                      <Input value={data.cta1En || ""} onChange={e => updateData({ cta1En: e.target.value })} placeholder="View Experience" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Label (Arabic)</Label>
+                      <Input value={data.cta1Ar || ""} onChange={e => updateData({ cta1Ar: e.target.value })} dir="rtl" placeholder="استعرض الخبرات" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Link URL</Label>
+                    <Input value={data.cta1Url || ""} onChange={e => updateData({ cta1Url: e.target.value })} placeholder="#experience or https://..." />
+                  </div>
                 </div>
-              </div>
+
+                {/* CTA Button 2 */}
+                <div className="space-y-3 pt-2 border-t">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Secondary Button (CTA 2)</p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Label (English)</Label>
+                      <Input value={data.cta2En || ""} onChange={e => updateData({ cta2En: e.target.value })} placeholder="Contact Me" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Label (Arabic)</Label>
+                      <Input value={data.cta2Ar || ""} onChange={e => updateData({ cta2Ar: e.target.value })} dir="rtl" placeholder="تواصل معي" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Link URL</Label>
+                    <Input value={data.cta2Url || ""} onChange={e => updateData({ cta2Url: e.target.value })} placeholder="#contact or https://..." />
+                  </div>
+                </div>
+              </>
             )}
 
             {t === "contact_strip" && (
@@ -291,6 +331,15 @@ export function SectionEditor({ section, pageId }: { section: SectionWithImages,
             {/* Images Manager */}
             {(t === "image_gallery" || t === "text_with_image") && (
               <ImageManager sectionId={section.id} pageId={pageId} images={section.images} />
+            )}
+
+            {/* Profile photo for hero */}
+            {t === "hero" && (
+              <div className="space-y-3 pt-2 border-t">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Profile Photo</p>
+                <p className="text-xs text-muted-foreground">Upload a photo to display alongside your name in the hero section. Only the first image is used.</p>
+                <ImageManager sectionId={section.id} pageId={pageId} images={section.images} />
+              </div>
             )}
 
             <div className="flex justify-end pt-4 border-t mt-6">
