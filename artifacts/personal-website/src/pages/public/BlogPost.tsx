@@ -119,7 +119,7 @@ function RelatedCard({
         <div
           style={{
             width: "100%",
-            aspectRatio: "16/10",
+            aspectRatio: "16/9",
             borderRadius: 4,
             overflow: "hidden",
             marginBottom: 12,
@@ -133,7 +133,7 @@ function RelatedCard({
             <img
               src={post.featuredImageUrl}
               alt={title ?? ""}
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
             />
           ) : (
             <PenLine
@@ -288,17 +288,26 @@ export default function BlogPost() {
           minHeight: "100vh",
         }}
       >
-        {/* ── Hero image (16:9) ────────────────────────────────────────── */}
+        {/* ── Hero image (16:9) — contain so the full image is always visible ── */}
         {post.featuredImageUrl && (
-          <div style={{ width: "100%", aspectRatio: "16/9", overflow: "hidden" }}>
+          <div
+            style={{
+              width: "100%",
+              aspectRatio: "16/9",
+              overflow: "hidden",
+              background: "#FAF6F0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <img
               src={post.featuredImageUrl}
               alt={title ?? ""}
               style={{
                 width: "100%",
                 height: "100%",
-                objectFit: "cover",
-                objectPosition: post.featuredImagePosition ?? "center",
+                objectFit: "contain",
                 display: "block",
               }}
             />

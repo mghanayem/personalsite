@@ -259,11 +259,11 @@ export default function Blog() {
                         (e.currentTarget.style.boxShadow = "none")
                       }
                     >
-                      {/* 16:10 cover image */}
+                      {/* 16:9 image — contain so the full image is always visible */}
                       <div
                         style={{
                           width: "100%",
-                          aspectRatio: "16/10",
+                          aspectRatio: "16/9",
                           overflow: "hidden",
                           background: "#F0EAE0",
                           display: "flex",
@@ -279,7 +279,7 @@ export default function Blog() {
                             style={{
                               width: "100%",
                               height: "100%",
-                              objectFit: "cover",
+                              objectFit: "contain",
                               display: "block",
                             }}
                           />
