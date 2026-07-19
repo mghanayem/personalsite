@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   useGetPost,
   useCreatePost,
@@ -42,7 +42,7 @@ function slugify(text: string) {
 }
 
 type ContentLang = "ar" | "en";
-type ImagePosition = "top" | "center" | "bottom";
+type ImagePosition = string; // e.g. "50% 30%", "center", "top"
 
 const MAX_GALLERY = 6;
 const FEATURED_ASPECT = 16 / 9;
@@ -53,35 +53,104 @@ interface GalleryImage {
   displayOrder: number;
 }
 
-// ── Position picker ───────────────────────────────────────────────────────
-function PositionPicker({
+// ── Focal point picker ────────────────────────────────────────────────────
+function parseObjectPosition(pos: string): { x: number; y: number } {
+  const parts = pos.trim().split(/\s+/);
+  const resolveX = (s: string) => {
+    if (s === "left") return 0;
+    if (s === "center") return 50;
+    if (s === "right") return 100;
+    return parseFloat(s) || 50;
+  };
+  const resolveY = (s: string) => {
+    if (s === "top") return 0;
+    if (s === "center") return 50;
+    if (s === "bottom") return 100;
+    return parseFloat(s) || 50;
+  };
+  if (parts.length === 1) {
+    switch (parts[0]) {
+      case "top": return { x: 50, y: 0 };
+      case "bottom": return { x: 50, y: 100 };
+      case "left": return { x: 0, y: 50 };
+      case "right": return { x: 100, y: 50 };
+      case "center": return { x: 50, y: 50 };
+      default: { const v = parseFloat(parts[0]) || 50; return { x: v, y: v }; }
+    }
+  }
+  return { x: resolveX(parts[0]), y: resolveY(parts[1]) };
+}
+
+function FocalPointPicker({
+  imageUrl,
   value,
   onChange,
 }: {
+  imageUrl: string;
   value: ImagePosition;
   onChange: (pos: ImagePosition) => void;
 }) {
-  const options: { value: ImagePosition; label: string }[] = [
-    { value: "top", label: "Top" },
-    { value: "center", label: "Center" },
-    { value: "bottom", label: "Bottom" },
-  ];
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const { x, y } = parseObjectPosition(value);
+
+  const getPos = useCallback((clientX: number, clientY: number): string | null => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    const px = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+    const py = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+    return `${Math.round(px)}% ${Math.round(py)}%`;
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    isDragging.current = true;
+    containerRef.current?.setPointerCapture(e.pointerId);
+    const pos = getPos(e.clientX, e.clientY);
+    if (pos) onChange(pos);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging.current) return;
+    const pos = getPos(e.clientX, e.clientY);
+    if (pos) onChange(pos);
+  };
+
+  const handlePointerUp = () => {
+    isDragging.current = false;
+  };
+
   return (
-    <div className="flex items-center gap-1 bg-muted rounded-md p-1 w-fit">
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          onClick={() => onChange(opt.value)}
-          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-            value === opt.value
-              ? "bg-background shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
+    <div className="space-y-1.5">
+      <Label className="text-xs text-muted-foreground">
+        Focal point — drag the dot to pin the hero crop
+      </Label>
+      <div
+        ref={containerRef}
+        className="relative rounded-lg overflow-hidden border border-border w-full aspect-video bg-muted cursor-crosshair select-none touch-none"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        <img
+          src={imageUrl}
+          alt="Featured"
+          className="w-full h-full object-cover pointer-events-none"
+          style={{ objectPosition: value }}
+          draggable={false}
+        />
+        {/* Crosshair dot */}
+        <div
+          className="absolute w-5 h-5 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ left: `${x}%`, top: `${y}%` }}
         >
-          {opt.label}
-        </button>
-      ))}
+          <div className="absolute inset-0 rounded-full border-2 border-white shadow-[0_0_0_1.5px_rgba(0,0,0,0.55)]" />
+          <div className="absolute inset-[5px] rounded-full bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.4)]" />
+        </div>
+      </div>
+      <p className="text-[11px] text-muted-foreground tabular-nums">
+        {value}
+      </p>
     </div>
   );
 }
@@ -192,9 +261,7 @@ export default function BlogEditor() {
       setIsPublished(existingPost.isPublished);
       setFeaturedImageUrl(existingPost.featuredImageUrl ?? null);
       const pos = existingPost.featuredImagePosition;
-      if (pos === "top" || pos === "center" || pos === "bottom") {
-        setFeaturedImagePositionState(pos);
-      }
+      if (pos) setFeaturedImagePositionState(pos);
       setGalleryImages(
         (existingPost.galleryImages ?? []).map((g) => ({
           id: g.id,
@@ -233,7 +300,7 @@ export default function BlogEditor() {
   };
 
   // ── Featured image position ─────────────────────────────────────────────
-  const handlePositionChange = async (pos: ImagePosition) => {
+  const handlePositionChange = async (pos: string) => {
     setFeaturedImagePositionState(pos);
     if (!savedId) return;
     try {
@@ -635,26 +702,12 @@ export default function BlogEditor() {
 
             {featuredImageUrl ? (
               <div className="space-y-4">
-                {/* Preview */}
-                <div className="rounded-lg overflow-hidden border border-border w-full max-w-md aspect-video bg-muted">
-                  <img
-                    src={featuredImageUrl}
-                    alt="Featured"
-                    className="w-full h-full object-cover"
-                    style={{ objectPosition: featuredImagePosition }}
-                  />
-                </div>
-
-                {/* Position picker */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">
-                    Crop anchor — where to pin the image in the hero frame
-                  </Label>
-                  <PositionPicker
-                    value={featuredImagePosition}
-                    onChange={handlePositionChange}
-                  />
-                </div>
+                {/* Drag focal-point picker (16:9 live preview) */}
+                <FocalPointPicker
+                  imageUrl={featuredImageUrl}
+                  value={featuredImagePosition}
+                  onChange={handlePositionChange}
+                />
 
                 <div className="flex items-center gap-3">
                   <Button

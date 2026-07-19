@@ -288,9 +288,9 @@ export default function BlogPost() {
           minHeight: "100vh",
         }}
       >
-        {/* ── Hero image (16:8) ────────────────────────────────────────── */}
+        {/* ── Hero image (16:9) ────────────────────────────────────────── */}
         {post.featuredImageUrl && (
-          <div style={{ width: "100%", aspectRatio: "16/8", overflow: "hidden", maxHeight: 560 }}>
+          <div style={{ width: "100%", aspectRatio: "16/9", overflow: "hidden" }}>
             <img
               src={post.featuredImageUrl}
               alt={title ?? ""}

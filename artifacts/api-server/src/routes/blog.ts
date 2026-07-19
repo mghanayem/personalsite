@@ -139,11 +139,16 @@ router.patch("/blog/:id", requireAuth, async (req: Request, res: Response): Prom
   if (typeof body.contentAr === "string") updates.contentAr = sanitizeBlogHtml(body.contentAr);
   if (typeof body.contentEn === "string") updates.contentEn = sanitizeBlogHtml(body.contentEn);
 
-  // featuredImagePosition — accepts "top" | "center" | "bottom"
+  // featuredImagePosition — accepts CSS object-position values:
+  // keywords ("top", "center", "bottom", "left", "right") or percentage pairs ("X% Y%")
   if (typeof body.featuredImagePosition === "string") {
-    const validPositions = ["top", "center", "bottom"];
-    if (validPositions.includes(body.featuredImagePosition)) {
-      updates.featuredImagePosition = body.featuredImagePosition;
+    const pos = body.featuredImagePosition.trim();
+    const keywords = ["top", "center", "bottom", "left", "right"];
+    const isKeyword = keywords.includes(pos) ||
+      pos.split(/\s+/).every((p) => keywords.includes(p));
+    const isPct = /^\d+(\.\d+)?%\s+\d+(\.\d+)?%$/.test(pos);
+    if (isKeyword || isPct) {
+      updates.featuredImagePosition = pos;
     }
   }
 
