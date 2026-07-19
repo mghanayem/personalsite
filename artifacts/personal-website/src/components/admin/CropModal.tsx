@@ -74,6 +74,46 @@ function makeInitialCrop(
   return { unit: "%", x: (100 - pct) / 2, y: (100 - pct) / 2, width: pct, height: pct };
 }
 
+// ── Fit-to-aspect export ──────────────────────────────────────────────────────
+function exportFit(img: HTMLImageElement, aspect: number): Promise<Blob> {
+  const canvasW = MAX_EXPORT_PX;
+  const canvasH = Math.round(canvasW / aspect);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return Promise.reject(new Error("Canvas 2D context unavailable"));
+
+  // Letterbox background matching site warm tone
+  ctx.fillStyle = "#FAF6F0";
+  ctx.fillRect(0, 0, canvasW, canvasH);
+
+  // Scale image to fit (contain) — preserves full image, no cropping
+  const imgAspect = img.naturalWidth / img.naturalHeight;
+  let drawW: number, drawH: number;
+  if (imgAspect >= aspect) {
+    drawW = canvasW;
+    drawH = canvasW / imgAspect;
+  } else {
+    drawH = canvasH;
+    drawW = canvasH * imgAspect;
+  }
+  const drawX = (canvasW - drawW) / 2;
+  const drawY = (canvasH - drawH) / 2;
+
+  ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, drawX, drawY, drawW, drawH);
+
+  return new Promise((resolve, reject) =>
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob produced null"))),
+      "image/jpeg",
+      JPEG_QUALITY,
+    ),
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 interface CropModalProps {
   /** The file to crop. Pass null to close. */
@@ -97,6 +137,7 @@ export function CropModal({
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [exporting, setExporting] = useState(false);
+  const [fitting, setFitting] = useState(false);
   const [error, setError] = useState("");
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -122,6 +163,21 @@ export function CropModal({
     },
     [aspectRatio],
   );
+
+  const handleFit = async () => {
+    const img = imgRef.current;
+    if (!img || !aspectRatio) return;
+    setFitting(true);
+    setError("");
+    try {
+      const blob = await exportFit(img, aspectRatio);
+      onConfirm(blob);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Fit export failed");
+    } finally {
+      setFitting(false);
+    }
+  };
 
   const handleConfirm = async () => {
     const img = imgRef.current;
@@ -213,10 +269,22 @@ export function CropModal({
           )}
 
           <DialogFooter className="px-5 py-3 border-t border-border">
-            <Button variant="ghost" size="sm" onClick={onCancel} disabled={exporting}>
+            <Button variant="ghost" size="sm" onClick={onCancel} disabled={exporting || fitting}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleConfirm} disabled={exporting} className="gap-2">
+            {aspectRatio && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleFit}
+                disabled={exporting || fitting}
+                className="gap-2"
+              >
+                {fitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                {fitting ? "Fitting…" : "Fit to 16:9 & Upload"}
+              </Button>
+            )}
+            <Button size="sm" onClick={handleConfirm} disabled={exporting || fitting} className="gap-2">
               {exporting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {exporting ? "Exporting…" : "Crop & Upload"}
             </Button>
