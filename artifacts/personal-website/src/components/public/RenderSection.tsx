@@ -193,11 +193,11 @@ export function RenderSection({ section }: { section: SectionWithImages }) {
           <div className="space-y-12">
             {d.items?.map((item) => (
               <div key={item.id} className="relative pl-8 md:pl-0 rtl:pr-8 rtl:md:pr-0 rtl:md:pl-0">
-                <div className="md:grid md:grid-cols-5 md:gap-8 items-start">
-                  <div className="md:col-span-1 md:text-right rtl:md:text-left mb-2 md:mb-0 pt-1">
+                <div className="md:grid md:gap-8 items-start" style={{ gridTemplateColumns: "160px 1fr" }}>
+                  <div className="md:text-right rtl:md:text-left mb-2 md:mb-0 pt-1">
                     <span className="text-ring font-bold whitespace-nowrap">{item.date}</span>
                   </div>
-                  <div className="md:col-span-4 relative pb-12 border-l-2 rtl:border-l-0 rtl:border-r-2 border-primary-foreground/20 pl-8 rtl:pr-8 rtl:pl-0">
+                  <div className="relative pb-12 border-l-2 rtl:border-l-0 rtl:border-r-2 border-primary-foreground/20 pl-8 rtl:pr-8 rtl:pl-0">
                     <div className="absolute w-4 h-4 rounded-full bg-ring -left-[9px] rtl:-right-[9px] top-1.5 ring-4 ring-primary" />
                     <h3 className="text-2xl font-bold mb-1">{t(item.titleAr, item.titleEn)}</h3>
                     <h4 className="text-lg text-primary-foreground/70 mb-4">{t(item.subheadingAr, item.subheadingEn)}</h4>
