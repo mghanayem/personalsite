@@ -18,8 +18,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, ArrowLeft, ArrowUp, ArrowDown, Eye, EyeOff, Trash2, Plus, GripVertical, Save, Search, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowUp, ArrowDown, Eye, EyeOff, Trash2, Plus, GripVertical, Save, Search, ChevronDown, ChevronRight, Upload, X } from "lucide-react";
 import { IconPicker } from "@/components/admin/IconPicker";
+import { CropModal } from "@/components/admin/CropModal";
 import { useQueryClient } from "@tanstack/react-query";
 import { SectionEditor } from "./SectionEditor";
 
@@ -75,6 +76,8 @@ export default function PageEditor() {
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
   const [newSectionType, setNewSectionType] = useState<typeof SectionInputType[keyof typeof SectionInputType]>("text");
   const [seoExpanded, setSeoExpanded] = useState(false);
+  const [ogCropFile, setOgCropFile] = useState<File | null>(null);
+  const [ogUploading, setOgUploading] = useState(false);
 
   useEffect(() => {
     if (page) {
@@ -113,6 +116,24 @@ export default function PageEditor() {
         setIsPageDirty(false);
       }
     });
+  };
+
+  const handleOgImageConfirm = async (blob: Blob) => {
+    setOgUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", blob, "og-image.jpg");
+      const res = await fetch(`/api/pages/${pageId}/og-image`, { method: "POST", body: form });
+      if (!res.ok) throw new Error("Upload failed");
+      const { url } = await res.json() as { url: string };
+      setPageData(p => ({ ...p, seoImageUrl: url }));
+      setIsPageDirty(true);
+    } catch (e) {
+      console.error("OG image upload failed", e);
+    } finally {
+      setOgUploading(false);
+      setOgCropFile(null);
+    }
   };
 
   const handleAddSection = () => {
@@ -404,27 +425,81 @@ export default function PageEditor() {
               </div>
 
               {/* Shared OG image */}
-              <div className="space-y-2 pt-6 border-t" dir="ltr">
-                <Label>Open Graph / Social Image URL</Label>
-                <Input
-                  value={pageData.seoImageUrl}
-                  placeholder="https://example.com/og-image.jpg (1200×630 recommended)"
-                  onChange={e => { setPageData(p => ({ ...p, seoImageUrl: e.target.value })); setIsPageDirty(true); }}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Shown when this page is shared on LinkedIn, Twitter/X, WhatsApp, etc. Use an absolute URL.
-                </p>
-                {pageData.seoImageUrl && (
-                  <div className="mt-2 rounded-lg overflow-hidden border border-border">
+              <div className="space-y-3 pt-6 border-t" dir="ltr">
+                <div className="flex items-center justify-between">
+                  <Label>Open Graph / Social Image</Label>
+                  <span className="text-xs text-muted-foreground">1200×630 recommended</span>
+                </div>
+
+                {/* Preview */}
+                {pageData.seoImageUrl ? (
+                  <div className="relative rounded-lg overflow-hidden border border-border bg-muted">
                     <img
                       src={pageData.seoImageUrl}
-                      alt="OG preview"
-                      className="w-full max-h-48 object-cover"
+                      alt="OG image preview"
+                      className="w-full object-contain max-h-48"
                       onError={e => (e.currentTarget.style.display = "none")}
                     />
+                    <button
+                      type="button"
+                      className="absolute top-2 right-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors"
+                      onClick={() => { setPageData(p => ({ ...p, seoImageUrl: "" })); setIsPageDirty(true); }}
+                      title="Remove OG image"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border-2 border-dashed border-border flex items-center justify-center h-32 bg-muted/30 text-muted-foreground text-sm">
+                    No image — upload one below
                   </div>
                 )}
+
+                {/* Upload button */}
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    disabled={ogUploading}
+                    onClick={() => document.getElementById(`og-file-input-${pageId}`)?.click()}
+                  >
+                    {ogUploading
+                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…</>
+                      : <><Upload className="w-3.5 h-3.5" /> {pageData.seoImageUrl ? "Replace image" : "Upload image"}</>
+                    }
+                  </Button>
+                  <input
+                    id={`og-file-input-${pageId}`}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={e => {
+                      const f = e.target.files?.[0];
+                      if (f) setOgCropFile(f);
+                      e.target.value = "";
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Shown on LinkedIn, Twitter/X, WhatsApp when this page is shared.
+                  </p>
+                </div>
+
+                {pageData.seoImageUrl && (
+                  <p className="text-xs text-muted-foreground break-all font-mono">{pageData.seoImageUrl}</p>
+                )}
               </div>
+
+              {/* OG image crop modal */}
+              <CropModal
+                file={ogCropFile}
+                aspectRatio={1200 / 630}
+                fitWidth={1200}
+                fitHeight={630}
+                onConfirm={handleOgImageConfirm}
+                onCancel={() => setOgCropFile(null)}
+              />
             </CardContent>
           )}
         </Card>

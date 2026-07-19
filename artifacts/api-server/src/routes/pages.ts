@@ -1,5 +1,6 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { eq, asc } from "drizzle-orm";
+import multer from "multer";
 import { db, pagesTable, sectionsTable, imagesTable } from "@workspace/db";
 import {
   CreatePageBody,
@@ -9,7 +10,7 @@ import {
   DeletePageParams,
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/auth";
-import { imageUrl } from "../lib/uploads";
+import { upload, imageUrl } from "../lib/uploads";
 
 const router: IRouter = Router();
 
@@ -163,6 +164,40 @@ router.patch("/pages/:id", requireAuth, async (req, res): Promise<void> => {
 
   res.json(formatPage(page));
 });
+
+// POST /pages/:id/og-image — multipart upload
+router.post(
+  "/pages/:id/og-image",
+  requireAuth,
+  (req: Request, res: Response, next: NextFunction) => {
+    upload.single("file")(req, res, (err) => {
+      if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+        res.status(413).json({ error: "File too large. Maximum size is 20 MB." });
+        return;
+      }
+      if (err) { next(err); return; }
+      next();
+    });
+  },
+  async (req, res): Promise<void> => {
+    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(rawId!, 10);
+    if (isNaN(id)) { res.status(400).json({ error: "Invalid page id" }); return; }
+    if (!req.file) { res.status(400).json({ error: "No file uploaded" }); return; }
+
+    const [page] = await db.select().from(pagesTable).where(eq(pagesTable.id, id));
+    if (!page) { res.status(404).json({ error: "Page not found" }); return; }
+
+    const url = imageUrl(req.file.filename);
+    const [updated] = await db
+      .update(pagesTable)
+      .set({ seoImageUrl: url })
+      .where(eq(pagesTable.id, id))
+      .returning();
+
+    res.status(201).json({ url, page: formatPage(updated!) });
+  },
+);
 
 // DELETE /pages/:id
 router.delete("/pages/:id", requireAuth, async (req, res): Promise<void> => {

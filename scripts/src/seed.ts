@@ -21,7 +21,19 @@ async function main() {
 
   // ── Homepage page ──────────────────────────────────────────────────────
   const existingHomepage = await db.select().from(pagesTable).where(eq(pagesTable.isHomepage, true));
+
+  // ── Default OG image (idempotent — only set if not already configured) ──
   if (existingHomepage.length > 0) {
+    const hp = existingHomepage[0]!;
+    if (!hp.seoImageUrl) {
+      await db
+        .update(pagesTable)
+        .set({ seoImageUrl: "/api/uploads/og-default.jpg" })
+        .where(eq(pagesTable.id, hp.id));
+      console.log("✅ Set default OG image on homepage");
+    } else {
+      console.log("⏭  Homepage OG image already set, skipping");
+    }
     console.log("⏭  Homepage already seeded, skipping sections");
     process.exit(0);
   }
@@ -35,6 +47,7 @@ async function main() {
       isPublished: true,
       showInNav: false,
       isHomepage: true,
+      seoImageUrl: "/api/uploads/og-default.jpg",
     })
     .returning();
 

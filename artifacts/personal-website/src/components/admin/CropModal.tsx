@@ -75,9 +75,9 @@ function makeInitialCrop(
 }
 
 // ── Fit-to-aspect export ──────────────────────────────────────────────────────
-function exportFit(img: HTMLImageElement, aspect: number): Promise<Blob> {
-  const canvasW = MAX_EXPORT_PX;
-  const canvasH = Math.round(canvasW / aspect);
+function exportFit(img: HTMLImageElement, aspect: number, fitW?: number, fitH?: number): Promise<Blob> {
+  const canvasW = fitW ?? MAX_EXPORT_PX;
+  const canvasH = fitH ?? Math.round(canvasW / aspect);
 
   const canvas = document.createElement("canvas");
   canvas.width = canvasW;
@@ -123,6 +123,13 @@ interface CropModalProps {
    * Omit or pass undefined for free-form crop.
    */
   aspectRatio?: number;
+  /**
+   * Output canvas width for the "Fit" export. Defaults to MAX_EXPORT_PX (1920).
+   * Pass together with fitHeight to set a specific output size (e.g. 1200×630 for OG images).
+   */
+  fitWidth?: number;
+  /** Output canvas height for the "Fit" export. Defaults to canvasW / aspectRatio. */
+  fitHeight?: number;
   onConfirm: (blob: Blob) => void;
   onCancel: () => void;
 }
@@ -130,6 +137,8 @@ interface CropModalProps {
 export function CropModal({
   file,
   aspectRatio,
+  fitWidth,
+  fitHeight,
   onConfirm,
   onCancel,
 }: CropModalProps) {
@@ -170,7 +179,7 @@ export function CropModal({
     setFitting(true);
     setError("");
     try {
-      const blob = await exportFit(img, aspectRatio);
+      const blob = await exportFit(img, aspectRatio, fitWidth, fitHeight);
       onConfirm(blob);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Fit export failed");
@@ -225,11 +234,17 @@ export function CropModal({
         <DialogContent className="max-w-3xl w-full p-0 gap-0 overflow-hidden">
           <DialogHeader className="px-5 pt-5 pb-3 border-b border-border">
             <DialogTitle className="text-base">
-              {aspectRatio ? "Crop featured image (16:9)" : "Crop gallery image"}
+              {aspectRatio
+                ? fitWidth && fitHeight
+                  ? `Crop image (${fitWidth}×${fitHeight})`
+                  : "Crop featured image (16:9)"
+                : "Crop gallery image"}
             </DialogTitle>
             {aspectRatio && (
               <p className="text-xs text-muted-foreground mt-0.5">
-                Drag the handles to frame the hero crop. The ratio is locked to 16:9 to match the post header.
+                {fitWidth && fitHeight
+                  ? `Drag the handles to frame the crop, or use "Fit" to letterbox the full image to ${fitWidth}×${fitHeight}.`
+                  : "Drag the handles to frame the hero crop. The ratio is locked to 16:9 to match the post header."}
               </p>
             )}
             {!aspectRatio && (
@@ -281,7 +296,11 @@ export function CropModal({
                 className="gap-2"
               >
                 {fitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                {fitting ? "Fitting…" : "Fit to 16:9 & Upload"}
+                {fitting
+                  ? "Fitting…"
+                  : fitWidth && fitHeight
+                    ? `Fit to ${fitWidth}×${fitHeight} & Upload`
+                    : "Fit to 16:9 & Upload"}
               </Button>
             )}
             <Button size="sm" onClick={handleConfirm} disabled={exporting || fitting} className="gap-2">
