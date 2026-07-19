@@ -1,5 +1,6 @@
 import { useListPublicPosts } from "@workspace/api-client-react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
+import { PageSeo } from "@/components/seo/PageSeo";
 import { useLanguage } from "@/lib/i18n";
 import { Link } from "wouter";
 import { Calendar, Loader2, PenLine } from "lucide-react";
@@ -17,8 +18,22 @@ export default function Blog() {
     });
   };
 
+  const canonicalUrl = typeof window !== "undefined" ? window.location.href : "";
+
   return (
     <PublicLayout>
+      <PageSeo
+        title={lang === "ar" ? "المدونة" : "Blog"}
+        description={
+          lang === "ar"
+            ? "أحدث المقالات والأفكار من محمد غنايم"
+            : "Latest articles and insights from Mohammad Ghanayem"
+        }
+        url={canonicalUrl}
+        type="website"
+        lang={lang}
+      />
+
       <div
         className="min-h-screen"
         style={{ backgroundColor: "var(--blog-bg, #ffffff)", color: "var(--blog-text, #1e293b)" }}
@@ -64,7 +79,6 @@ export default function Blog() {
                         borderColor: "var(--blog-accent, #5b91c8)",
                         borderWidth: "1px",
                         borderStyle: "solid",
-                        opacity: 1,
                       }}
                     >
                       {/* Featured image or placeholder */}

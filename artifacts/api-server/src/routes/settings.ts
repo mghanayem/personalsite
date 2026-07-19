@@ -19,9 +19,15 @@ type BrandingUpdate = {
   blogBgColor?: string;
   blogTextColor?: string;
   blogAccentColor?: string;
+  // AEO fields
+  seoPersonJobTitle?: string | null;
+  seoWebsiteUrl?: string | null;
+  seoLinkedinUrl?: string | null;
+  seoTwitterUrl?: string | null;
+  seoGithubUrl?: string | null;
 };
 
-const COLOR_FIELDS: (keyof Omit<BrandingUpdate, "defaultLanguage">)[] = [
+const COLOR_FIELDS: (keyof Omit<BrandingUpdate, "defaultLanguage" | "seoPersonJobTitle" | "seoWebsiteUrl" | "seoLinkedinUrl" | "seoTwitterUrl" | "seoGithubUrl">)[] = [
   "primaryColor",
   "accentColor",
   "cta1BgColor",
@@ -31,6 +37,13 @@ const COLOR_FIELDS: (keyof Omit<BrandingUpdate, "defaultLanguage">)[] = [
   "blogBgColor",
   "blogTextColor",
   "blogAccentColor",
+];
+
+const URL_FIELDS: (keyof Pick<BrandingUpdate, "seoWebsiteUrl" | "seoLinkedinUrl" | "seoTwitterUrl" | "seoGithubUrl">)[] = [
+  "seoWebsiteUrl",
+  "seoLinkedinUrl",
+  "seoTwitterUrl",
+  "seoGithubUrl",
 ];
 
 /** Fetch current settings row, creating defaults on first call. */
@@ -53,6 +66,11 @@ function brandingResponse(row: typeof settingsTable.$inferSelect) {
     blogBgColor: row.blogBgColor,
     blogTextColor: row.blogTextColor,
     blogAccentColor: row.blogAccentColor,
+    seoPersonJobTitle: row.seoPersonJobTitle ?? null,
+    seoWebsiteUrl: row.seoWebsiteUrl ?? null,
+    seoLinkedinUrl: row.seoLinkedinUrl ?? null,
+    seoTwitterUrl: row.seoTwitterUrl ?? null,
+    seoGithubUrl: row.seoGithubUrl ?? null,
   };
 }
 
@@ -71,7 +89,7 @@ router.patch("/settings/branding", requireAuth, async (req, res): Promise<void> 
   for (const key of COLOR_FIELDS) {
     const val = body[key];
     if (val === undefined) continue;
-    if (!HEX_RE.test(val)) {
+    if (!HEX_RE.test(val as string)) {
       res.status(400).json({ error: `${key} must be a valid 6-digit hex color (e.g. #0e1a2a)` });
       return;
     }
@@ -85,6 +103,12 @@ router.patch("/settings/branding", requireAuth, async (req, res): Promise<void> 
       return;
     }
     updates.defaultLanguage = body.defaultLanguage;
+  }
+
+  // AEO text fields (nullable strings — allow clearing with null or "")
+  if ("seoPersonJobTitle" in body) updates.seoPersonJobTitle = body.seoPersonJobTitle || null;
+  for (const key of URL_FIELDS) {
+    if (key in body) updates[key] = body[key] || null;
   }
 
   if (Object.keys(updates).length === 0) {

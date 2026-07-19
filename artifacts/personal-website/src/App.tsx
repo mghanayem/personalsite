@@ -3,6 +3,7 @@ import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { LanguageProvider } from '@/lib/i18n';
 import { useEffect } from 'react';
 import { applyBrandingColors } from '@/lib/branding';
+import { HelmetProvider } from 'react-helmet-async';
 
 import Home from '@/pages/public/Home';
 import Page from '@/pages/public/Page';
@@ -105,14 +106,16 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, '') || ''}>
-        <LanguageProvider>
-          <BrandingLoader />
-          <Router />
-        </LanguageProvider>
-      </WouterRouter>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, '') || ''}>
+          <LanguageProvider>
+            <BrandingLoader />
+            <Router />
+          </LanguageProvider>
+        </WouterRouter>
+      </QueryClientProvider>
+    </HelmetProvider>
   );
 }
 

@@ -41,6 +41,17 @@ async function getVisibleSections(pageId: number) {
   );
 }
 
+function seoFields(p: typeof pagesTable.$inferSelect) {
+  return {
+    seoTitleAr: p.seoTitleAr ?? null,
+    seoTitleEn: p.seoTitleEn ?? null,
+    seoDescAr: p.seoDescAr ?? null,
+    seoDescEn: p.seoDescEn ?? null,
+    seoImageUrl: p.seoImageUrl ?? null,
+    updatedAt: p.updatedAt.toISOString(),
+  };
+}
+
 // GET /public/nav
 router.get("/public/nav", async (_req, res): Promise<void> => {
   const pages = await db
@@ -80,6 +91,7 @@ router.get("/public/homepage", async (_req, res): Promise<void> => {
     titleEn: homepage.titleEn,
     slug: homepage.slug,
     isHomepage: true,
+    ...seoFields(homepage),
     sections,
   });
 });
@@ -107,6 +119,7 @@ router.get("/public/pages/:slug", async (req, res): Promise<void> => {
     titleEn: page.titleEn,
     slug: page.slug,
     isHomepage: page.isHomepage,
+    ...seoFields(page),
     sections,
   });
 });

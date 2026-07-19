@@ -7,6 +7,7 @@ import connectPgSimple from "connect-pg-simple";
 import path from "path";
 import { fileURLToPath } from "url";
 import router from "./routes";
+import seoRouter from "./routes/seo";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import { getUploadsDir } from "./lib/uploads";
@@ -143,6 +144,9 @@ app.use("/api/public/contact", contactLimiter);
 // ── Static uploads ────────────────────────────────────────────────────────
 const uploadsDir = getUploadsDir();
 app.use("/uploads", express.static(uploadsDir));
+
+// ── SEO utility routes (served at root, outside /api prefix) ─────────────
+app.use(seoRouter);
 
 // ── API routes ────────────────────────────────────────────────────────────
 app.use("/api", router);

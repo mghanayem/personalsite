@@ -13,5 +13,11 @@ export interface PublicPage {
   titleEn: string;
   slug: string;
   isHomepage: boolean;
+  seoTitleAr?: string | null;
+  seoTitleEn?: string | null;
+  seoDescAr?: string | null;
+  seoDescEn?: string | null;
+  seoImageUrl?: string | null;
+  updatedAt: Date;
   sections: SectionWithImages[];
 }

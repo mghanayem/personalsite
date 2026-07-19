@@ -1024,6 +1024,21 @@ components:
           type: boolean
         isHomepage:
           type: boolean
+        seoTitleAr:
+          type: string
+          nullable: true
+        seoTitleEn:
+          type: string
+          nullable: true
+        seoDescAr:
+          type: string
+          nullable: true
+        seoDescEn:
+          type: string
+          nullable: true
+        seoImageUrl:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -1065,6 +1080,21 @@ components:
           type: boolean
         showInNav:
           type: boolean
+        seoTitleAr:
+          type: string
+          nullable: true
+        seoTitleEn:
+          type: string
+          nullable: true
+        seoDescAr:
+          type: string
+          nullable: true
+        seoDescEn:
+          type: string
+          nullable: true
+        seoImageUrl:
+          type: string
+          nullable: true
 
     PageWithSections:
       type: object
@@ -1084,6 +1114,21 @@ components:
           type: boolean
         isHomepage:
           type: boolean
+        seoTitleAr:
+          type: string
+          nullable: true
+        seoTitleEn:
+          type: string
+          nullable: true
+        seoDescAr:
+          type: string
+          nullable: true
+        seoDescEn:
+          type: string
+          nullable: true
+        seoImageUrl:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -1333,6 +1378,26 @@ components:
         blogAccentColor:
           type: string
           description: "Hex accent color for blog post cards"
+        seoPersonJobTitle:
+          type: string
+          nullable: true
+          description: "Job title used in schema.org/Person JSON-LD"
+        seoWebsiteUrl:
+          type: string
+          nullable: true
+          description: "Website URL for the Person structured data"
+        seoLinkedinUrl:
+          type: string
+          nullable: true
+          description: "LinkedIn profile URL for sameAs array"
+        seoTwitterUrl:
+          type: string
+          nullable: true
+          description: "Twitter/X profile URL for sameAs array"
+        seoGithubUrl:
+          type: string
+          nullable: true
+          description: "GitHub profile URL for sameAs array"
 
     BrandingUpdate:
       type: object
@@ -1367,6 +1432,21 @@ components:
         blogAccentColor:
           type: string
           pattern: "^#[0-9a-fA-F]{6}$"
+        seoPersonJobTitle:
+          type: string
+          nullable: true
+        seoWebsiteUrl:
+          type: string
+          nullable: true
+        seoLinkedinUrl:
+          type: string
+          nullable: true
+        seoTwitterUrl:
+          type: string
+          nullable: true
+        seoGithubUrl:
+          type: string
+          nullable: true
 
     # ── Public ────────────────────────────────────────────────────────────
     # ── Contact ───────────────────────────────────────────────────────────────
@@ -1427,7 +1507,7 @@ components:
 
     PublicPage:
       type: object
-      required: [id, titleAr, titleEn, slug, isHomepage, sections]
+      required: [id, titleAr, titleEn, slug, isHomepage, sections, updatedAt]
       properties:
         id:
           type: integer
@@ -1439,6 +1519,24 @@ components:
           type: string
         isHomepage:
           type: boolean
+        seoTitleAr:
+          type: string
+          nullable: true
+        seoTitleEn:
+          type: string
+          nullable: true
+        seoDescAr:
+          type: string
+          nullable: true
+        seoDescEn:
+          type: string
+          nullable: true
+        seoImageUrl:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
         sections:
           type: array
           items:

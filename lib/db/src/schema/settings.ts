@@ -19,6 +19,12 @@ export const settingsTable = pgTable("settings", {
   blogBgColor: text("blog_bg_color").notNull().default("#ffffff"),
   blogTextColor: text("blog_text_color").notNull().default("#1e293b"),
   blogAccentColor: text("blog_accent_color").notNull().default("#5b91c8"),
+  // AEO / structured-data Person fields
+  seoPersonJobTitle: text("seo_person_job_title"),
+  seoWebsiteUrl: text("seo_website_url"),
+  seoLinkedinUrl: text("seo_linkedin_url"),
+  seoTwitterUrl: text("seo_twitter_url"),
+  seoGithubUrl: text("seo_github_url"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()

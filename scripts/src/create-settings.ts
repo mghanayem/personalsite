@@ -59,5 +59,23 @@ await pool.query(`
   CREATE UNIQUE INDEX IF NOT EXISTS posts_slug_en_unique ON posts (slug_en);
 `);
 
-console.log("✅ settings + posts tables ready");
+// Step 7: add AEO / structured-data fields to settings
+await pool.query(`
+  ALTER TABLE settings ADD COLUMN IF NOT EXISTS seo_person_job_title text;
+  ALTER TABLE settings ADD COLUMN IF NOT EXISTS seo_website_url text;
+  ALTER TABLE settings ADD COLUMN IF NOT EXISTS seo_linkedin_url text;
+  ALTER TABLE settings ADD COLUMN IF NOT EXISTS seo_twitter_url text;
+  ALTER TABLE settings ADD COLUMN IF NOT EXISTS seo_github_url text;
+`);
+
+// Step 8: add SEO columns to pages table
+await pool.query(`
+  ALTER TABLE pages ADD COLUMN IF NOT EXISTS seo_title_ar text;
+  ALTER TABLE pages ADD COLUMN IF NOT EXISTS seo_title_en text;
+  ALTER TABLE pages ADD COLUMN IF NOT EXISTS seo_desc_ar text;
+  ALTER TABLE pages ADD COLUMN IF NOT EXISTS seo_desc_en text;
+  ALTER TABLE pages ADD COLUMN IF NOT EXISTS seo_image_url text;
+`);
+
+console.log("✅ settings + posts + SEO tables ready");
 process.exit(0);

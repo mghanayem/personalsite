@@ -27,4 +27,9 @@ export interface BrandingUpdate {
   blogTextColor?: string;
   /** @pattern ^#[0-9a-fA-F]{6}$ */
   blogAccentColor?: string;
+  seoPersonJobTitle?: string | null;
+  seoWebsiteUrl?: string | null;
+  seoLinkedinUrl?: string | null;
+  seoTwitterUrl?: string | null;
+  seoGithubUrl?: string | null;
 }

@@ -43,6 +43,11 @@ export interface Page {
   isPublished: boolean;
   showInNav: boolean;
   isHomepage: boolean;
+  seoTitleAr?: string | null;
+  seoTitleEn?: string | null;
+  seoDescAr?: string | null;
+  seoDescEn?: string | null;
+  seoImageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -67,6 +72,11 @@ export interface PageUpdate {
   slug?: string;
   isPublished?: boolean;
   showInNav?: boolean;
+  seoTitleAr?: string | null;
+  seoTitleEn?: string | null;
+  seoDescAr?: string | null;
+  seoDescEn?: string | null;
+  seoImageUrl?: string | null;
 }
 
 export type SectionWithImagesType = typeof SectionWithImagesType[keyof typeof SectionWithImagesType];
@@ -148,6 +158,11 @@ export interface PageWithSections {
   isPublished: boolean;
   showInNav: boolean;
   isHomepage: boolean;
+  seoTitleAr?: string | null;
+  seoTitleEn?: string | null;
+  seoDescAr?: string | null;
+  seoDescEn?: string | null;
+  seoImageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   sections: SectionWithImages[];
@@ -254,6 +269,16 @@ export interface BrandingSettings {
   blogTextColor: string;
   /** Hex accent color for blog post cards */
   blogAccentColor: string;
+  /** Job title used in schema.org/Person JSON-LD */
+  seoPersonJobTitle?: string | null;
+  /** Website URL for the Person structured data */
+  seoWebsiteUrl?: string | null;
+  /** LinkedIn profile URL for sameAs array */
+  seoLinkedinUrl?: string | null;
+  /** Twitter/X profile URL for sameAs array */
+  seoTwitterUrl?: string | null;
+  /** GitHub profile URL for sameAs array */
+  seoGithubUrl?: string | null;
 }
 
 export type BrandingUpdateDefaultLanguage = typeof BrandingUpdateDefaultLanguage[keyof typeof BrandingUpdateDefaultLanguage];
@@ -284,6 +309,11 @@ export interface BrandingUpdate {
   blogTextColor?: string;
   /** @pattern ^#[0-9a-fA-F]{6}$ */
   blogAccentColor?: string;
+  seoPersonJobTitle?: string | null;
+  seoWebsiteUrl?: string | null;
+  seoLinkedinUrl?: string | null;
+  seoTwitterUrl?: string | null;
+  seoGithubUrl?: string | null;
 }
 
 export interface ContactMessage {
@@ -327,6 +357,12 @@ export interface PublicPage {
   titleEn: string;
   slug: string;
   isHomepage: boolean;
+  seoTitleAr?: string | null;
+  seoTitleEn?: string | null;
+  seoDescAr?: string | null;
+  seoDescEn?: string | null;
+  seoImageUrl?: string | null;
+  updatedAt: string;
   sections: SectionWithImages[];
 }
 

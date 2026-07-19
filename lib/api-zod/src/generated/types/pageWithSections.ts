@@ -15,6 +15,11 @@ export interface PageWithSections {
   isPublished: boolean;
   showInNav: boolean;
   isHomepage: boolean;
+  seoTitleAr?: string | null;
+  seoTitleEn?: string | null;
+  seoDescAr?: string | null;
+  seoDescEn?: string | null;
+  seoImageUrl?: string | null;
   createdAt: Date;
   updatedAt: Date;
   sections: SectionWithImages[];

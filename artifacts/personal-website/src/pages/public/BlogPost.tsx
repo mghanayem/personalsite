@@ -1,5 +1,6 @@
 import { useGetPublicPost, getGetPublicPostQueryKey } from "@workspace/api-client-react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
+import { PageSeo } from "@/components/seo/PageSeo";
 import { useLanguage } from "@/lib/i18n";
 import { useParams, Link } from "wouter";
 import { Calendar, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
@@ -41,6 +42,10 @@ export default function BlogPost() {
   if (isError || !post) {
     return (
       <PublicLayout>
+        <PageSeo
+          title={lang === "ar" ? "المقال غير موجود" : "Post not found"}
+          lang={lang}
+        />
         <div
           className="min-h-screen flex flex-col items-center justify-center px-4 text-center"
           style={{ backgroundColor: "var(--blog-bg, #ffffff)", color: "var(--blog-text, #1e293b)" }}
@@ -58,10 +63,22 @@ export default function BlogPost() {
   }
 
   const title = lang === "ar" ? post.titleAr : post.titleEn;
+  const excerpt = lang === "ar" ? post.excerptAr : post.excerptEn;
   const content = lang === "ar" ? post.contentAr : post.contentEn;
+  const canonicalUrl = typeof window !== "undefined" ? window.location.href : "";
 
   return (
     <PublicLayout>
+      <PageSeo
+        title={title}
+        description={excerpt}
+        image={post.featuredImageUrl}
+        url={canonicalUrl}
+        type="article"
+        publishedAt={post.publishedAt}
+        lang={lang}
+      />
+
       <div style={{ backgroundColor: "var(--blog-bg, #ffffff)", color: "var(--blog-text, #1e293b)" }}>
         {/* Featured image */}
         {post.featuredImageUrl && (

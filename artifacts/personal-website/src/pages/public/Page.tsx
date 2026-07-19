@@ -2,16 +2,18 @@ import { useGetPublicPage } from "@workspace/api-client-react";
 import { Loader2 } from "lucide-react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { RenderSection } from "@/components/public/RenderSection";
+import { PageSeo } from "@/components/seo/PageSeo";
 import { useParams } from "wouter";
+import { useLanguage } from "@/lib/i18n";
 
 export default function Page() {
   const { slug } = useParams<{ slug: string }>();
-  
-  // Guard for safety, though wouter route ensures slug exists
+  const { lang } = useLanguage();
+
   const { data: page, isLoading } = useGetPublicPage(slug || "", {
     query: {
       enabled: !!slug,
-      queryKey: ["getGetPublicPage", slug] // Orval specific requirement for enabled queries sometimes
+      queryKey: ["getGetPublicPage", slug],
     }
   });
 
@@ -36,8 +38,20 @@ export default function Page() {
     );
   }
 
+  const seoTitle = lang === "ar" ? page.seoTitleAr : page.seoTitleEn;
+  const seoDesc = lang === "ar" ? page.seoDescAr : page.seoDescEn;
+  const canonicalUrl = typeof window !== "undefined" ? window.location.href : "";
+
   return (
     <PublicLayout>
+      <PageSeo
+        title={seoTitle || (lang === "ar" ? page.titleAr : page.titleEn)}
+        description={seoDesc}
+        image={page.seoImageUrl}
+        url={canonicalUrl}
+        type="website"
+        lang={lang}
+      />
       <div className="flex flex-col w-full">
         {page.sections
           .filter(s => s.isVisible)

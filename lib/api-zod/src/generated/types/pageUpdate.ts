@@ -15,4 +15,9 @@ export interface PageUpdate {
   slug?: string;
   isPublished?: boolean;
   showInNav?: boolean;
+  seoTitleAr?: string | null;
+  seoTitleEn?: string | null;
+  seoDescAr?: string | null;
+  seoDescEn?: string | null;
+  seoImageUrl?: string | null;
 }

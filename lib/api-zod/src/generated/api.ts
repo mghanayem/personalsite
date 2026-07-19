@@ -71,6 +71,11 @@ export const ListPagesResponseItem = zod.object({
   "isPublished": zod.boolean(),
   "showInNav": zod.boolean(),
   "isHomepage": zod.boolean(),
+  "seoTitleAr": zod.string().nullish(),
+  "seoTitleEn": zod.string().nullish(),
+  "seoDescAr": zod.string().nullish(),
+  "seoDescEn": zod.string().nullish(),
+  "seoImageUrl": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -101,6 +106,11 @@ export const CreatePageResponse = zod.object({
   "isPublished": zod.boolean(),
   "showInNav": zod.boolean(),
   "isHomepage": zod.boolean(),
+  "seoTitleAr": zod.string().nullish(),
+  "seoTitleEn": zod.string().nullish(),
+  "seoDescAr": zod.string().nullish(),
+  "seoDescEn": zod.string().nullish(),
+  "seoImageUrl": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -121,6 +131,11 @@ export const GetPageResponse = zod.object({
   "isPublished": zod.boolean(),
   "showInNav": zod.boolean(),
   "isHomepage": zod.boolean(),
+  "seoTitleAr": zod.string().nullish(),
+  "seoTitleEn": zod.string().nullish(),
+  "seoDescAr": zod.string().nullish(),
+  "seoDescEn": zod.string().nullish(),
+  "seoImageUrl": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "sections": zod.array(zod.object({
@@ -192,7 +207,12 @@ export const UpdatePageBody = zod.object({
   "titleEn": zod.string().min(1).optional(),
   "slug": zod.string().min(1).optional(),
   "isPublished": zod.boolean().optional(),
-  "showInNav": zod.boolean().optional()
+  "showInNav": zod.boolean().optional(),
+  "seoTitleAr": zod.string().nullish(),
+  "seoTitleEn": zod.string().nullish(),
+  "seoDescAr": zod.string().nullish(),
+  "seoDescEn": zod.string().nullish(),
+  "seoImageUrl": zod.string().nullish()
 })
 
 export const UpdatePageResponse = zod.object({
@@ -203,6 +223,11 @@ export const UpdatePageResponse = zod.object({
   "isPublished": zod.boolean(),
   "showInNav": zod.boolean(),
   "isHomepage": zod.boolean(),
+  "seoTitleAr": zod.string().nullish(),
+  "seoTitleEn": zod.string().nullish(),
+  "seoDescAr": zod.string().nullish(),
+  "seoDescEn": zod.string().nullish(),
+  "seoImageUrl": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -708,7 +733,12 @@ export const GetBrandingSettingsResponse = zod.object({
   "defaultLanguage": zod.enum(['ar', 'en']).describe('Default language shown to new visitors'),
   "blogBgColor": zod.string().describe('Hex background color for the blog and post pages'),
   "blogTextColor": zod.string().describe('Hex text color for blog post content'),
-  "blogAccentColor": zod.string().describe('Hex accent color for blog post cards')
+  "blogAccentColor": zod.string().describe('Hex accent color for blog post cards'),
+  "seoPersonJobTitle": zod.string().nullish().describe('Job title used in schema.org\/Person JSON-LD'),
+  "seoWebsiteUrl": zod.string().nullish().describe('Website URL for the Person structured data'),
+  "seoLinkedinUrl": zod.string().nullish().describe('LinkedIn profile URL for sameAs array'),
+  "seoTwitterUrl": zod.string().nullish().describe('Twitter\/X profile URL for sameAs array'),
+  "seoGithubUrl": zod.string().nullish().describe('GitHub profile URL for sameAs array')
 })
 
 
@@ -736,7 +766,12 @@ export const UpdateBrandingSettingsBody = zod.object({
   "defaultLanguage": zod.enum(['ar', 'en']).optional(),
   "blogBgColor": zod.string().regex(updateBrandingSettingsBodyBlogBgColorRegExp).optional(),
   "blogTextColor": zod.string().regex(updateBrandingSettingsBodyBlogTextColorRegExp).optional(),
-  "blogAccentColor": zod.string().regex(updateBrandingSettingsBodyBlogAccentColorRegExp).optional()
+  "blogAccentColor": zod.string().regex(updateBrandingSettingsBodyBlogAccentColorRegExp).optional(),
+  "seoPersonJobTitle": zod.string().nullish(),
+  "seoWebsiteUrl": zod.string().nullish(),
+  "seoLinkedinUrl": zod.string().nullish(),
+  "seoTwitterUrl": zod.string().nullish(),
+  "seoGithubUrl": zod.string().nullish()
 })
 
 export const UpdateBrandingSettingsResponse = zod.object({
@@ -749,7 +784,12 @@ export const UpdateBrandingSettingsResponse = zod.object({
   "defaultLanguage": zod.enum(['ar', 'en']).describe('Default language shown to new visitors'),
   "blogBgColor": zod.string().describe('Hex background color for the blog and post pages'),
   "blogTextColor": zod.string().describe('Hex text color for blog post content'),
-  "blogAccentColor": zod.string().describe('Hex accent color for blog post cards')
+  "blogAccentColor": zod.string().describe('Hex accent color for blog post cards'),
+  "seoPersonJobTitle": zod.string().nullish().describe('Job title used in schema.org\/Person JSON-LD'),
+  "seoWebsiteUrl": zod.string().nullish().describe('Website URL for the Person structured data'),
+  "seoLinkedinUrl": zod.string().nullish().describe('LinkedIn profile URL for sameAs array'),
+  "seoTwitterUrl": zod.string().nullish().describe('Twitter\/X profile URL for sameAs array'),
+  "seoGithubUrl": zod.string().nullish().describe('GitHub profile URL for sameAs array')
 })
 
 
@@ -779,6 +819,12 @@ export const GetPublicPageResponse = zod.object({
   "titleEn": zod.string(),
   "slug": zod.string(),
   "isHomepage": zod.boolean(),
+  "seoTitleAr": zod.string().nullish(),
+  "seoTitleEn": zod.string().nullish(),
+  "seoDescAr": zod.string().nullish(),
+  "seoDescEn": zod.string().nullish(),
+  "seoImageUrl": zod.string().nullish(),
+  "updatedAt": zod.coerce.date(),
   "sections": zod.array(zod.object({
   "id": zod.number(),
   "pageId": zod.number(),
@@ -840,6 +886,12 @@ export const GetPublicHomepageResponse = zod.object({
   "titleEn": zod.string(),
   "slug": zod.string(),
   "isHomepage": zod.boolean(),
+  "seoTitleAr": zod.string().nullish(),
+  "seoTitleEn": zod.string().nullish(),
+  "seoDescAr": zod.string().nullish(),
+  "seoDescEn": zod.string().nullish(),
+  "seoImageUrl": zod.string().nullish(),
+  "updatedAt": zod.coerce.date(),
   "sections": zod.array(zod.object({
   "id": zod.number(),
   "pageId": zod.number(),

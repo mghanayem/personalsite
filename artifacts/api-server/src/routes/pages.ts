@@ -22,6 +22,11 @@ function formatPage(p: typeof pagesTable.$inferSelect) {
     isPublished: p.isPublished,
     showInNav: p.showInNav,
     isHomepage: p.isHomepage,
+    seoTitleAr: p.seoTitleAr ?? null,
+    seoTitleEn: p.seoTitleEn ?? null,
+    seoDescAr: p.seoDescAr ?? null,
+    seoDescEn: p.seoDescEn ?? null,
+    seoImageUrl: p.seoImageUrl ?? null,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
   };
@@ -133,6 +138,14 @@ router.patch("/pages/:id", requireAuth, async (req, res): Promise<void> => {
   if (parsed.data.slug != null) updateData.slug = parsed.data.slug;
   if (parsed.data.isPublished != null) updateData.isPublished = parsed.data.isPublished;
   if (parsed.data.showInNav != null) updateData.showInNav = parsed.data.showInNav;
+
+  // SEO fields — allow explicit null to clear
+  const body = req.body as Record<string, unknown>;
+  if ("seoTitleAr" in body) updateData.seoTitleAr = body.seoTitleAr as string | null ?? null;
+  if ("seoTitleEn" in body) updateData.seoTitleEn = body.seoTitleEn as string | null ?? null;
+  if ("seoDescAr" in body) updateData.seoDescAr = body.seoDescAr as string | null ?? null;
+  if ("seoDescEn" in body) updateData.seoDescEn = body.seoDescEn as string | null ?? null;
+  if ("seoImageUrl" in body) updateData.seoImageUrl = body.seoImageUrl as string | null ?? null;
 
   const [page] = await db
     .update(pagesTable)

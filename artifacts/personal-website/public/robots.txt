@@ -1,2 +1,5 @@
 User-agent: *
 Allow: /
+
+# Dynamic sitemap — lists all published pages and blog posts
+Sitemap: /api/sitemap.xml

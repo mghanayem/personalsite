@@ -10,6 +10,12 @@ export const pagesTable = pgTable("pages", {
   isPublished: boolean("is_published").notNull().default(false),
   showInNav: boolean("show_in_nav").notNull().default(false),
   isHomepage: boolean("is_homepage").notNull().default(false),
+  // SEO fields (all nullable; fall back to page title when empty)
+  seoTitleAr: text("seo_title_ar"),
+  seoTitleEn: text("seo_title_en"),
+  seoDescAr: text("seo_desc_ar"),
+  seoDescEn: text("seo_desc_en"),
+  seoImageUrl: text("seo_image_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()

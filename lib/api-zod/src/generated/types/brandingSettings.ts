@@ -28,4 +28,14 @@ export interface BrandingSettings {
   blogTextColor: string;
   /** Hex accent color for blog post cards */
   blogAccentColor: string;
+  /** Job title used in schema.org/Person JSON-LD */
+  seoPersonJobTitle?: string | null;
+  /** Website URL for the Person structured data */
+  seoWebsiteUrl?: string | null;
+  /** LinkedIn profile URL for sameAs array */
+  seoLinkedinUrl?: string | null;
+  /** Twitter/X profile URL for sameAs array */
+  seoTwitterUrl?: string | null;
+  /** GitHub profile URL for sameAs array */
+  seoGithubUrl?: string | null;
 }

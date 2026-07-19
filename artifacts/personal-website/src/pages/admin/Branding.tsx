@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Loader2, Save, Palette, Globe, BookOpen } from "lucide-react";
+import { Loader2, Save, Palette, Globe, BookOpen, Sparkles, Link2, Briefcase } from "lucide-react";
 import { applyBrandingColors } from "@/lib/branding";
 
 function ColorPicker({
@@ -64,6 +64,14 @@ export default function Branding() {
   const [blogBgColor, setBlogBgColor] = useState("#ffffff");
   const [blogTextColor, setBlogTextColor] = useState("#1e293b");
   const [blogAccentColor, setBlogAccentColor] = useState("#5b91c8");
+
+  // AEO / structured data fields
+  const [seoPersonJobTitle, setSeoPersonJobTitle] = useState("");
+  const [seoWebsiteUrl, setSeoWebsiteUrl] = useState("");
+  const [seoLinkedinUrl, setSeoLinkedinUrl] = useState("");
+  const [seoTwitterUrl, setSeoTwitterUrl] = useState("");
+  const [seoGithubUrl, setSeoGithubUrl] = useState("");
+
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -78,6 +86,11 @@ export default function Branding() {
       setBlogBgColor(settings.blogBgColor);
       setBlogTextColor(settings.blogTextColor);
       setBlogAccentColor(settings.blogAccentColor);
+      setSeoPersonJobTitle(settings.seoPersonJobTitle ?? "");
+      setSeoWebsiteUrl(settings.seoWebsiteUrl ?? "");
+      setSeoLinkedinUrl(settings.seoLinkedinUrl ?? "");
+      setSeoTwitterUrl(settings.seoTwitterUrl ?? "");
+      setSeoGithubUrl(settings.seoGithubUrl ?? "");
     }
   }, [settings]);
 
@@ -95,6 +108,11 @@ export default function Branding() {
           blogBgColor,
           blogTextColor,
           blogAccentColor,
+          seoPersonJobTitle: seoPersonJobTitle || null,
+          seoWebsiteUrl: seoWebsiteUrl || null,
+          seoLinkedinUrl: seoLinkedinUrl || null,
+          seoTwitterUrl: seoTwitterUrl || null,
+          seoGithubUrl: seoGithubUrl || null,
         },
       },
       {
@@ -299,6 +317,91 @@ export default function Branding() {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* AEO — Structured Data (Person) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Structured Data (AEO)
+            </CardTitle>
+            <CardDescription>
+              Powers the <code className="text-xs bg-muted px-1 py-0.5 rounded">schema.org/Person</code> JSON-LD block injected on your homepage. AI assistants (ChatGPT, Google AI Overviews, Perplexity) read this to surface accurate information about you.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
+                Job Title
+              </Label>
+              <Input
+                value={seoPersonJobTitle}
+                placeholder="e.g. Technical Project Manager"
+                onChange={e => setSeoPersonJobTitle(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
+                Website URL
+              </Label>
+              <Input
+                value={seoWebsiteUrl}
+                placeholder="https://yoursite.com"
+                type="url"
+                onChange={e => setSeoWebsiteUrl(e.target.value)}
+              />
+            </div>
+            <div className="grid sm:grid-cols-3 gap-4 pt-2 border-t">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">LinkedIn</Label>
+                <Input
+                  value={seoLinkedinUrl}
+                  placeholder="https://linkedin.com/in/…"
+                  onChange={e => setSeoLinkedinUrl(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Twitter / X</Label>
+                <Input
+                  value={seoTwitterUrl}
+                  placeholder="https://twitter.com/…"
+                  onChange={e => setSeoTwitterUrl(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">GitHub</Label>
+                <Input
+                  value={seoGithubUrl}
+                  placeholder="https://github.com/…"
+                  onChange={e => setSeoGithubUrl(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* JSON-LD preview */}
+            {(seoPersonJobTitle || seoWebsiteUrl || seoLinkedinUrl || seoTwitterUrl || seoGithubUrl) && (
+              <div className="mt-2">
+                <p className="text-xs text-muted-foreground mb-2 font-medium">JSON-LD preview</p>
+                <pre className="rounded-lg bg-muted p-4 text-xs overflow-auto leading-relaxed font-mono">
+                  {JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "Person",
+                    "name": "Mohammad Ghanayem",
+                    ...(seoPersonJobTitle ? { "jobTitle": seoPersonJobTitle } : {}),
+                    ...(seoWebsiteUrl ? { "url": seoWebsiteUrl } : {}),
+                    ...(
+                      [seoLinkedinUrl, seoTwitterUrl, seoGithubUrl].filter(Boolean).length > 0
+                        ? { "sameAs": [seoLinkedinUrl, seoTwitterUrl, seoGithubUrl].filter(Boolean) }
+                        : {}
+                    ),
+                  }, null, 2)}
+                </pre>
+              </div>
+            )}
           </CardContent>
         </Card>
 
