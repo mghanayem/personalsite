@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Loader2, ArrowLeft, ArrowUp, ArrowDown, Eye, EyeOff, Trash2, Plus, GripVertical, Save, Search, ChevronDown, ChevronRight } from "lucide-react";
+import { IconPicker } from "@/components/admin/IconPicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { SectionEditor } from "./SectionEditor";
 
@@ -28,6 +29,7 @@ type PageData = {
   slug: string;
   isPublished: boolean;
   showInNav: boolean;
+  icon: string | null;
   seoTitleAr: string;
   seoTitleEn: string;
   seoDescAr: string;
@@ -66,7 +68,7 @@ export default function PageEditor() {
   const reorderSections = useReorderSections();
 
   const [pageData, setPageData] = useState<PageData>({
-    titleAr: "", titleEn: "", slug: "", isPublished: false, showInNav: false,
+    titleAr: "", titleEn: "", slug: "", isPublished: false, showInNav: false, icon: null,
     seoTitleAr: "", seoTitleEn: "", seoDescAr: "", seoDescEn: "", seoImageUrl: "",
   });
   const [isPageDirty, setIsPageDirty] = useState(false);
@@ -82,6 +84,7 @@ export default function PageEditor() {
         slug: page.slug,
         isPublished: page.isPublished,
         showInNav: page.showInNav,
+        icon: page.icon ?? null,
         seoTitleAr: page.seoTitleAr ?? "",
         seoTitleEn: page.seoTitleEn ?? "",
         seoDescAr: page.seoDescAr ?? "",
@@ -97,6 +100,7 @@ export default function PageEditor() {
       id: pageId,
       data: {
         ...pageData,
+        icon: pageData.icon || null,
         seoTitleAr: pageData.seoTitleAr || null,
         seoTitleEn: pageData.seoTitleEn || null,
         seoDescAr: pageData.seoDescAr || null,
@@ -248,6 +252,25 @@ export default function PageEditor() {
                   onChange={e => { setPageData(p => ({ ...p, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })); setIsPageDirty(true); }} 
                   disabled={page.isHomepage}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Navigation Icon</Label>
+                <div className="flex items-center gap-3">
+                  <IconPicker
+                    value={pageData.icon}
+                    onChange={icon => { setPageData(p => ({ ...p, icon })); setIsPageDirty(true); }}
+                  />
+                  {pageData.icon && (
+                    <p className="text-xs text-muted-foreground">
+                      Shown next to the page title in the nav bar.
+                    </p>
+                  )}
+                  {!pageData.icon && (
+                    <p className="text-xs text-muted-foreground">
+                      Optional — appears next to the title in the navigation bar.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
             

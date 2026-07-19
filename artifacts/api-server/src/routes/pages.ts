@@ -22,6 +22,7 @@ function formatPage(p: typeof pagesTable.$inferSelect) {
     isPublished: p.isPublished,
     showInNav: p.showInNav,
     isHomepage: p.isHomepage,
+    icon: p.icon ?? null,
     seoTitleAr: p.seoTitleAr ?? null,
     seoTitleEn: p.seoTitleEn ?? null,
     seoDescAr: p.seoDescAr ?? null,
@@ -93,6 +94,7 @@ router.post("/pages", requireAuth, async (req, res): Promise<void> => {
       isPublished: parsed.data.isPublished ?? false,
       showInNav: parsed.data.showInNav ?? false,
       isHomepage: false,
+      icon: parsed.data.icon ?? null,
     })
     .returning();
 
@@ -139,8 +141,9 @@ router.patch("/pages/:id", requireAuth, async (req, res): Promise<void> => {
   if (parsed.data.isPublished != null) updateData.isPublished = parsed.data.isPublished;
   if (parsed.data.showInNav != null) updateData.showInNav = parsed.data.showInNav;
 
-  // SEO fields — allow explicit null to clear
+  // Nullable fields — allow explicit null to clear
   const body = req.body as Record<string, unknown>;
+  if ("icon" in body) updateData.icon = body.icon as string | null ?? null;
   if ("seoTitleAr" in body) updateData.seoTitleAr = body.seoTitleAr as string | null ?? null;
   if ("seoTitleEn" in body) updateData.seoTitleEn = body.seoTitleEn as string | null ?? null;
   if ("seoDescAr" in body) updateData.seoDescAr = body.seoDescAr as string | null ?? null;

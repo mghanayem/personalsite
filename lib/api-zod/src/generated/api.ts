@@ -71,6 +71,7 @@ export const ListPagesResponseItem = zod.object({
   "isPublished": zod.boolean(),
   "showInNav": zod.boolean(),
   "isHomepage": zod.boolean(),
+  "icon": zod.string().nullish(),
   "seoTitleAr": zod.string().nullish(),
   "seoTitleEn": zod.string().nullish(),
   "seoDescAr": zod.string().nullish(),
@@ -95,7 +96,8 @@ export const CreatePageBody = zod.object({
   "titleEn": zod.string().min(1),
   "slug": zod.string().min(1),
   "isPublished": zod.boolean().optional(),
-  "showInNav": zod.boolean().optional()
+  "showInNav": zod.boolean().optional(),
+  "icon": zod.string().nullish()
 })
 
 export const CreatePageResponse = zod.object({
@@ -106,6 +108,7 @@ export const CreatePageResponse = zod.object({
   "isPublished": zod.boolean(),
   "showInNav": zod.boolean(),
   "isHomepage": zod.boolean(),
+  "icon": zod.string().nullish(),
   "seoTitleAr": zod.string().nullish(),
   "seoTitleEn": zod.string().nullish(),
   "seoDescAr": zod.string().nullish(),
@@ -131,6 +134,7 @@ export const GetPageResponse = zod.object({
   "isPublished": zod.boolean(),
   "showInNav": zod.boolean(),
   "isHomepage": zod.boolean(),
+  "icon": zod.string().nullish(),
   "seoTitleAr": zod.string().nullish(),
   "seoTitleEn": zod.string().nullish(),
   "seoDescAr": zod.string().nullish(),
@@ -208,6 +212,7 @@ export const UpdatePageBody = zod.object({
   "slug": zod.string().min(1).optional(),
   "isPublished": zod.boolean().optional(),
   "showInNav": zod.boolean().optional(),
+  "icon": zod.string().nullish(),
   "seoTitleAr": zod.string().nullish(),
   "seoTitleEn": zod.string().nullish(),
   "seoDescAr": zod.string().nullish(),
@@ -223,6 +228,7 @@ export const UpdatePageResponse = zod.object({
   "isPublished": zod.boolean(),
   "showInNav": zod.boolean(),
   "isHomepage": zod.boolean(),
+  "icon": zod.string().nullish(),
   "seoTitleAr": zod.string().nullish(),
   "seoTitleEn": zod.string().nullish(),
   "seoDescAr": zod.string().nullish(),
@@ -911,7 +917,8 @@ export const GetPublicNavResponseItem = zod.object({
   "titleAr": zod.string(),
   "titleEn": zod.string(),
   "slug": zod.string(),
-  "isHomepage": zod.boolean()
+  "isHomepage": zod.boolean(),
+  "icon": zod.string().nullish()
 })
 export const GetPublicNavResponse = zod.array(GetPublicNavResponseItem)
 

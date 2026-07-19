@@ -15,4 +15,5 @@ export interface PageInput {
   slug: string;
   isPublished?: boolean;
   showInNav?: boolean;
+  icon?: string | null;
 }

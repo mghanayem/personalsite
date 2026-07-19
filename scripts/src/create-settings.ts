@@ -116,5 +116,10 @@ await pool.query(`
   );
 `);
 
-console.log("✅ settings + posts + SEO tables + upload URL + editorial blog colors + gallery images ready");
+// Step 13: add icon column to pages (nullable emoji/text shown next to page title in nav)
+await pool.query(`
+  ALTER TABLE pages ADD COLUMN IF NOT EXISTS icon text;
+`);
+
+console.log("✅ settings + posts + SEO tables + upload URL + editorial blog colors + gallery images + page icons ready");
 process.exit(0);

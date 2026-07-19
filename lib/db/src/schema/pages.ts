@@ -10,6 +10,8 @@ export const pagesTable = pgTable("pages", {
   isPublished: boolean("is_published").notNull().default(false),
   showInNav: boolean("show_in_nav").notNull().default(false),
   isHomepage: boolean("is_homepage").notNull().default(false),
+  // Nav icon — optional emoji or short text shown next to the page title in navigation
+  icon: text("icon"),
   // SEO fields (all nullable; fall back to page title when empty)
   seoTitleAr: text("seo_title_ar"),
   seoTitleEn: text("seo_title_en"),

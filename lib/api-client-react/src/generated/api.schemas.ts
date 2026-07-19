@@ -81,6 +81,7 @@ export interface Page {
   isPublished: boolean;
   showInNav: boolean;
   isHomepage: boolean;
+  icon?: string | null;
   seoTitleAr?: string | null;
   seoTitleEn?: string | null;
   seoDescAr?: string | null;
@@ -99,6 +100,7 @@ export interface PageInput {
   slug: string;
   isPublished?: boolean;
   showInNav?: boolean;
+  icon?: string | null;
 }
 
 export interface PageUpdate {
@@ -110,6 +112,7 @@ export interface PageUpdate {
   slug?: string;
   isPublished?: boolean;
   showInNav?: boolean;
+  icon?: string | null;
   seoTitleAr?: string | null;
   seoTitleEn?: string | null;
   seoDescAr?: string | null;
@@ -196,6 +199,7 @@ export interface PageWithSections {
   isPublished: boolean;
   showInNav: boolean;
   isHomepage: boolean;
+  icon?: string | null;
   seoTitleAr?: string | null;
   seoTitleEn?: string | null;
   seoDescAr?: string | null;
@@ -387,6 +391,7 @@ export interface NavItem {
   titleEn: string;
   slug: string;
   isHomepage: boolean;
+  icon?: string | null;
 }
 
 export interface PublicPage {

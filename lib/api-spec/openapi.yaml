@@ -1258,6 +1258,9 @@ components:
           type: boolean
         isHomepage:
           type: boolean
+        icon:
+          type: string
+          nullable: true
         seoTitleAr:
           type: string
           nullable: true
@@ -1297,6 +1300,9 @@ components:
           type: boolean
         showInNav:
           type: boolean
+        icon:
+          type: string
+          nullable: true
 
     PageUpdate:
       type: object
@@ -1314,6 +1320,9 @@ components:
           type: boolean
         showInNav:
           type: boolean
+        icon:
+          type: string
+          nullable: true
         seoTitleAr:
           type: string
           nullable: true
@@ -1348,6 +1357,9 @@ components:
           type: boolean
         isHomepage:
           type: boolean
+        icon:
+          type: string
+          nullable: true
         seoTitleAr:
           type: string
           nullable: true
@@ -1738,6 +1750,9 @@ components:
           type: string
         isHomepage:
           type: boolean
+        icon:
+          type: string
+          nullable: true
 
     PublicPage:
       type: object

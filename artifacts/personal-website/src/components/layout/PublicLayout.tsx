@@ -28,6 +28,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
     return {
       title: lang === "ar" ? item.titleAr : item.titleEn,
       path,
+      icon: item.icon ?? null,
     };
   });
 
@@ -36,6 +37,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
     ? {
         title: lang === "ar" ? "المدونة" : "Blog",
         path: lang === "ar" ? "/blog" : "/en/blog",
+        icon: null as string | null,
       }
     : null;
 
@@ -56,10 +58,13 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               <Link
                 key={link.path}
                 href={link.path}
-                className={`transition-colors hover:text-primary ${
+                className={`flex items-center gap-1.5 transition-colors hover:text-primary ${
                   location === link.path ? "text-primary" : "text-muted-foreground"
                 }`}
               >
+                {"icon" in link && link.icon && (
+                  <span className="text-base leading-none">{link.icon}</span>
+                )}
                 {link.title}
               </Link>
             ))}
@@ -88,8 +93,11 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               key={link.path}
               href={link.path}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="block text-foreground font-medium py-2 border-b border-border/50"
+              className="flex items-center gap-2 text-foreground font-medium py-2 border-b border-border/50"
             >
+              {"icon" in link && link.icon && (
+                <span className="text-base leading-none">{link.icon}</span>
+              )}
               {link.title}
             </Link>
           ))}

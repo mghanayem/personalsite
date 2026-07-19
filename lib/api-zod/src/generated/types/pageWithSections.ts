@@ -15,6 +15,7 @@ export interface PageWithSections {
   isPublished: boolean;
   showInNav: boolean;
   isHomepage: boolean;
+  icon?: string | null;
   seoTitleAr?: string | null;
   seoTitleEn?: string | null;
   seoDescAr?: string | null;

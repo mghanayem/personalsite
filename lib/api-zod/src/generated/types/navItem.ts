@@ -12,4 +12,5 @@ export interface NavItem {
   titleEn: string;
   slug: string;
   isHomepage: boolean;
+  icon?: string | null;
 }

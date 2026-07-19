@@ -67,6 +67,7 @@ router.get("/public/nav", async (_req, res): Promise<void> => {
       titleEn: p.titleEn,
       slug: p.slug,
       isHomepage: p.isHomepage,
+      icon: p.icon ?? null,
     })),
   );
 });
