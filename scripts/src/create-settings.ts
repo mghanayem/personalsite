@@ -86,5 +86,19 @@ await pool.query(`
   WHERE featured_image_url LIKE '/uploads/%';
 `);
 
-console.log("✅ settings + posts + SEO tables + upload URL migration ready");
+// Step 10: migrate blog colors to editorial palette defaults
+// Only updates if the row still has the old pre-editorial defaults.
+await pool.query(`
+  UPDATE settings
+  SET
+    blog_bg_color    = '#FAF6F0',
+    blog_text_color  = '#201D1A',
+    blog_accent_color = '#B15A2E'
+  WHERE id = 1
+    AND blog_bg_color     = '#ffffff'
+    AND blog_text_color   = '#1e293b'
+    AND blog_accent_color = '#5b91c8';
+`);
+
+console.log("✅ settings + posts + SEO tables + upload URL + editorial blog colors ready");
 process.exit(0);
