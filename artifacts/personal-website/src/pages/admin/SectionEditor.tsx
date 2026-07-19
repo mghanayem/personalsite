@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, ChevronDown, ChevronUp, Save } from "lucide-react";
+import { Loader2, Plus, Trash2, ChevronDown, ChevronUp, Save, Sparkles } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ImageManager } from "./ImageManager";
+import { AiAssistPanel } from "@/components/admin/AiAssistPanel";
 
 export function SectionEditor({ section, pageId }: { section: SectionWithImages, pageId: number }) {
   const queryClient = useQueryClient();
@@ -14,6 +15,7 @@ export function SectionEditor({ section, pageId }: { section: SectionWithImages,
   const [data, setData] = useState<SectionData>(section.data);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
 
   useEffect(() => {
     setData(section.data);
@@ -62,9 +64,23 @@ export function SectionEditor({ section, pageId }: { section: SectionWithImages,
         </div>
         <div className="flex items-center gap-3">
           {isDirty && <span className="w-2 h-2 rounded-full bg-amber-500" title="Unsaved changes" />}
+          <button
+            onClick={(e) => { e.stopPropagation(); setAiOpen(true); }}
+            title="AI Assist"
+            className="text-primary hover:text-primary/80 transition-colors"
+          >
+            <Sparkles className="w-4 h-4" />
+          </button>
           {isExpanded ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
         </div>
       </div>
+      <AiAssistPanel
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        title={`AI — ${typeLabels[section.type] || section.type}`}
+        contextDescription={`You are assisting with a "${section.type}" section. Current English title: "${data.titleEn || "none"}". Current English content: "${(data.contentEn || "").slice(0, 300)}". Write bilingual content — label outputs [EN] and [AR].`}
+        initialPrompt="Rewrite this section with a strong, professional, bilingual version."
+      />
 
       {isExpanded && (
         <div className="p-4 border-t bg-muted/10">

@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
-import { useGetBrandingSettings, useUpdateBrandingSettings } from "@workspace/api-client-react";
+import { useGetBrandingSettings, useUpdateBrandingSettings, useGetAiStatus, useSetAiKey } from "@workspace/api-client-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Loader2, Save, Palette, Globe, BookOpen, Sparkles, Link2, Briefcase } from "lucide-react";
+import { Loader2, Save, Palette, Globe, BookOpen, Sparkles, Link2, Briefcase, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { applyBrandingColors } from "@/lib/branding";
+import { useQueryClient } from "@tanstack/react-query";
+import { getGetAiStatusQueryKey } from "@workspace/api-client-react";
 
 function ColorPicker({
   label,
@@ -405,6 +407,9 @@ export default function Branding() {
           </CardContent>
         </Card>
 
+        {/* AI Assistant Card */}
+        <AiKeyCard />
+
         <div className="flex items-center justify-between">
           <div>
             {saved && (
@@ -424,5 +429,79 @@ export default function Branding() {
         </div>
       </div>
     </AdminLayout>
+  );
+}
+
+function AiKeyCard() {
+  const queryClient = useQueryClient();
+  const { data: status, isLoading } = useGetAiStatus();
+  const setKey = useSetAiKey();
+  const [apiKey, setApiKey] = useState("");
+  const [show, setShow] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    if (!apiKey.trim()) return;
+    await setKey.mutateAsync({ data: { apiKey: apiKey.trim() } });
+    queryClient.invalidateQueries({ queryKey: getGetAiStatusQueryKey() });
+    setApiKey("");
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-primary" />
+          <CardTitle className="text-base">Claude AI Assistant</CardTitle>
+        </div>
+        <CardDescription>
+          Enter your Anthropic API key to enable AI-powered content writing, SEO audits, and site review. The key is stored securely and never exposed to the browser.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <Loader2 className="w-4 h-4 animate-spin" /> Checking…
+          </div>
+        ) : status?.isConfigured ? (
+          <div className="flex items-center gap-2 text-emerald-600 text-sm font-medium">
+            <CheckCircle2 className="w-4 h-4" /> API key is configured
+          </div>
+        ) : (
+          <div className="text-sm text-amber-600">No API key configured — AI features will use the default Replit integration key.</div>
+        )}
+        <div className="flex gap-2 items-end">
+          <div className="flex-1 space-y-1.5">
+            <Label className="text-sm">Anthropic API Key</Label>
+            <div className="relative">
+              <Input
+                type={show ? "text" : "password"}
+                value={apiKey}
+                onChange={e => setApiKey(e.target.value)}
+                placeholder={status?.isConfigured ? "Enter new key to replace…" : "sk-ant-…"}
+                className="pr-10 font-mono text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShow(!show)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          <Button onClick={handleSave} disabled={!apiKey.trim() || setKey.isPending} className="gap-2">
+            {setKey.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Save Key
+          </Button>
+        </div>
+        {saved && <p className="text-sm text-green-600 font-medium">✓ API key saved</p>}
+        <p className="text-xs text-muted-foreground">
+          Get your key at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">console.anthropic.com</a>
+        </p>
+      </CardContent>
+    </Card>
   );
 }

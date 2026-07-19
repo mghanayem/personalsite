@@ -121,4 +121,22 @@ router.patch("/settings/branding", requireAuth, async (req, res): Promise<void> 
   res.json(brandingResponse(updated));
 });
 
+// GET /settings/ai-status — admin only
+router.get("/settings/ai-status", requireAuth, async (_req, res): Promise<void> => {
+  const settings = await getOrCreateSettings();
+  res.json({ isConfigured: Boolean(settings.anthropicApiKey?.trim()) });
+});
+
+// PATCH /settings/ai-key — admin only, write-only
+router.patch("/settings/ai-key", requireAuth, async (req, res): Promise<void> => {
+  const { apiKey } = req.body as { apiKey?: string };
+  if (!apiKey?.trim()) {
+    res.status(400).json({ error: "apiKey is required" });
+    return;
+  }
+  await getOrCreateSettings();
+  await db.update(settingsTable).set({ anthropicApiKey: apiKey.trim() });
+  res.json({ isConfigured: true });
+});
+
 export default router;

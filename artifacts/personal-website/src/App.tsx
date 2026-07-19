@@ -18,6 +18,7 @@ import Branding from '@/pages/admin/Branding';
 import Messages from '@/pages/admin/Messages';
 import BlogList from '@/pages/admin/BlogList';
 import BlogEditor from '@/pages/admin/BlogEditor';
+import AiChat from '@/pages/admin/AiChat';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -85,6 +86,7 @@ function Router() {
       <Route path="/admin/branding" component={Branding} />
       <Route path="/admin/blog" component={BlogList} />
       <Route path="/admin/blog/:id" component={BlogEditor} />
+      <Route path="/admin/ai" component={AiChat} />
 
       {/* Public English Routes */}
       <Route path="/en" component={Home} />

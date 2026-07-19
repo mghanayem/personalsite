@@ -1,6 +1,6 @@
 import { useGetAdminSession, useAdminLogout, getGetAdminSessionQueryKey } from "@workspace/api-client-react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, Settings, LogOut, Loader2, AlertCircle, Palette, Inbox, ExternalLink, PenLine } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, LogOut, Loader2, AlertCircle, Palette, Inbox, ExternalLink, PenLine, Sparkles } from "lucide-react";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { title: "Blog", href: "/admin/blog", icon: PenLine },
     { title: "Messages", href: "/admin/messages", icon: Inbox },
     { title: "Branding", href: "/admin/branding", icon: Palette },
+    { title: "AI Assistant", href: "/admin/ai", icon: Sparkles },
     { title: "Account Settings", href: "/admin/account", icon: Settings },
   ];
 

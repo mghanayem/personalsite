@@ -25,9 +25,11 @@ import {
   Check,
   Plus,
   ImageIcon,
+  Sparkles,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CropModal } from "@/components/admin/CropModal";
+import { AiAssistPanel } from "@/components/admin/AiAssistPanel";
 
 function slugify(text: string) {
   return text
@@ -441,6 +443,7 @@ export default function BlogEditor() {
   };
 
   const isSaving = createPost.isPending || updatePost.isPending;
+  const [aiOpen, setAiOpen] = useState(false);
 
   if (!isNew && postLoading) {
     return (
@@ -463,6 +466,15 @@ export default function BlogEditor() {
           onCancel={handleCropCancel}
         />
 
+        {/* AI Assist panel */}
+        <AiAssistPanel
+          open={aiOpen}
+          onOpenChange={setAiOpen}
+          title="AI — Blog Editor"
+          contextDescription={`You are helping write or improve a blog post. Title (EN): "${titleEn || "untitled"}". Write bilingual content — label outputs [EN] and [AR]. You can also apply CMS actions directly.`}
+          initialPrompt="Help me write compelling bilingual content for this blog post."
+        />
+
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -483,6 +495,16 @@ export default function BlogEditor() {
           </div>
           <div className="flex items-center gap-3">
             {saved && <span className="text-sm text-green-600 font-medium">✓ Saved</span>}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 text-primary"
+              onClick={() => setAiOpen(true)}
+              title="AI Assistant"
+            >
+              <Sparkles className="w-4 h-4" />
+              AI
+            </Button>
             <Button
               variant={isPublished ? "default" : "outline"}
               size="sm"

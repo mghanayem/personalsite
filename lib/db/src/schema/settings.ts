@@ -25,6 +25,8 @@ export const settingsTable = pgTable("settings", {
   seoLinkedinUrl: text("seo_linkedin_url"),
   seoTwitterUrl: text("seo_twitter_url"),
   seoGithubUrl: text("seo_github_url"),
+  // AI assistant — stored server-side only, never returned to frontend
+  anthropicApiKey: text("anthropic_api_key"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()

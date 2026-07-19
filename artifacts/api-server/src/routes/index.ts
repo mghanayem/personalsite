@@ -12,6 +12,7 @@ import contactRouter from "./contact";
 import settingsRouter from "./settings";
 import messagesRouter from "./messages";
 import blogRouter from "./blog";
+import anthropicRouter from "./anthropic/index";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(publicBlogRouter);
 router.use(contactRouter);
 router.use(messagesRouter);
 router.use(blogRouter);
+router.use(anthropicRouter);
 
 export default router;
