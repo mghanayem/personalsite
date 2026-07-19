@@ -34,7 +34,7 @@ const storage = multer.diskStorage({
 });
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
-const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_SIZE = 20 * 1024 * 1024; // 20 MB
 
 export const upload = multer({
   storage,

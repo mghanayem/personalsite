@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Trash2, Upload, Loader2, Save } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export function ImageManager({ sectionId, pageId, images }: { sectionId: number, pageId: number, images: SectionImage[] }) {
   const queryClient = useQueryClient();
   const deleteImage = useDeleteImage();
   const updateImage = useUpdateImage();
   const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
@@ -20,10 +22,20 @@ export function ImageManager({ sectionId, pageId, images }: { sectionId: number,
       fd.append("file", e.target.files[0]);
       fd.append("caption_ar", "");
       fd.append("caption_en", "");
-      await fetch(`/api/sections/${sectionId}/images`, { method: "POST", body: fd });
+      const res = await fetch(`/api/sections/${sectionId}/images`, { method: "POST", body: fd });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast({
+          variant: "destructive",
+          title: "Upload failed",
+          description: (body as { error?: string }).error ?? `Server error (${res.status})`,
+        });
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: getGetPageQueryKey(pageId) });
     } catch (err) {
       console.error("Upload failed", err);
+      toast({ variant: "destructive", title: "Upload failed", description: "Could not reach the server." });
     } finally {
       setUploading(false);
       if (e.target) e.target.value = ''; // reset file input

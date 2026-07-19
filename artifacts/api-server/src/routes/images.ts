@@ -1,4 +1,5 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import multer from "multer";
 import { eq, asc } from "drizzle-orm";
 import { db, sectionsTable, imagesTable } from "@workspace/db";
 import {
@@ -17,7 +18,19 @@ const router: IRouter = Router();
 router.post(
   "/sections/:sectionId/images",
   requireAuth,
-  upload.single("file"),
+  (req: Request, res: Response, next: NextFunction) => {
+    upload.single("file")(req, res, (err) => {
+      if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+        res.status(413).json({ error: "File too large. Maximum size is 20 MB." });
+        return;
+      }
+      if (err) {
+        next(err);
+        return;
+      }
+      next();
+    });
+  },
   async (req, res): Promise<void> => {
     const rawId = Array.isArray(req.params.sectionId)
       ? req.params.sectionId[0]
