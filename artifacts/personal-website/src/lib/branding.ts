@@ -35,6 +35,10 @@ export interface BrandingColors {
   cta1TextColor: string;
   cta2BgColor: string;
   cta2TextColor: string;
+  defaultLanguage?: string;
+  blogBgColor?: string;
+  blogTextColor?: string;
+  blogAccentColor?: string;
 }
 
 /**
@@ -53,7 +57,7 @@ export function applyBrandingColors(colors: BrandingColors) {
     root.style.setProperty("--accent", hexToHslVars(colors.accentColor));
   }
 
-  // Button color CSS vars — consumed by RenderSection hero buttons
+  // Hero button CSS vars — consumed by RenderSection hero buttons
   if (colors.cta1BgColor && HEX_RE.test(colors.cta1BgColor)) {
     root.style.setProperty("--hero-cta1-bg", colors.cta1BgColor);
   }
@@ -65,5 +69,16 @@ export function applyBrandingColors(colors: BrandingColors) {
   }
   if (colors.cta2TextColor && HEX_RE.test(colors.cta2TextColor)) {
     root.style.setProperty("--hero-cta2-text", colors.cta2TextColor);
+  }
+
+  // Blog template CSS vars — consumed by Blog and BlogPost pages
+  if (colors.blogBgColor && HEX_RE.test(colors.blogBgColor)) {
+    root.style.setProperty("--blog-bg", colors.blogBgColor);
+  }
+  if (colors.blogTextColor && HEX_RE.test(colors.blogTextColor)) {
+    root.style.setProperty("--blog-text", colors.blogTextColor);
+  }
+  if (colors.blogAccentColor && HEX_RE.test(colors.blogAccentColor)) {
+    root.style.setProperty("--blog-accent", colors.blogAccentColor);
   }
 }

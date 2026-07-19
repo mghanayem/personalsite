@@ -22,4 +22,10 @@ export interface BrandingSettings {
   cta2TextColor: string;
   /** Default language shown to new visitors */
   defaultLanguage: BrandingSettingsDefaultLanguage;
+  /** Hex background color for the blog and post pages */
+  blogBgColor: string;
+  /** Hex text color for blog post content */
+  blogTextColor: string;
+  /** Hex accent color for blog post cards */
+  blogAccentColor: string;
 }

@@ -28,6 +28,8 @@ tags:
     description: Public website endpoints
   - name: messages
     description: Contact message inbox
+  - name: blog
+    description: Blog post management
 
 paths:
   /healthz:
@@ -772,6 +774,178 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+  # ── Blog (admin CRUD) ─────────────────────────────────────────────────────
+  /blog:
+    get:
+      operationId: listAdminPosts
+      tags: [blog]
+      summary: List all blog posts (admin, newest first)
+      responses:
+        "200":
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostMeta"
+    post:
+      operationId: createPost
+      tags: [blog]
+      summary: Create a new blog post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /blog/{id}:
+    get:
+      operationId: getPost
+      tags: [blog]
+      summary: Get a blog post by ID (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    patch:
+      operationId: updatePost
+      tags: [blog]
+      summary: Update a blog post
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostUpdate"
+      responses:
+        "200":
+          description: Updated post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    delete:
+      operationId: deletePost
+      tags: [blog]
+      summary: Delete a blog post
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  # ── Blog (public) ─────────────────────────────────────────────────────────
+  /public/blog/has-posts:
+    get:
+      operationId: getPublicBlogHasPosts
+      tags: [public]
+      summary: Check if any published blog posts exist (for nav visibility)
+      responses:
+        "200":
+          description: Has posts flag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HasPostsResponse"
+
+  /public/blog:
+    get:
+      operationId: listPublicPosts
+      tags: [public]
+      summary: List published blog posts (newest first)
+      responses:
+        "200":
+          description: List of published posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicPostSummary"
+
+  /public/blog/{slug}:
+    get:
+      operationId: getPublicPost
+      tags: [public]
+      summary: Get a published blog post by slug (AR or EN slug accepted)
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Published post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicPost"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 components:
   schemas:
     # ── Generic ───────────────────────────────────────────────────────────
@@ -1126,7 +1300,7 @@ components:
     # ── Settings ──────────────────────────────────────────────────────────
     BrandingSettings:
       type: object
-      required: [primaryColor, accentColor, cta1BgColor, cta1TextColor, cta2BgColor, cta2TextColor, defaultLanguage]
+      required: [primaryColor, accentColor, cta1BgColor, cta1TextColor, cta2BgColor, cta2TextColor, defaultLanguage, blogBgColor, blogTextColor, blogAccentColor]
       properties:
         primaryColor:
           type: string
@@ -1150,6 +1324,15 @@ components:
           type: string
           enum: [ar, en]
           description: "Default language shown to new visitors"
+        blogBgColor:
+          type: string
+          description: "Hex background color for the blog and post pages"
+        blogTextColor:
+          type: string
+          description: "Hex text color for blog post content"
+        blogAccentColor:
+          type: string
+          description: "Hex accent color for blog post cards"
 
     BrandingUpdate:
       type: object
@@ -1175,6 +1358,15 @@ components:
         defaultLanguage:
           type: string
           enum: [ar, en]
+        blogBgColor:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
+        blogTextColor:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
+        blogAccentColor:
+          type: string
+          pattern: "^#[0-9a-fA-F]{6}$"
 
     # ── Public ────────────────────────────────────────────────────────────
     # ── Contact ───────────────────────────────────────────────────────────────
@@ -1251,3 +1443,181 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SectionWithImages"
+
+    # ── Blog ──────────────────────────────────────────────────────────────────
+    HasPostsResponse:
+      type: object
+      required: [hasPosts]
+      properties:
+        hasPosts:
+          type: boolean
+
+    PostMeta:
+      type: object
+      required: [id, titleAr, titleEn, slugAr, slugEn, isPublished, createdAt]
+      properties:
+        id:
+          type: integer
+        titleAr:
+          type: string
+        titleEn:
+          type: string
+        slugAr:
+          type: string
+        slugEn:
+          type: string
+        featuredImageUrl:
+          type: string
+          nullable: true
+        isPublished:
+          type: boolean
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    Post:
+      type: object
+      required: [id, titleAr, titleEn, slugAr, slugEn, excerptAr, excerptEn, contentAr, contentEn, isPublished, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        titleAr:
+          type: string
+        titleEn:
+          type: string
+        slugAr:
+          type: string
+        slugEn:
+          type: string
+        excerptAr:
+          type: string
+        excerptEn:
+          type: string
+        contentAr:
+          type: string
+        contentEn:
+          type: string
+        featuredImageUrl:
+          type: string
+          nullable: true
+        isPublished:
+          type: boolean
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PostInput:
+      type: object
+      required: [titleAr, titleEn, slugAr, slugEn]
+      properties:
+        titleAr:
+          type: string
+          minLength: 1
+        titleEn:
+          type: string
+          minLength: 1
+        slugAr:
+          type: string
+          minLength: 1
+        slugEn:
+          type: string
+          minLength: 1
+        excerptAr:
+          type: string
+        excerptEn:
+          type: string
+        contentAr:
+          type: string
+        contentEn:
+          type: string
+        isPublished:
+          type: boolean
+
+    PostUpdate:
+      type: object
+      properties:
+        titleAr:
+          type: string
+        titleEn:
+          type: string
+        slugAr:
+          type: string
+        slugEn:
+          type: string
+        excerptAr:
+          type: string
+        excerptEn:
+          type: string
+        contentAr:
+          type: string
+        contentEn:
+          type: string
+        isPublished:
+          type: boolean
+
+    PublicPostSummary:
+      type: object
+      required: [id, titleAr, titleEn, slugAr, slugEn, excerptAr, excerptEn]
+      properties:
+        id:
+          type: integer
+        titleAr:
+          type: string
+        titleEn:
+          type: string
+        slugAr:
+          type: string
+        slugEn:
+          type: string
+        excerptAr:
+          type: string
+        excerptEn:
+          type: string
+        featuredImageUrl:
+          type: string
+          nullable: true
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    PublicPost:
+      type: object
+      required: [id, titleAr, titleEn, slugAr, slugEn, excerptAr, excerptEn, contentAr, contentEn]
+      properties:
+        id:
+          type: integer
+        titleAr:
+          type: string
+        titleEn:
+          type: string
+        slugAr:
+          type: string
+        slugEn:
+          type: string
+        excerptAr:
+          type: string
+        excerptEn:
+          type: string
+        contentAr:
+          type: string
+        contentEn:
+          type: string
+        featuredImageUrl:
+          type: string
+          nullable: true
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true

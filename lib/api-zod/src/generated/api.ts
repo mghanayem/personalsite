@@ -705,7 +705,10 @@ export const GetBrandingSettingsResponse = zod.object({
   "cta1TextColor": zod.string().describe('Hex text color for the primary hero button'),
   "cta2BgColor": zod.string().describe('Hex background color for the secondary hero button'),
   "cta2TextColor": zod.string().describe('Hex text color for the secondary hero button'),
-  "defaultLanguage": zod.enum(['ar', 'en']).describe('Default language shown to new visitors')
+  "defaultLanguage": zod.enum(['ar', 'en']).describe('Default language shown to new visitors'),
+  "blogBgColor": zod.string().describe('Hex background color for the blog and post pages'),
+  "blogTextColor": zod.string().describe('Hex text color for blog post content'),
+  "blogAccentColor": zod.string().describe('Hex accent color for blog post cards')
 })
 
 
@@ -718,6 +721,9 @@ export const updateBrandingSettingsBodyCta1BgColorRegExp = new RegExp('^#[0-9a-f
 export const updateBrandingSettingsBodyCta1TextColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const updateBrandingSettingsBodyCta2BgColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const updateBrandingSettingsBodyCta2TextColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateBrandingSettingsBodyBlogBgColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateBrandingSettingsBodyBlogTextColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateBrandingSettingsBodyBlogAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 
 
 export const UpdateBrandingSettingsBody = zod.object({
@@ -727,7 +733,10 @@ export const UpdateBrandingSettingsBody = zod.object({
   "cta1TextColor": zod.string().regex(updateBrandingSettingsBodyCta1TextColorRegExp).optional(),
   "cta2BgColor": zod.string().regex(updateBrandingSettingsBodyCta2BgColorRegExp).optional(),
   "cta2TextColor": zod.string().regex(updateBrandingSettingsBodyCta2TextColorRegExp).optional(),
-  "defaultLanguage": zod.enum(['ar', 'en']).optional()
+  "defaultLanguage": zod.enum(['ar', 'en']).optional(),
+  "blogBgColor": zod.string().regex(updateBrandingSettingsBodyBlogBgColorRegExp).optional(),
+  "blogTextColor": zod.string().regex(updateBrandingSettingsBodyBlogTextColorRegExp).optional(),
+  "blogAccentColor": zod.string().regex(updateBrandingSettingsBodyBlogAccentColorRegExp).optional()
 })
 
 export const UpdateBrandingSettingsResponse = zod.object({
@@ -737,7 +746,10 @@ export const UpdateBrandingSettingsResponse = zod.object({
   "cta1TextColor": zod.string().describe('Hex text color for the primary hero button'),
   "cta2BgColor": zod.string().describe('Hex background color for the secondary hero button'),
   "cta2TextColor": zod.string().describe('Hex text color for the secondary hero button'),
-  "defaultLanguage": zod.enum(['ar', 'en']).describe('Default language shown to new visitors')
+  "defaultLanguage": zod.enum(['ar', 'en']).describe('Default language shown to new visitors'),
+  "blogBgColor": zod.string().describe('Hex background color for the blog and post pages'),
+  "blogTextColor": zod.string().describe('Hex text color for blog post content'),
+  "blogAccentColor": zod.string().describe('Hex accent color for blog post cards')
 })
 
 
@@ -984,6 +996,181 @@ export const SubmitContactFormBody = zod.object({
 
 export const SubmitContactFormResponse = zod.object({
   "message": zod.string()
+})
+
+
+/**
+ * @summary List all blog posts (admin, newest first)
+ */
+export const ListAdminPostsResponseItem = zod.object({
+  "id": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "slugAr": zod.string(),
+  "slugEn": zod.string(),
+  "featuredImageUrl": zod.string().nullish(),
+  "isPublished": zod.boolean(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListAdminPostsResponse = zod.array(ListAdminPostsResponseItem)
+
+
+/**
+ * @summary Create a new blog post
+ */
+
+
+
+
+
+
+export const CreatePostBody = zod.object({
+  "titleAr": zod.string().min(1),
+  "titleEn": zod.string().min(1),
+  "slugAr": zod.string().min(1),
+  "slugEn": zod.string().min(1),
+  "excerptAr": zod.string().optional(),
+  "excerptEn": zod.string().optional(),
+  "contentAr": zod.string().optional(),
+  "contentEn": zod.string().optional(),
+  "isPublished": zod.boolean().optional()
+})
+
+export const CreatePostResponse = zod.object({
+  "id": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "slugAr": zod.string(),
+  "slugEn": zod.string(),
+  "excerptAr": zod.string(),
+  "excerptEn": zod.string(),
+  "contentAr": zod.string(),
+  "contentEn": zod.string(),
+  "featuredImageUrl": zod.string().nullish(),
+  "isPublished": zod.boolean(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get a blog post by ID (admin)
+ */
+export const GetPostParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetPostResponse = zod.object({
+  "id": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "slugAr": zod.string(),
+  "slugEn": zod.string(),
+  "excerptAr": zod.string(),
+  "excerptEn": zod.string(),
+  "contentAr": zod.string(),
+  "contentEn": zod.string(),
+  "featuredImageUrl": zod.string().nullish(),
+  "isPublished": zod.boolean(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a blog post
+ */
+export const UpdatePostParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePostBody = zod.object({
+  "titleAr": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "slugAr": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "excerptAr": zod.string().optional(),
+  "excerptEn": zod.string().optional(),
+  "contentAr": zod.string().optional(),
+  "contentEn": zod.string().optional(),
+  "isPublished": zod.boolean().optional()
+})
+
+export const UpdatePostResponse = zod.object({
+  "id": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "slugAr": zod.string(),
+  "slugEn": zod.string(),
+  "excerptAr": zod.string(),
+  "excerptEn": zod.string(),
+  "contentAr": zod.string(),
+  "contentEn": zod.string(),
+  "featuredImageUrl": zod.string().nullish(),
+  "isPublished": zod.boolean(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a blog post
+ */
+export const DeletePostParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeletePostResponse = zod.void()
+
+
+/**
+ * @summary Check if any published blog posts exist (for nav visibility)
+ */
+export const GetPublicBlogHasPostsResponse = zod.object({
+  "hasPosts": zod.boolean()
+})
+
+
+/**
+ * @summary List published blog posts (newest first)
+ */
+export const ListPublicPostsResponseItem = zod.object({
+  "id": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "slugAr": zod.string(),
+  "slugEn": zod.string(),
+  "excerptAr": zod.string(),
+  "excerptEn": zod.string(),
+  "featuredImageUrl": zod.string().nullish(),
+  "publishedAt": zod.coerce.date().nullish()
+})
+export const ListPublicPostsResponse = zod.array(ListPublicPostsResponseItem)
+
+
+/**
+ * @summary Get a published blog post by slug (AR or EN slug accepted)
+ */
+export const GetPublicPostParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const GetPublicPostResponse = zod.object({
+  "id": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "slugAr": zod.string(),
+  "slugEn": zod.string(),
+  "excerptAr": zod.string(),
+  "excerptEn": zod.string(),
+  "contentAr": zod.string(),
+  "contentEn": zod.string(),
+  "featuredImageUrl": zod.string().nullish(),
+  "publishedAt": zod.coerce.date().nullish()
 })
 
 

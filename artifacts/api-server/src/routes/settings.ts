@@ -8,7 +8,7 @@ const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 const LANG_VALUES = ["ar", "en"] as const;
 type LangValue = typeof LANG_VALUES[number];
 
-type BrandingFields = {
+type BrandingUpdate = {
   primaryColor?: string;
   accentColor?: string;
   cta1BgColor?: string;
@@ -16,15 +16,21 @@ type BrandingFields = {
   cta2BgColor?: string;
   cta2TextColor?: string;
   defaultLanguage?: string;
+  blogBgColor?: string;
+  blogTextColor?: string;
+  blogAccentColor?: string;
 };
 
-const COLOR_FIELDS: (keyof Omit<BrandingFields, "defaultLanguage">)[] = [
+const COLOR_FIELDS: (keyof Omit<BrandingUpdate, "defaultLanguage">)[] = [
   "primaryColor",
   "accentColor",
   "cta1BgColor",
   "cta1TextColor",
   "cta2BgColor",
   "cta2TextColor",
+  "blogBgColor",
+  "blogTextColor",
+  "blogAccentColor",
 ];
 
 /** Fetch current settings row, creating defaults on first call. */
@@ -44,6 +50,9 @@ function brandingResponse(row: typeof settingsTable.$inferSelect) {
     cta2BgColor: row.cta2BgColor,
     cta2TextColor: row.cta2TextColor,
     defaultLanguage: row.defaultLanguage as LangValue,
+    blogBgColor: row.blogBgColor,
+    blogTextColor: row.blogTextColor,
+    blogAccentColor: row.blogAccentColor,
   };
 }
 
@@ -55,7 +64,7 @@ router.get("/settings/branding", async (_req, res): Promise<void> => {
 
 // PATCH /settings/branding — admin only
 router.patch("/settings/branding", requireAuth, async (req, res): Promise<void> => {
-  const body = req.body as BrandingFields;
+  const body = req.body as BrandingUpdate;
   const updates: Record<string, unknown> = {};
 
   // Validate and collect color fields

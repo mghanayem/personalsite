@@ -27,6 +27,7 @@ import type {
   ContactMessage,
   ContactRequest,
   DashboardStats,
+  HasPostsResponse,
   HealthStatus,
   ImageUpdate,
   LoginCredentials,
@@ -37,7 +38,13 @@ import type {
   PageUpdate,
   PageWithSections,
   PasswordChange,
+  Post,
+  PostInput,
+  PostMeta,
+  PostUpdate,
   PublicPage,
+  PublicPost,
+  PublicPostSummary,
   ReorderRequest,
   SectionImage,
   SectionInput,
@@ -2501,4 +2508,603 @@ export const useSubmitContactForm = <TError = ErrorType<ApiError>,
       > => {
       return useMutation(getSubmitContactFormMutationOptions(options));
     }
+
+export const getListAdminPostsUrl = () => {
+
+
+
+
+  return `/api/blog`
+}
+
+/**
+ * @summary List all blog posts (admin, newest first)
+ */
+export const listAdminPosts = async ( options?: RequestInit): Promise<PostMeta[]> => {
+
+  return customFetch<PostMeta[]>(getListAdminPostsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminPostsQueryKey = () => {
+    return [
+    `/api/blog`
+    ] as const;
+    }
+
+
+export const getListAdminPostsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminPosts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminPostsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminPosts>>> = ({ signal }) => listAdminPosts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminPostsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminPosts>>>
+export type ListAdminPostsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all blog posts (admin, newest first)
+ */
+
+export function useListAdminPosts<TData = Awaited<ReturnType<typeof listAdminPosts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminPostsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreatePostUrl = () => {
+
+
+
+
+  return `/api/blog`
+}
+
+/**
+ * @summary Create a new blog post
+ */
+export const createPost = async (postInput: PostInput, options?: RequestInit): Promise<Post> => {
+
+  return customFetch<Post>(getCreatePostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(postInput)
+  }
+);}
+
+
+
+
+
+export const getCreatePostMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPost>>, TError,{data: BodyType<PostInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPost>>, TError,{data: BodyType<PostInput>}, TContext> => {
+
+const mutationKey = ['createPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPost>>, {data: BodyType<PostInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePostMutationResult = NonNullable<Awaited<ReturnType<typeof createPost>>>
+    export type CreatePostMutationBody = BodyType<PostInput>
+    export type CreatePostMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Create a new blog post
+ */
+export const useCreatePost = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPost>>, TError,{data: BodyType<PostInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPost>>,
+        TError,
+        {data: BodyType<PostInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePostMutationOptions(options));
+    }
+
+export const getGetPostUrl = (id: number,) => {
+
+
+
+
+  return `/api/blog/${id}`
+}
+
+/**
+ * @summary Get a blog post by ID (admin)
+ */
+export const getPost = async (id: number, options?: RequestInit): Promise<Post> => {
+
+  return customFetch<Post>(getGetPostUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPostQueryKey = (id: number,) => {
+    return [
+    `/api/blog/${id}`
+    ] as const;
+    }
+
+
+export const getGetPostQueryOptions = <TData = Awaited<ReturnType<typeof getPost>>, TError = ErrorType<ApiError>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPost>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPostQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPost>>> = ({ signal }) => getPost(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPost>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPostQueryResult = NonNullable<Awaited<ReturnType<typeof getPost>>>
+export type GetPostQueryError = ErrorType<ApiError>
+
+
+/**
+ * @summary Get a blog post by ID (admin)
+ */
+
+export function useGetPost<TData = Awaited<ReturnType<typeof getPost>>, TError = ErrorType<ApiError>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPost>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPostQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdatePostUrl = (id: number,) => {
+
+
+
+
+  return `/api/blog/${id}`
+}
+
+/**
+ * @summary Update a blog post
+ */
+export const updatePost = async (id: number,
+    postUpdate: PostUpdate, options?: RequestInit): Promise<Post> => {
+
+  return customFetch<Post>(getUpdatePostUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(postUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdatePostMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePost>>, TError,{id: number;data: BodyType<PostUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePost>>, TError,{id: number;data: BodyType<PostUpdate>}, TContext> => {
+
+const mutationKey = ['updatePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePost>>, {id: number;data: BodyType<PostUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updatePost(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePostMutationResult = NonNullable<Awaited<ReturnType<typeof updatePost>>>
+    export type UpdatePostMutationBody = BodyType<PostUpdate>
+    export type UpdatePostMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Update a blog post
+ */
+export const useUpdatePost = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePost>>, TError,{id: number;data: BodyType<PostUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePost>>,
+        TError,
+        {id: number;data: BodyType<PostUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdatePostMutationOptions(options));
+    }
+
+export const getDeletePostUrl = (id: number,) => {
+
+
+
+
+  return `/api/blog/${id}`
+}
+
+/**
+ * @summary Delete a blog post
+ */
+export const deletePost = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeletePostUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeletePostMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePost>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deletePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePost>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePost(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePostMutationResult = NonNullable<Awaited<ReturnType<typeof deletePost>>>
+
+    export type DeletePostMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Delete a blog post
+ */
+export const useDeletePost = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePost>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeletePostMutationOptions(options));
+    }
+
+export const getGetPublicBlogHasPostsUrl = () => {
+
+
+
+
+  return `/api/public/blog/has-posts`
+}
+
+/**
+ * @summary Check if any published blog posts exist (for nav visibility)
+ */
+export const getPublicBlogHasPosts = async ( options?: RequestInit): Promise<HasPostsResponse> => {
+
+  return customFetch<HasPostsResponse>(getGetPublicBlogHasPostsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicBlogHasPostsQueryKey = () => {
+    return [
+    `/api/public/blog/has-posts`
+    ] as const;
+    }
+
+
+export const getGetPublicBlogHasPostsQueryOptions = <TData = Awaited<ReturnType<typeof getPublicBlogHasPosts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicBlogHasPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicBlogHasPostsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicBlogHasPosts>>> = ({ signal }) => getPublicBlogHasPosts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicBlogHasPosts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPublicBlogHasPostsQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicBlogHasPosts>>>
+export type GetPublicBlogHasPostsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Check if any published blog posts exist (for nav visibility)
+ */
+
+export function useGetPublicBlogHasPosts<TData = Awaited<ReturnType<typeof getPublicBlogHasPosts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicBlogHasPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPublicBlogHasPostsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListPublicPostsUrl = () => {
+
+
+
+
+  return `/api/public/blog`
+}
+
+/**
+ * @summary List published blog posts (newest first)
+ */
+export const listPublicPosts = async ( options?: RequestInit): Promise<PublicPostSummary[]> => {
+
+  return customFetch<PublicPostSummary[]>(getListPublicPostsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicPostsQueryKey = () => {
+    return [
+    `/api/public/blog`
+    ] as const;
+    }
+
+
+export const getListPublicPostsQueryOptions = <TData = Awaited<ReturnType<typeof listPublicPosts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPublicPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicPostsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicPosts>>> = ({ signal }) => listPublicPosts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicPosts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPublicPostsQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicPosts>>>
+export type ListPublicPostsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List published blog posts (newest first)
+ */
+
+export function useListPublicPosts<TData = Awaited<ReturnType<typeof listPublicPosts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPublicPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPublicPostsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetPublicPostUrl = (slug: string,) => {
+
+
+
+
+  return `/api/public/blog/${slug}`
+}
+
+/**
+ * @summary Get a published blog post by slug (AR or EN slug accepted)
+ */
+export const getPublicPost = async (slug: string, options?: RequestInit): Promise<PublicPost> => {
+
+  return customFetch<PublicPost>(getGetPublicPostUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicPostQueryKey = (slug: string,) => {
+    return [
+    `/api/public/blog/${slug}`
+    ] as const;
+    }
+
+
+export const getGetPublicPostQueryOptions = <TData = Awaited<ReturnType<typeof getPublicPost>>, TError = ErrorType<ApiError>>(slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicPost>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicPostQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicPost>>> = ({ signal }) => getPublicPost(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicPost>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPublicPostQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicPost>>>
+export type GetPublicPostQueryError = ErrorType<ApiError>
+
+
+/**
+ * @summary Get a published blog post by slug (AR or EN slug accepted)
+ */
+
+export function useGetPublicPost<TData = Awaited<ReturnType<typeof getPublicPost>>, TError = ErrorType<ApiError>>(
+ slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicPost>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPublicPostQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 

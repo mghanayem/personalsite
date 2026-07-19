@@ -248,6 +248,12 @@ export interface BrandingSettings {
   cta2TextColor: string;
   /** Default language shown to new visitors */
   defaultLanguage: BrandingSettingsDefaultLanguage;
+  /** Hex background color for the blog and post pages */
+  blogBgColor: string;
+  /** Hex text color for blog post content */
+  blogTextColor: string;
+  /** Hex accent color for blog post cards */
+  blogAccentColor: string;
 }
 
 export type BrandingUpdateDefaultLanguage = typeof BrandingUpdateDefaultLanguage[keyof typeof BrandingUpdateDefaultLanguage];
@@ -272,6 +278,12 @@ export interface BrandingUpdate {
   /** @pattern ^#[0-9a-fA-F]{6}$ */
   cta2TextColor?: string;
   defaultLanguage?: BrandingUpdateDefaultLanguage;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  blogBgColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  blogTextColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  blogAccentColor?: string;
 }
 
 export interface ContactMessage {
@@ -316,5 +328,92 @@ export interface PublicPage {
   slug: string;
   isHomepage: boolean;
   sections: SectionWithImages[];
+}
+
+export interface HasPostsResponse {
+  hasPosts: boolean;
+}
+
+export interface PostMeta {
+  id: number;
+  titleAr: string;
+  titleEn: string;
+  slugAr: string;
+  slugEn: string;
+  featuredImageUrl?: string | null;
+  isPublished: boolean;
+  publishedAt?: string | null;
+  createdAt: string;
+}
+
+export interface Post {
+  id: number;
+  titleAr: string;
+  titleEn: string;
+  slugAr: string;
+  slugEn: string;
+  excerptAr: string;
+  excerptEn: string;
+  contentAr: string;
+  contentEn: string;
+  featuredImageUrl?: string | null;
+  isPublished: boolean;
+  publishedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PostInput {
+  /** @minLength 1 */
+  titleAr: string;
+  /** @minLength 1 */
+  titleEn: string;
+  /** @minLength 1 */
+  slugAr: string;
+  /** @minLength 1 */
+  slugEn: string;
+  excerptAr?: string;
+  excerptEn?: string;
+  contentAr?: string;
+  contentEn?: string;
+  isPublished?: boolean;
+}
+
+export interface PostUpdate {
+  titleAr?: string;
+  titleEn?: string;
+  slugAr?: string;
+  slugEn?: string;
+  excerptAr?: string;
+  excerptEn?: string;
+  contentAr?: string;
+  contentEn?: string;
+  isPublished?: boolean;
+}
+
+export interface PublicPostSummary {
+  id: number;
+  titleAr: string;
+  titleEn: string;
+  slugAr: string;
+  slugEn: string;
+  excerptAr: string;
+  excerptEn: string;
+  featuredImageUrl?: string | null;
+  publishedAt?: string | null;
+}
+
+export interface PublicPost {
+  id: number;
+  titleAr: string;
+  titleEn: string;
+  slugAr: string;
+  slugEn: string;
+  excerptAr: string;
+  excerptEn: string;
+  contentAr: string;
+  contentEn: string;
+  featuredImageUrl?: string | null;
+  publishedAt?: string | null;
 }
 

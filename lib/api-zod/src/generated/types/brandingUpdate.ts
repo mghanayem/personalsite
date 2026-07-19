@@ -21,4 +21,10 @@ export interface BrandingUpdate {
   /** @pattern ^#[0-9a-fA-F]{6}$ */
   cta2TextColor?: string;
   defaultLanguage?: BrandingUpdateDefaultLanguage;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  blogBgColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  blogTextColor?: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  blogAccentColor?: string;
 }

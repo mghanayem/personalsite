@@ -6,6 +6,8 @@ import { applyBrandingColors } from '@/lib/branding';
 
 import Home from '@/pages/public/Home';
 import Page from '@/pages/public/Page';
+import Blog from '@/pages/public/Blog';
+import BlogPost from '@/pages/public/BlogPost';
 import Login from '@/pages/admin/Login';
 import Dashboard from '@/pages/admin/Dashboard';
 import PagesList from '@/pages/admin/PagesList';
@@ -13,6 +15,8 @@ import PageEditor from '@/pages/admin/PageEditor';
 import Account from '@/pages/admin/Account';
 import Branding from '@/pages/admin/Branding';
 import Messages from '@/pages/admin/Messages';
+import BlogList from '@/pages/admin/BlogList';
+import BlogEditor from '@/pages/admin/BlogEditor';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,11 +30,9 @@ const queryClient = new QueryClient({
  * Fetches branding settings from the API on first mount.
  * - Applies color CSS vars immediately.
  * - Redirects the bare root path to /en when English is the stored default language.
- *   Uses window.location.replace so the back button is not polluted.
  */
 function BrandingLoader() {
   useEffect(() => {
-    // Snapshot the path before the async fetch so we don't act on a stale value.
     const snapshotHref = window.location.pathname;
 
     fetch('/api/settings/branding')
@@ -38,24 +40,21 @@ function BrandingLoader() {
       .then(data => {
         if (!data) return;
 
-        // Apply colors
         if (data.primaryColor) applyBrandingColors(data);
 
-        // Language redirect — only for new visitors landing on the root
+        // Default language redirect — only for new visitors landing on the root
         if (data.defaultLanguage === 'en') {
           const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-          // Wouter-relative path: strip the vite BASE_URL prefix
           const rel = snapshotHref.startsWith(base)
             ? snapshotHref.slice(base.length) || '/'
             : snapshotHref;
-          // Only redirect if they're on the bare root (Arabic default path)
           if (rel === '/' || rel === '') {
             window.location.replace(base + '/en');
           }
         }
       })
       .catch(() => { /* silently fall back to CSS defaults */ });
-  }, []); // run once at mount
+  }, []);
 
   return null;
 }
@@ -83,15 +82,21 @@ function Router() {
       <Route path="/admin/account" component={Account} />
       <Route path="/admin/messages" component={Messages} />
       <Route path="/admin/branding" component={Branding} />
+      <Route path="/admin/blog" component={BlogList} />
+      <Route path="/admin/blog/:id" component={BlogEditor} />
 
       {/* Public English Routes */}
       <Route path="/en" component={Home} />
       <Route path="/en/" component={Home} />
       <Route path="/en/p/:slug" component={Page} />
+      <Route path="/en/blog" component={Blog} />
+      <Route path="/en/blog/:slug" component={BlogPost} />
 
       {/* Public Arabic Routes */}
       <Route path="/" component={Home} />
       <Route path="/p/:slug" component={Page} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/blog/:slug" component={BlogPost} />
 
       <Route component={NotFound} />
     </Switch>

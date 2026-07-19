@@ -1,4 +1,4 @@
-import { useGetPublicNav } from "@workspace/api-client-react";
+import { useGetPublicNav, useGetPublicBlogHasPosts } from "@workspace/api-client-react";
 import { Link, useLocation } from "wouter";
 import { useLanguage } from "@/lib/i18n";
 import { Menu, X, Globe } from "lucide-react";
@@ -8,6 +8,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
   const { lang, setLang } = useLanguage();
   const [location, setLocation] = useLocation();
   const { data: navItems = [] } = useGetPublicNav();
+  const { data: blogMeta } = useGetPublicBlogHasPosts();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleLanguage = () => {
@@ -30,6 +31,16 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
     };
   });
 
+  // Blog nav link — only shown when there are published posts
+  const blogLink = blogMeta?.hasPosts
+    ? {
+        title: lang === "ar" ? "المدونة" : "Blog",
+        path: lang === "ar" ? "/blog" : "/en/blog",
+      }
+    : null;
+
+  const allNavLinks = blogLink ? [...navLinks, blogLink] : navLinks;
+
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -39,9 +50,9 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               {lang === "ar" ? "محمد غنايم" : "Mohammad Ghanayem"}
             </Link>
           </div>
-          
+
           <nav className="hidden md:flex items-center gap-8 font-medium text-sm">
-            {navLinks.map((link) => (
+            {allNavLinks.map((link) => (
               <Link
                 key={link.path}
                 href={link.path}
@@ -52,7 +63,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
                 {link.title}
               </Link>
             ))}
-            <button 
+            <button
               onClick={toggleLanguage}
               className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
             >
@@ -72,7 +83,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
       {isMobileMenuOpen && (
         <div className="md:hidden border-b bg-background px-4 py-4 space-y-4 shadow-sm animate-in slide-in-from-top-2">
-          {navLinks.map((link) => (
+          {allNavLinks.map((link) => (
             <Link
               key={link.path}
               href={link.path}
@@ -82,7 +93,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               {link.title}
             </Link>
           ))}
-          <button 
+          <button
             onClick={() => {
               toggleLanguage();
               setIsMobileMenuOpen(false);

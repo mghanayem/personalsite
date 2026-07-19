@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Loader2, Save, Palette, Globe } from "lucide-react";
+import { Loader2, Save, Palette, Globe, BookOpen } from "lucide-react";
 import { applyBrandingColors } from "@/lib/branding";
 
 function ColorPicker({
@@ -61,6 +61,9 @@ export default function Branding() {
   const [cta2BgColor, setCta2BgColor] = useState("#ffffff");
   const [cta2TextColor, setCta2TextColor] = useState("#0e1a2a");
   const [defaultLanguage, setDefaultLanguage] = useState<"ar" | "en">("ar");
+  const [blogBgColor, setBlogBgColor] = useState("#ffffff");
+  const [blogTextColor, setBlogTextColor] = useState("#1e293b");
+  const [blogAccentColor, setBlogAccentColor] = useState("#5b91c8");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -72,6 +75,9 @@ export default function Branding() {
       setCta2BgColor(settings.cta2BgColor);
       setCta2TextColor(settings.cta2TextColor);
       setDefaultLanguage(settings.defaultLanguage as "ar" | "en");
+      setBlogBgColor(settings.blogBgColor);
+      setBlogTextColor(settings.blogTextColor);
+      setBlogAccentColor(settings.blogAccentColor);
     }
   }, [settings]);
 
@@ -86,6 +92,9 @@ export default function Branding() {
           cta2BgColor,
           cta2TextColor,
           defaultLanguage,
+          blogBgColor,
+          blogTextColor,
+          blogAccentColor,
         },
       },
       {
@@ -117,7 +126,7 @@ export default function Branding() {
             Site Branding
           </h1>
           <p className="text-muted-foreground mt-1">
-            Choose your site's color palette and default language. Changes apply immediately.
+            Customize your site's appearance. Changes apply immediately.
           </p>
         </div>
 
@@ -181,8 +190,6 @@ export default function Branding() {
               value={accentColor}
               onChange={setAccentColor}
             />
-
-            {/* Theme preview */}
             <div className="rounded-xl overflow-hidden border border-border shadow-sm mt-2">
               <div className="px-5 py-3 text-sm font-semibold" style={{ backgroundColor: primaryColor, color: "#fff" }}>
                 Hero background
@@ -199,7 +206,7 @@ export default function Branding() {
           <CardHeader>
             <CardTitle>Hero Buttons</CardTitle>
             <CardDescription>
-              Controls the two call-to-action buttons in your hero section. Both have a solid fill for guaranteed readability.
+              Controls the two call-to-action buttons in your hero section.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -218,7 +225,6 @@ export default function Branding() {
                 onChange={setCta1TextColor}
               />
             </div>
-
             <div className="space-y-4 pt-4 border-t">
               <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Secondary Button</p>
               <ColorPicker
@@ -234,25 +240,63 @@ export default function Branding() {
                 onChange={setCta2TextColor}
               />
             </div>
-
-            {/* Live button preview */}
             <div className="rounded-xl p-5 mt-2" style={{ backgroundColor: primaryColor }}>
               <p className="text-xs mb-4 font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>
                 Live preview against hero background
               </p>
               <div className="flex flex-wrap gap-3">
-                <span
-                  className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-semibold"
-                  style={{ backgroundColor: cta1BgColor, color: cta1TextColor }}
-                >
+                <span className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-semibold" style={{ backgroundColor: cta1BgColor, color: cta1TextColor }}>
                   Primary Button →
                 </span>
-                <span
-                  className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-semibold"
-                  style={{ backgroundColor: cta2BgColor, color: cta2TextColor }}
-                >
+                <span className="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-semibold" style={{ backgroundColor: cta2BgColor, color: cta2TextColor }}>
                   Secondary Button
                 </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Blog Style */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Blog Style
+            </CardTitle>
+            <CardDescription>
+              Controls the colors of your blog index and post pages.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <ColorPicker
+              label="Background"
+              hint="Page background for the blog index and post pages"
+              value={blogBgColor}
+              onChange={setBlogBgColor}
+            />
+            <ColorPicker
+              label="Text Color"
+              hint="Main text color for blog post content"
+              value={blogTextColor}
+              onChange={setBlogTextColor}
+            />
+            <ColorPicker
+              label="Accent Color"
+              hint="Card borders, date labels, and back links"
+              value={blogAccentColor}
+              onChange={setBlogAccentColor}
+            />
+            {/* Live blog preview */}
+            <div className="rounded-xl overflow-hidden border border-border shadow-sm mt-2">
+              <div className="px-5 py-4" style={{ backgroundColor: blogBgColor }}>
+                <div className="rounded-xl border overflow-hidden" style={{ borderColor: blogAccentColor }}>
+                  <div className="aspect-video bg-current opacity-10" style={{ backgroundColor: blogAccentColor }} />
+                  <div className="p-4" style={{ backgroundColor: blogBgColor }}>
+                    <p className="font-bold text-sm mb-1" style={{ color: blogTextColor }}>Post title preview</p>
+                    <p className="text-xs mb-3" style={{ color: blogTextColor, opacity: 0.6 }}>A short excerpt appears here…</p>
+                    <span className="text-xs font-medium" style={{ color: blogAccentColor }}>📅 January 1, 2025</span>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
