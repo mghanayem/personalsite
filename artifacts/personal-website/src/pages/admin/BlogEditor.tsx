@@ -32,6 +32,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CropModal } from "@/components/admin/CropModal";
 import { AiAssistPanel } from "@/components/admin/AiAssistPanel";
 import { FocalPointPicker } from "@/components/admin/FocalPointPicker";
+import { FocalPointDialog } from "@/components/admin/FocalPointDialog";
 
 function slugify(text: string) {
   return text
@@ -72,98 +73,57 @@ function GalleryCard({
   copied: boolean;
   onPositionSave: (pos: string) => Promise<void>;
 }) {
-  const [adjusting, setAdjusting] = useState(false);
-  const [pendingPos, setPendingPos] = useState(image.position ?? "center");
-  const [saving, setSaving] = useState(false);
+  const [cropOpen, setCropOpen] = useState(false);
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await onPositionSave(pendingPos);
-    } finally {
-      setSaving(false);
-      setAdjusting(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setPendingPos(image.position ?? "center");
-    setAdjusting(false);
-  };
-
-  if (adjusting) {
-    return (
-      <div className="rounded-lg border border-border overflow-hidden bg-muted">
-        <FocalPointPicker
-          imageUrl={image.imageUrl}
-          value={pendingPos}
-          onChange={setPendingPos}
-          aspectRatio="4/3"
-          showPosition={false}
+  return (
+    <>
+      <div className="group relative rounded-lg border border-border overflow-hidden aspect-[4/3] bg-muted">
+        <img
+          src={image.imageUrl}
+          alt=""
+          className="w-full h-full object-cover"
+          style={{ objectPosition: image.position ?? "center" }}
         />
-        <div className="flex gap-2 p-2">
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 flex-wrap p-2">
           <Button
             size="sm"
-            className="flex-1 h-7 text-xs"
-            onClick={handleSave}
-            disabled={saving}
+            variant="secondary"
+            className="h-7 px-2 gap-1 text-xs"
+            onClick={() => setCropOpen(true)}
           >
-            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
+            <Crosshair className="w-3 h-3" />
+            Crop
           </Button>
           <Button
             size="sm"
-            variant="outline"
-            className="flex-1 h-7 text-xs"
-            onClick={handleCancel}
-            disabled={saving}
+            variant="secondary"
+            className="h-7 px-2 gap-1.5 text-xs"
+            onClick={onCopy}
           >
-            Cancel
+            {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+            {copied ? "Copied!" : "URL"}
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="h-7 px-2 gap-1 text-xs"
+            onClick={onRemove}
+          >
+            <Trash2 className="w-3 h-3" />
           </Button>
         </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="group relative rounded-lg border border-border overflow-hidden aspect-[4/3] bg-muted">
-      <img
-        src={image.imageUrl}
-        alt=""
-        className="w-full h-full object-cover"
-        style={{ objectPosition: image.position ?? "center" }}
-      />
-      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 flex-wrap p-2">
-        <Button
-          size="sm"
-          variant="secondary"
-          className="h-7 px-2 gap-1 text-xs"
-          onClick={() => {
-            setPendingPos(image.position ?? "center");
-            setAdjusting(true);
-          }}
-        >
-          <Crosshair className="w-3 h-3" />
-          Crop
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          className="h-7 px-2 gap-1.5 text-xs"
-          onClick={onCopy}
-        >
-          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-          {copied ? "Copied!" : "URL"}
-        </Button>
-        <Button
-          size="sm"
-          variant="destructive"
-          className="h-7 px-2 gap-1 text-xs"
-          onClick={onRemove}
-        >
-          <Trash2 className="w-3 h-3" />
-        </Button>
-      </div>
-    </div>
+      {cropOpen && (
+        <FocalPointDialog
+          imageUrl={image.imageUrl}
+          initialValue={image.position ?? "center"}
+          aspectRatio="4/3"
+          title="Adjust gallery image crop — 4:3"
+          onSave={onPositionSave}
+          onClose={() => setCropOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
@@ -198,6 +158,7 @@ export default function BlogEditor() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [featuredCropOpen, setFeaturedCropOpen] = useState(false);
 
   // Crop modal state
   const [cropPending, setCropPending] = useState<{
@@ -694,13 +655,34 @@ export default function BlogEditor() {
 
             {featuredImageUrl ? (
               <div className="space-y-4">
-                {/* Drag focal-point picker (16:9 live preview) */}
-                <FocalPointPicker
-                  imageUrl={featuredImageUrl}
-                  value={featuredImagePosition}
-                  onChange={handlePositionChange}
-                  label="Focal point — drag the dot to pin the hero crop"
-                />
+                {/* Thumbnail showing current crop — click to open the draggable dialog */}
+                <div className="relative rounded-lg border border-border overflow-hidden aspect-video bg-muted">
+                  <img
+                    src={featuredImageUrl}
+                    alt=""
+                    className="w-full h-full object-cover pointer-events-none"
+                    style={{ objectPosition: featuredImagePosition }}
+                    draggable={false}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFeaturedCropOpen(true)}
+                    className="absolute bottom-2 right-2 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs font-medium transition-colors"
+                  >
+                    <Crosshair className="w-3.5 h-3.5" />
+                    Adjust crop
+                  </button>
+                </div>
+                {featuredCropOpen && (
+                  <FocalPointDialog
+                    imageUrl={featuredImageUrl}
+                    initialValue={featuredImagePosition}
+                    aspectRatio="16/9"
+                    title="Adjust hero crop — 16:9"
+                    onSave={handlePositionChange}
+                    onClose={() => setFeaturedCropOpen(false)}
+                  />
+                )}
 
                 <div className="flex items-center gap-3">
                   <Button
