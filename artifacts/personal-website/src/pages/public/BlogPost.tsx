@@ -288,31 +288,6 @@ export default function BlogPost() {
           minHeight: "100vh",
         }}
       >
-        {/* ── Hero image (16:9) — contain so the full image is always visible ── */}
-        {post.featuredImageUrl && (
-          <div
-            style={{
-              width: "100%",
-              aspectRatio: "16/9",
-              overflow: "hidden",
-              background: "#FAF6F0",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <img
-              src={post.featuredImageUrl}
-              alt={title ?? ""}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-                display: "block",
-              }}
-            />
-          </div>
-        )}
 
         {/* ── Article body ─────────────────────────────────────────────── */}
         <article style={{ padding: "52px 32px 88px", maxWidth: 720, margin: "0 auto" }}>
@@ -412,6 +387,30 @@ export default function BlogPost() {
               </a>
             </span>
           </div>
+
+          {/* Featured image — inline, constrained to reading column */}
+          {post.featuredImageUrl && (
+            <div
+              style={{
+                margin: "0 0 40px",
+                borderRadius: 10,
+                overflow: "hidden",
+                background: "#FAF6F0",
+                lineHeight: 0,
+              }}
+            >
+              <img
+                src={post.featuredImageUrl}
+                alt={title ?? ""}
+                style={{
+                  width: "100%",
+                  maxHeight: "60vh",
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
+            </div>
+          )}
 
           {/* Post content */}
           {content ? (
