@@ -77,5 +77,14 @@ await pool.query(`
   ALTER TABLE pages ADD COLUMN IF NOT EXISTS seo_image_url text;
 `);
 
-console.log("✅ settings + posts + SEO tables ready");
+// Step 9: migrate posts.featured_image_url from /uploads/ to /api/uploads/
+// Idempotent — the REPLACE only fires when the old prefix is still present.
+// (The images table stores filename only; its URL is built at query time.)
+await pool.query(`
+  UPDATE posts
+  SET featured_image_url = REPLACE(featured_image_url, '/uploads/', '/api/uploads/')
+  WHERE featured_image_url LIKE '/uploads/%';
+`);
+
+console.log("✅ settings + posts + SEO tables + upload URL migration ready");
 process.exit(0);

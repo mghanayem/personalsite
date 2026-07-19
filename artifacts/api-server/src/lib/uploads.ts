@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Resolve uploads directory relative to the project root
 export const UPLOADS_DIR = path.resolve(__dirname, "..", "..", "..", "..", "artifacts", "personal-website", "dist", "public", "uploads");
-export const UPLOADS_URL_PREFIX = "/uploads";
+export const UPLOADS_URL_PREFIX = "/api/uploads";
 
 // Ensure uploads directory exists (dev-mode path: served via Vite proxy / public)
 // In production the frontend is built; we serve from dist/public
@@ -56,5 +56,5 @@ export function deleteUploadFile(filename: string): void {
 }
 
 export function imageUrl(filename: string): string {
-  return `/uploads/${filename}`;
+  return `/api/uploads/${filename}`;
 }

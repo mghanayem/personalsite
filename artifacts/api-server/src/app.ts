@@ -142,8 +142,10 @@ const contactLimiter = rateLimit({
 app.use("/api/public/contact", contactLimiter);
 
 // ── Static uploads ────────────────────────────────────────────────────────
+// Served under /api/uploads so Replit's proxy routes these requests to this
+// server (the proxy only forwards /api/* to the API server).
 const uploadsDir = getUploadsDir();
-app.use("/uploads", express.static(uploadsDir));
+app.use("/api/uploads", express.static(uploadsDir));
 
 // ── SEO utility routes (served at root, outside /api prefix) ─────────────
 app.use(seoRouter);
