@@ -34,6 +34,8 @@ import type {
   ContactMessage,
   ContactRequest,
   DashboardStats,
+  GalleryImage,
+  GalleryImagePositionUpdate,
   HasPostsResponse,
   HealthStatus,
   ImageUpdate,
@@ -3475,6 +3477,78 @@ export const useDeletePost = <TError = ErrorType<ApiError>,
         TContext
       > => {
       return useMutation(getDeletePostMutationOptions(options));
+    }
+
+export const getUpdateGalleryImagePositionUrl = (id: number,) => {
+
+
+
+
+  return `/api/post-gallery-images/${id}`
+}
+
+/**
+ * @summary Update a gallery image's focal point position
+ */
+export const updateGalleryImagePosition = async (id: number,
+    galleryImagePositionUpdate: GalleryImagePositionUpdate, options?: RequestInit): Promise<GalleryImage> => {
+
+  return customFetch<GalleryImage>(getUpdateGalleryImagePositionUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(galleryImagePositionUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateGalleryImagePositionMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGalleryImagePosition>>, TError,{id: number;data: BodyType<GalleryImagePositionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGalleryImagePosition>>, TError,{id: number;data: BodyType<GalleryImagePositionUpdate>}, TContext> => {
+
+const mutationKey = ['updateGalleryImagePosition'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGalleryImagePosition>>, {id: number;data: BodyType<GalleryImagePositionUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateGalleryImagePosition(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGalleryImagePositionMutationResult = NonNullable<Awaited<ReturnType<typeof updateGalleryImagePosition>>>
+    export type UpdateGalleryImagePositionMutationBody = BodyType<GalleryImagePositionUpdate>
+    export type UpdateGalleryImagePositionMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Update a gallery image's focal point position
+ */
+export const useUpdateGalleryImagePosition = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGalleryImagePosition>>, TError,{id: number;data: BodyType<GalleryImagePositionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGalleryImagePosition>>,
+        TError,
+        {id: number;data: BodyType<GalleryImagePositionUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateGalleryImagePositionMutationOptions(options));
     }
 
 export const getGetPublicBlogHasPostsUrl = () => {

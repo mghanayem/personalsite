@@ -425,10 +425,15 @@ export interface PostMeta {
   createdAt: string;
 }
 
+export interface GalleryImagePositionUpdate {
+  position: string;
+}
+
 export interface GalleryImage {
   id: number;
   imageUrl: string;
   displayOrder: number;
+  position?: string | null;
 }
 
 export interface Post {

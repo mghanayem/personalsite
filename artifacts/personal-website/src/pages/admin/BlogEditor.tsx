@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   useGetPost,
   useCreatePost,
@@ -26,10 +26,12 @@ import {
   Plus,
   ImageIcon,
   Sparkles,
+  Crosshair,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CropModal } from "@/components/admin/CropModal";
 import { AiAssistPanel } from "@/components/admin/AiAssistPanel";
+import { FocalPointPicker } from "@/components/admin/FocalPointPicker";
 
 function slugify(text: string) {
   return text
@@ -51,109 +53,10 @@ interface GalleryImage {
   id: number;
   imageUrl: string;
   displayOrder: number;
+  position: string;
 }
 
-// ── Focal point picker ────────────────────────────────────────────────────
-function parseObjectPosition(pos: string): { x: number; y: number } {
-  const parts = pos.trim().split(/\s+/);
-  const resolveX = (s: string) => {
-    if (s === "left") return 0;
-    if (s === "center") return 50;
-    if (s === "right") return 100;
-    return parseFloat(s) || 50;
-  };
-  const resolveY = (s: string) => {
-    if (s === "top") return 0;
-    if (s === "center") return 50;
-    if (s === "bottom") return 100;
-    return parseFloat(s) || 50;
-  };
-  if (parts.length === 1) {
-    switch (parts[0]) {
-      case "top": return { x: 50, y: 0 };
-      case "bottom": return { x: 50, y: 100 };
-      case "left": return { x: 0, y: 50 };
-      case "right": return { x: 100, y: 50 };
-      case "center": return { x: 50, y: 50 };
-      default: { const v = parseFloat(parts[0]) || 50; return { x: v, y: v }; }
-    }
-  }
-  return { x: resolveX(parts[0]), y: resolveY(parts[1]) };
-}
-
-function FocalPointPicker({
-  imageUrl,
-  value,
-  onChange,
-}: {
-  imageUrl: string;
-  value: ImagePosition;
-  onChange: (pos: ImagePosition) => void;
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
-  const { x, y } = parseObjectPosition(value);
-
-  const getPos = useCallback((clientX: number, clientY: number): string | null => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return null;
-    const px = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-    const py = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
-    return `${Math.round(px)}% ${Math.round(py)}%`;
-  }, []);
-
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    isDragging.current = true;
-    containerRef.current?.setPointerCapture(e.pointerId);
-    const pos = getPos(e.clientX, e.clientY);
-    if (pos) onChange(pos);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) return;
-    const pos = getPos(e.clientX, e.clientY);
-    if (pos) onChange(pos);
-  };
-
-  const handlePointerUp = () => {
-    isDragging.current = false;
-  };
-
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-xs text-muted-foreground">
-        Focal point — drag the dot to pin the hero crop
-      </Label>
-      <div
-        ref={containerRef}
-        className="relative rounded-lg overflow-hidden border border-border w-full aspect-video bg-muted cursor-crosshair select-none touch-none"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-      >
-        <img
-          src={imageUrl}
-          alt="Featured"
-          className="w-full h-full object-cover pointer-events-none"
-          style={{ objectPosition: value }}
-          draggable={false}
-        />
-        {/* Crosshair dot */}
-        <div
-          className="absolute w-5 h-5 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ left: `${x}%`, top: `${y}%` }}
-        >
-          <div className="absolute inset-0 rounded-full border-2 border-white shadow-[0_0_0_1.5px_rgba(0,0,0,0.55)]" />
-          <div className="absolute inset-[5px] rounded-full bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.4)]" />
-        </div>
-      </div>
-      <p className="text-[11px] text-muted-foreground tabular-nums">
-        {value}
-      </p>
-    </div>
-  );
-}
+// FocalPointPicker is imported from @/components/admin/FocalPointPicker
 
 // ── Gallery image card ────────────────────────────────────────────────────
 function GalleryCard({
@@ -161,16 +64,87 @@ function GalleryCard({
   onRemove,
   onCopy,
   copied,
+  onPositionSave,
 }: {
   image: GalleryImage;
   onRemove: () => void;
   onCopy: () => void;
   copied: boolean;
+  onPositionSave: (pos: string) => Promise<void>;
 }) {
+  const [adjusting, setAdjusting] = useState(false);
+  const [pendingPos, setPendingPos] = useState(image.position ?? "center");
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onPositionSave(pendingPos);
+    } finally {
+      setSaving(false);
+      setAdjusting(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setPendingPos(image.position ?? "center");
+    setAdjusting(false);
+  };
+
+  if (adjusting) {
+    return (
+      <div className="rounded-lg border border-border overflow-hidden bg-muted">
+        <FocalPointPicker
+          imageUrl={image.imageUrl}
+          value={pendingPos}
+          onChange={setPendingPos}
+          aspectRatio="4/3"
+          showPosition={false}
+        />
+        <div className="flex gap-2 p-2">
+          <Button
+            size="sm"
+            className="flex-1 h-7 text-xs"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 h-7 text-xs"
+            onClick={handleCancel}
+            disabled={saving}
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="group relative rounded-lg border border-border overflow-hidden aspect-video bg-muted">
-      <img src={image.imageUrl} alt="" className="w-full h-full object-cover" />
-      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+    <div className="group relative rounded-lg border border-border overflow-hidden aspect-[4/3] bg-muted">
+      <img
+        src={image.imageUrl}
+        alt=""
+        className="w-full h-full object-cover"
+        style={{ objectPosition: image.position ?? "center" }}
+      />
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 flex-wrap p-2">
+        <Button
+          size="sm"
+          variant="secondary"
+          className="h-7 px-2 gap-1 text-xs"
+          onClick={() => {
+            setPendingPos(image.position ?? "center");
+            setAdjusting(true);
+          }}
+        >
+          <Crosshair className="w-3 h-3" />
+          Crop
+        </Button>
         <Button
           size="sm"
           variant="secondary"
@@ -178,12 +152,12 @@ function GalleryCard({
           onClick={onCopy}
         >
           {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-          {copied ? "Copied!" : "Copy URL"}
+          {copied ? "Copied!" : "URL"}
         </Button>
         <Button
           size="sm"
           variant="destructive"
-          className="h-7 px-2 gap-1.5 text-xs"
+          className="h-7 px-2 gap-1 text-xs"
           onClick={onRemove}
         >
           <Trash2 className="w-3 h-3" />
@@ -267,6 +241,7 @@ export default function BlogEditor() {
           id: g.id,
           imageUrl: g.imageUrl,
           displayOrder: g.displayOrder,
+          position: g.position ?? "center",
         })),
       );
       setSavedId(existingPost.id);
@@ -297,6 +272,23 @@ export default function BlogEditor() {
       else setContentEn(bodyHtml);
     };
     input.click();
+  };
+
+  // ── Gallery image focal point ───────────────────────────────────────────
+  const handleGalleryPositionSave = async (imageId: number, position: string): Promise<void> => {
+    try {
+      await fetch(`/api/post-gallery-images/${imageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ position }),
+      });
+      setGalleryImages((prev) =>
+        prev.map((img) => (img.id === imageId ? { ...img, position } : img)),
+      );
+    } catch {
+      // non-critical — position is still reflected in local state
+    }
   };
 
   // ── Featured image position ─────────────────────────────────────────────
@@ -707,6 +699,7 @@ export default function BlogEditor() {
                   imageUrl={featuredImageUrl}
                   value={featuredImagePosition}
                   onChange={handlePositionChange}
+                  label="Focal point — drag the dot to pin the hero crop"
                 />
 
                 <div className="flex items-center gap-3">
@@ -800,6 +793,7 @@ export default function BlogEditor() {
                     onRemove={() => handleRemoveGalleryImage(img.id)}
                     onCopy={() => handleCopyUrl(img)}
                     copied={copiedId === img.id}
+                    onPositionSave={(pos) => handleGalleryPositionSave(img.id, pos)}
                   />
                 ))}
               </div>

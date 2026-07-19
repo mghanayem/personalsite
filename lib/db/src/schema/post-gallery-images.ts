@@ -12,6 +12,7 @@ export const postGalleryImagesTable = pgTable("post_gallery_images", {
     .references(() => postsTable.id, { onDelete: "cascade" }),
   imageUrl: text("image_url").notNull(),
   displayOrder: integer("display_order").notNull().default(0),
+  position: text("position").default("center"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -13,7 +13,7 @@ const MAX_GALLERY = 6;
 type GalleryRow = typeof postGalleryImagesTable.$inferSelect;
 
 function galleryShape(g: GalleryRow) {
-  return { id: g.id, imageUrl: g.imageUrl, displayOrder: g.displayOrder };
+  return { id: g.id, imageUrl: g.imageUrl, displayOrder: g.displayOrder, position: g.position ?? "center" };
 }
 
 async function fetchGallery(postId: number) {
@@ -311,6 +311,43 @@ router.delete(
     deleteUploadFile(path.basename(img.imageUrl));
     await db.delete(postGalleryImagesTable).where(eq(postGalleryImagesTable.id, imageId));
     res.status(204).send();
+  },
+);
+
+// PATCH /post-gallery-images/:id — update focal point position
+router.patch(
+  "/post-gallery-images/:id",
+  requireAuth,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = parseInt(req.params.id as string, 10);
+    if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+    const body = req.body as Record<string, unknown>;
+    const pos = typeof body.position === "string" ? body.position.trim() : null;
+    if (!pos) { res.status(400).json({ error: "position is required" }); return; }
+
+    // Accept CSS object-position: keywords or "X% Y%" pairs
+    const keywords = ["top", "center", "bottom", "left", "right"];
+    const isKeyword = keywords.includes(pos) || pos.split(/\s+/).every((p) => keywords.includes(p));
+    const isPct = /^\d+(\.\d+)?%\s+\d+(\.\d+)?%$/.test(pos);
+    if (!isKeyword && !isPct) {
+      res.status(400).json({ error: "Invalid position value" });
+      return;
+    }
+
+    const [img] = await db
+      .select()
+      .from(postGalleryImagesTable)
+      .where(eq(postGalleryImagesTable.id, id));
+    if (!img) { res.status(404).json({ error: "Gallery image not found" }); return; }
+
+    const [updated] = await db
+      .update(postGalleryImagesTable)
+      .set({ position: pos })
+      .where(eq(postGalleryImagesTable.id, id))
+      .returning();
+
+    res.json(galleryShape(updated));
   },
 );
 

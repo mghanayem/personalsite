@@ -121,5 +121,10 @@ await pool.query(`
   ALTER TABLE pages ADD COLUMN IF NOT EXISTS icon text;
 `);
 
-console.log("✅ settings + posts + SEO tables + upload URL + editorial blog colors + gallery images + page icons ready");
+// Step 14: add per-image focal point position to gallery images
+await pool.query(`
+  ALTER TABLE post_gallery_images ADD COLUMN IF NOT EXISTS position text DEFAULT 'center';
+`);
+
+console.log("✅ settings + posts + SEO tables + upload URL + editorial blog colors + gallery images + page icons + gallery focal points ready");
 process.exit(0);

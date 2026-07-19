@@ -24,6 +24,7 @@ export * from './contactMessage';
 export * from './contactRequest';
 export * from './dashboardStats';
 export * from './galleryImage';
+export * from './galleryImagePositionUpdate';
 export * from './hasPostsResponse';
 export * from './healthStatus';
 export * from './imageUpdate';

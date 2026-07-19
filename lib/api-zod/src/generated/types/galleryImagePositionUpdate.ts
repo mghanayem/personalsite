@@ -6,9 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface GalleryImage {
-  id: number;
-  imageUrl: string;
-  displayOrder: number;
-  position?: string | null;
+export interface GalleryImagePositionUpdate {
+  position: string;
 }

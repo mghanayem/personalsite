@@ -458,6 +458,7 @@ export default function BlogPost() {
                         width: "100%",
                         height: "100%",
                         objectFit: "cover",
+                        objectPosition: (img as { position?: string }).position ?? "center",
                         display: "block",
                       }}
                     />

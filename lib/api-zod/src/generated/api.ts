@@ -1225,7 +1225,8 @@ export const CreatePostResponse = zod.object({
   "galleryImages": zod.array(zod.object({
   "id": zod.number(),
   "imageUrl": zod.string(),
-  "displayOrder": zod.number()
+  "displayOrder": zod.number(),
+  "position": zod.string().nullish()
 }))
 })
 
@@ -1256,7 +1257,8 @@ export const GetPostResponse = zod.object({
   "galleryImages": zod.array(zod.object({
   "id": zod.number(),
   "imageUrl": zod.string(),
-  "displayOrder": zod.number()
+  "displayOrder": zod.number(),
+  "position": zod.string().nullish()
 }))
 })
 
@@ -1300,7 +1302,8 @@ export const UpdatePostResponse = zod.object({
   "galleryImages": zod.array(zod.object({
   "id": zod.number(),
   "imageUrl": zod.string(),
-  "displayOrder": zod.number()
+  "displayOrder": zod.number(),
+  "position": zod.string().nullish()
 }))
 })
 
@@ -1313,6 +1316,25 @@ export const DeletePostParams = zod.object({
 })
 
 export const DeletePostResponse = zod.void()
+
+
+/**
+ * @summary Update a gallery image's focal point position
+ */
+export const UpdateGalleryImagePositionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateGalleryImagePositionBody = zod.object({
+  "position": zod.string()
+})
+
+export const UpdateGalleryImagePositionResponse = zod.object({
+  "id": zod.number(),
+  "imageUrl": zod.string(),
+  "displayOrder": zod.number(),
+  "position": zod.string().nullish()
+})
 
 
 /**
@@ -1363,7 +1385,8 @@ export const GetPublicPostResponse = zod.object({
   "galleryImages": zod.array(zod.object({
   "id": zod.number(),
   "imageUrl": zod.string(),
-  "displayOrder": zod.number()
+  "displayOrder": zod.number(),
+  "position": zod.string().nullish()
 }))
 })
 

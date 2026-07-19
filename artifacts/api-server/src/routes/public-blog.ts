@@ -90,6 +90,7 @@ router.get("/public/blog/:slug", async (req: Request, res: Response): Promise<vo
       id: g.id,
       imageUrl: g.imageUrl,
       displayOrder: g.displayOrder,
+      position: g.position ?? "center",
     })),
   });
 });
