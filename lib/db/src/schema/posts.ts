@@ -15,6 +15,7 @@ export const postsTable = pgTable("posts", {
   contentAr: text("content_ar").notNull().default(""),
   contentEn: text("content_en").notNull().default(""),
   featuredImageUrl: text("featured_image_url"),
+  featuredImagePosition: text("featured_image_position").notNull().default("center"),
   isPublished: boolean("is_published").notNull().default(false),
   publishedAt: timestamp("published_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

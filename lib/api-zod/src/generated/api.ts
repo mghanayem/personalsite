@@ -1100,10 +1100,16 @@ export const CreatePostResponse = zod.object({
   "contentAr": zod.string(),
   "contentEn": zod.string(),
   "featuredImageUrl": zod.string().nullish(),
+  "featuredImagePosition": zod.string().nullish(),
   "isPublished": zod.boolean(),
   "publishedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
+  "updatedAt": zod.coerce.date(),
+  "galleryImages": zod.array(zod.object({
+  "id": zod.number(),
+  "imageUrl": zod.string(),
+  "displayOrder": zod.number()
+}))
 })
 
 
@@ -1125,10 +1131,16 @@ export const GetPostResponse = zod.object({
   "contentAr": zod.string(),
   "contentEn": zod.string(),
   "featuredImageUrl": zod.string().nullish(),
+  "featuredImagePosition": zod.string().nullish(),
   "isPublished": zod.boolean(),
   "publishedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
+  "updatedAt": zod.coerce.date(),
+  "galleryImages": zod.array(zod.object({
+  "id": zod.number(),
+  "imageUrl": zod.string(),
+  "displayOrder": zod.number()
+}))
 })
 
 
@@ -1148,7 +1160,8 @@ export const UpdatePostBody = zod.object({
   "excerptEn": zod.string().optional(),
   "contentAr": zod.string().optional(),
   "contentEn": zod.string().optional(),
-  "isPublished": zod.boolean().optional()
+  "isPublished": zod.boolean().optional(),
+  "featuredImagePosition": zod.string().nullish()
 })
 
 export const UpdatePostResponse = zod.object({
@@ -1162,10 +1175,16 @@ export const UpdatePostResponse = zod.object({
   "contentAr": zod.string(),
   "contentEn": zod.string(),
   "featuredImageUrl": zod.string().nullish(),
+  "featuredImagePosition": zod.string().nullish(),
   "isPublished": zod.boolean(),
   "publishedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
+  "updatedAt": zod.coerce.date(),
+  "galleryImages": zod.array(zod.object({
+  "id": zod.number(),
+  "imageUrl": zod.string(),
+  "displayOrder": zod.number()
+}))
 })
 
 
@@ -1222,7 +1241,13 @@ export const GetPublicPostResponse = zod.object({
   "contentAr": zod.string(),
   "contentEn": zod.string(),
   "featuredImageUrl": zod.string().nullish(),
-  "publishedAt": zod.coerce.date().nullish()
+  "featuredImagePosition": zod.string().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "galleryImages": zod.array(zod.object({
+  "id": zod.number(),
+  "imageUrl": zod.string(),
+  "displayOrder": zod.number()
+}))
 })
 
 

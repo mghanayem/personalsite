@@ -294,7 +294,13 @@ export default function BlogPost() {
             <img
               src={post.featuredImageUrl}
               alt={title ?? ""}
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: post.featuredImagePosition ?? "center",
+                display: "block",
+              }}
             />
           </div>
         )}
@@ -413,6 +419,53 @@ export default function BlogPost() {
 
           {/* Author card */}
           <AuthorCard name={authorName} jobTitle={jobTitle} isRtl={isRtl} />
+
+          {/* Gallery images */}
+          {post.galleryImages && post.galleryImages.length > 0 && (
+            <div style={{ marginTop: 52 }}>
+              <h2
+                style={{
+                  fontFamily: "'Newsreader', Georgia, serif",
+                  fontSize: 20,
+                  fontWeight: 600,
+                  margin: "0 0 20px",
+                  color: "var(--blog-text, #201D1A)",
+                }}
+              >
+                {isRtl ? "صور المقال" : "Images"}
+              </h2>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                {post.galleryImages.map((img) => (
+                  <div
+                    key={img.id}
+                    style={{
+                      aspectRatio: "4/3",
+                      borderRadius: 4,
+                      overflow: "hidden",
+                      background: "#F0EAE0",
+                    }}
+                  >
+                    <img
+                      src={img.imageUrl}
+                      alt=""
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        display: "block",
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Related posts */}
           {relatedPosts.length > 0 && (

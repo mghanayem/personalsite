@@ -100,5 +100,21 @@ await pool.query(`
     AND blog_accent_color = '#5b91c8';
 `);
 
-console.log("✅ settings + posts + SEO tables + upload URL + editorial blog colors ready");
+// Step 11: add featured_image_position column to posts
+await pool.query(`
+  ALTER TABLE posts ADD COLUMN IF NOT EXISTS featured_image_position text NOT NULL DEFAULT 'center';
+`);
+
+// Step 12: create post_gallery_images table (up to 6 images per post)
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS post_gallery_images (
+    id serial PRIMARY KEY,
+    post_id integer NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    image_url text NOT NULL,
+    display_order integer NOT NULL DEFAULT 0,
+    created_at timestamptz NOT NULL DEFAULT now()
+  );
+`);
+
+console.log("✅ settings + posts + SEO tables + upload URL + editorial blog colors + gallery images ready");
 process.exit(0);

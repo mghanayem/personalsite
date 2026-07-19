@@ -382,6 +382,12 @@ export interface PostMeta {
   createdAt: string;
 }
 
+export interface GalleryImage {
+  id: number;
+  imageUrl: string;
+  displayOrder: number;
+}
+
 export interface Post {
   id: number;
   titleAr: string;
@@ -393,10 +399,12 @@ export interface Post {
   contentAr: string;
   contentEn: string;
   featuredImageUrl?: string | null;
+  featuredImagePosition?: string | null;
   isPublished: boolean;
   publishedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  galleryImages: GalleryImage[];
 }
 
 export interface PostInput {
@@ -425,6 +433,7 @@ export interface PostUpdate {
   contentAr?: string;
   contentEn?: string;
   isPublished?: boolean;
+  featuredImagePosition?: string | null;
 }
 
 export interface PublicPostSummary {
@@ -450,6 +459,8 @@ export interface PublicPost {
   contentAr: string;
   contentEn: string;
   featuredImageUrl?: string | null;
+  featuredImagePosition?: string | null;
   publishedAt?: string | null;
+  galleryImages: GalleryImage[];
 }
 

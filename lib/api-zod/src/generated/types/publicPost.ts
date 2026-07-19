@@ -5,6 +5,7 @@
  * Bilingual personal website + CMS API
  * OpenAPI spec version: 0.1.0
  */
+import type { GalleryImage } from './galleryImage';
 
 export interface PublicPost {
   id: number;
@@ -17,5 +18,7 @@ export interface PublicPost {
   contentAr: string;
   contentEn: string;
   featuredImageUrl?: string | null;
+  featuredImagePosition?: string | null;
   publishedAt?: Date | null;
+  galleryImages: GalleryImage[];
 }

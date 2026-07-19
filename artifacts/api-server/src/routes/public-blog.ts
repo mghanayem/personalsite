@@ -1,8 +1,16 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq, desc } from "drizzle-orm";
-import { db, postsTable } from "@workspace/db";
+import { db, postsTable, postGalleryImagesTable } from "@workspace/db";
 
 const router: IRouter = Router();
+
+async function fetchGallery(postId: number) {
+  return db
+    .select()
+    .from(postGalleryImagesTable)
+    .where(eq(postGalleryImagesTable.postId, postId))
+    .orderBy(postGalleryImagesTable.displayOrder);
+}
 
 function postSummary(row: typeof postsTable.$inferSelect) {
   return {
@@ -44,7 +52,6 @@ router.get("/public/blog/:slug", async (req: Request, res: Response): Promise<vo
   const rawSlug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
   const slug = rawSlug ?? "";
 
-  // Check Arabic slug first, then English slug
   const [bySlugAr] = await db
     .select()
     .from(postsTable)
@@ -64,6 +71,8 @@ router.get("/public/blog/:slug", async (req: Request, res: Response): Promise<vo
     return;
   }
 
+  const gallery = await fetchGallery(found.id);
+
   res.json({
     id: found.id,
     titleAr: found.titleAr,
@@ -75,7 +84,13 @@ router.get("/public/blog/:slug", async (req: Request, res: Response): Promise<vo
     contentAr: found.contentAr,
     contentEn: found.contentEn,
     featuredImageUrl: found.featuredImageUrl ?? null,
+    featuredImagePosition: found.featuredImagePosition ?? "center",
     publishedAt: found.publishedAt ? found.publishedAt.toISOString() : null,
+    galleryImages: gallery.map((g) => ({
+      id: g.id,
+      imageUrl: g.imageUrl,
+      displayOrder: g.displayOrder,
+    })),
   });
 });
 

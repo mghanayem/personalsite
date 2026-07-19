@@ -16,6 +16,7 @@ export * from './bulletItem';
 export * from './contactMessage';
 export * from './contactRequest';
 export * from './dashboardStats';
+export * from './galleryImage';
 export * from './hasPostsResponse';
 export * from './healthStatus';
 export * from './imageUpdate';

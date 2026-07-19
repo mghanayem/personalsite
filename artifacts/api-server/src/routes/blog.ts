@@ -1,13 +1,28 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq, desc } from "drizzle-orm";
-import { db, postsTable } from "@workspace/db";
+import { db, postsTable, postGalleryImagesTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
-import { upload, getUploadsDir, deleteUploadFile, imageUrl } from "../lib/uploads";
+import { upload, deleteUploadFile, imageUrl } from "../lib/uploads";
 import { sanitizeBlogHtml } from "../lib/sanitize";
 import path from "path";
-import fs from "fs";
 
 const router: IRouter = Router();
+
+const MAX_GALLERY = 6;
+
+type GalleryRow = typeof postGalleryImagesTable.$inferSelect;
+
+function galleryShape(g: GalleryRow) {
+  return { id: g.id, imageUrl: g.imageUrl, displayOrder: g.displayOrder };
+}
+
+async function fetchGallery(postId: number) {
+  return db
+    .select()
+    .from(postGalleryImagesTable)
+    .where(eq(postGalleryImagesTable.postId, postId))
+    .orderBy(postGalleryImagesTable.displayOrder);
+}
 
 function postMeta(row: typeof postsTable.$inferSelect) {
   return {
@@ -23,7 +38,10 @@ function postMeta(row: typeof postsTable.$inferSelect) {
   };
 }
 
-function postFull(row: typeof postsTable.$inferSelect) {
+function postFull(
+  row: typeof postsTable.$inferSelect,
+  gallery: GalleryRow[],
+) {
   return {
     id: row.id,
     titleAr: row.titleAr,
@@ -35,10 +53,12 @@ function postFull(row: typeof postsTable.$inferSelect) {
     contentAr: row.contentAr,
     contentEn: row.contentEn,
     featuredImageUrl: row.featuredImageUrl ?? null,
+    featuredImagePosition: row.featuredImagePosition ?? "center",
     isPublished: row.isPublished,
     publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    galleryImages: gallery.map(galleryShape),
   };
 }
 
@@ -53,31 +73,21 @@ router.get("/blog", requireAuth, async (_req, res): Promise<void> => {
 
 // POST /blog — create post
 router.post("/blog", requireAuth, async (req: Request, res: Response): Promise<void> => {
-  const { titleAr = "", titleEn = "", slugAr, slugEn, excerptAr = "", excerptEn = "",
-    contentAr = "", contentEn = "", isPublished = false } = req.body as Record<string, string | boolean>;
+  const {
+    titleAr = "", titleEn = "", slugAr, slugEn,
+    excerptAr = "", excerptEn = "",
+    contentAr = "", contentEn = "", isPublished = false,
+  } = req.body as Record<string, string | boolean>;
 
   if (!slugAr || !slugEn) {
     res.status(400).json({ error: "slugAr and slugEn are required" });
     return;
   }
 
-  // Check slug uniqueness
-  const existing = await db
-    .select({ id: postsTable.id })
-    .from(postsTable)
-    .where(eq(postsTable.slugAr, slugAr as string));
-  if (existing.length > 0) {
-    res.status(400).json({ error: "slugAr is already taken" });
-    return;
-  }
-  const existingEn = await db
-    .select({ id: postsTable.id })
-    .from(postsTable)
-    .where(eq(postsTable.slugEn, slugEn as string));
-  if (existingEn.length > 0) {
-    res.status(400).json({ error: "slugEn is already taken" });
-    return;
-  }
+  const existing = await db.select({ id: postsTable.id }).from(postsTable).where(eq(postsTable.slugAr, slugAr as string));
+  if (existing.length > 0) { res.status(400).json({ error: "slugAr is already taken" }); return; }
+  const existingEn = await db.select({ id: postsTable.id }).from(postsTable).where(eq(postsTable.slugEn, slugEn as string));
+  if (existingEn.length > 0) { res.status(400).json({ error: "slugEn is already taken" }); return; }
 
   const now = new Date();
   const [post] = await db
@@ -96,7 +106,7 @@ router.post("/blog", requireAuth, async (req: Request, res: Response): Promise<v
     })
     .returning();
 
-  res.status(201).json(postFull(post));
+  res.status(201).json(postFull(post, []));
 });
 
 // GET /blog/:id — get post by ID (admin)
@@ -107,7 +117,8 @@ router.get("/blog/:id", requireAuth, async (req: Request, res: Response): Promis
   const [post] = await db.select().from(postsTable).where(eq(postsTable.id, id));
   if (!post) { res.status(404).json({ error: "Post not found" }); return; }
 
-  res.json(postFull(post));
+  const gallery = await fetchGallery(id);
+  res.json(postFull(post, gallery));
 });
 
 // PATCH /blog/:id — update post
@@ -128,7 +139,14 @@ router.patch("/blog/:id", requireAuth, async (req: Request, res: Response): Prom
   if (typeof body.contentAr === "string") updates.contentAr = sanitizeBlogHtml(body.contentAr);
   if (typeof body.contentEn === "string") updates.contentEn = sanitizeBlogHtml(body.contentEn);
 
-  // Slug uniqueness checks
+  // featuredImagePosition — accepts "top" | "center" | "bottom"
+  if (typeof body.featuredImagePosition === "string") {
+    const validPositions = ["top", "center", "bottom"];
+    if (validPositions.includes(body.featuredImagePosition)) {
+      updates.featuredImagePosition = body.featuredImagePosition;
+    }
+  }
+
   if (typeof body.slugAr === "string" && body.slugAr !== existing.slugAr) {
     const clash = await db.select({ id: postsTable.id }).from(postsTable).where(eq(postsTable.slugAr, body.slugAr));
     if (clash.length > 0) { res.status(400).json({ error: "slugAr is already taken" }); return; }
@@ -149,16 +167,18 @@ router.patch("/blog/:id", requireAuth, async (req: Request, res: Response): Prom
     }
   }
 
+  const gallery = await fetchGallery(id);
+
   if (Object.keys(updates).length === 0) {
-    res.json(postFull(existing));
+    res.json(postFull(existing, gallery));
     return;
   }
 
   const [updated] = await db.update(postsTable).set(updates).where(eq(postsTable.id, id)).returning();
-  res.json(postFull(updated));
+  res.json(postFull(updated, gallery));
 });
 
-// DELETE /blog/:id — delete post
+// DELETE /blog/:id — delete post + all gallery images
 router.delete("/blog/:id", requireAuth, async (req: Request, res: Response): Promise<void> => {
   const id = parseInt(req.params.id as string, 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
@@ -166,17 +186,22 @@ router.delete("/blog/:id", requireAuth, async (req: Request, res: Response): Pro
   const [post] = await db.select().from(postsTable).where(eq(postsTable.id, id));
   if (!post) { res.status(404).json({ error: "Post not found" }); return; }
 
-  // Delete featured image file if present
+  // Delete featured image
   if (post.featuredImageUrl) {
-    const filename = path.basename(post.featuredImageUrl);
-    deleteUploadFile(filename);
+    deleteUploadFile(path.basename(post.featuredImageUrl));
+  }
+
+  // Delete gallery image files (cascade deletes DB rows via FK)
+  const gallery = await fetchGallery(id);
+  for (const img of gallery) {
+    deleteUploadFile(path.basename(img.imageUrl));
   }
 
   await db.delete(postsTable).where(eq(postsTable.id, id));
   res.status(204).send();
 });
 
-// POST /blog/:id/featured-image — upload featured image (multipart, not in OpenAPI spec)
+// POST /blog/:id/featured-image — upload featured image (multipart, outside OpenAPI spec)
 router.post(
   "/blog/:id/featured-image",
   requireAuth,
@@ -189,10 +214,8 @@ router.post(
     if (!post) { res.status(404).json({ error: "Post not found" }); return; }
     if (!req.file) { res.status(400).json({ error: "No file uploaded" }); return; }
 
-    // Delete old featured image
     if (post.featuredImageUrl) {
-      const oldFilename = path.basename(post.featuredImageUrl);
-      deleteUploadFile(oldFilename);
+      deleteUploadFile(path.basename(post.featuredImageUrl));
     }
 
     const url = imageUrl(req.file.filename);
@@ -202,7 +225,8 @@ router.post(
       .where(eq(postsTable.id, id))
       .returning();
 
-    res.json(postFull(updated));
+    const gallery = await fetchGallery(id);
+    res.json(postFull(updated, gallery));
   },
 );
 
@@ -218,15 +242,70 @@ router.delete(
     if (!post) { res.status(404).json({ error: "Post not found" }); return; }
 
     if (post.featuredImageUrl) {
-      const filename = path.basename(post.featuredImageUrl);
-      deleteUploadFile(filename);
-      await db
-        .update(postsTable)
-        .set({ featuredImageUrl: null })
-        .where(eq(postsTable.id, id));
+      deleteUploadFile(path.basename(post.featuredImageUrl));
+      await db.update(postsTable).set({ featuredImageUrl: null }).where(eq(postsTable.id, id));
     }
 
     res.json({ message: "Featured image removed" });
+  },
+);
+
+// POST /blog/:id/gallery-image — upload a gallery image (multipart, outside OpenAPI spec)
+router.post(
+  "/blog/:id/gallery-image",
+  requireAuth,
+  upload.single("file"),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = parseInt(req.params.id as string, 10);
+    if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+    const [post] = await db.select().from(postsTable).where(eq(postsTable.id, id));
+    if (!post) { res.status(404).json({ error: "Post not found" }); return; }
+    if (!req.file) { res.status(400).json({ error: "No file uploaded" }); return; }
+
+    const existing = await fetchGallery(id);
+    if (existing.length >= MAX_GALLERY) {
+      // Delete the just-uploaded file and reject
+      deleteUploadFile(req.file.filename);
+      res.status(400).json({ error: `Maximum of ${MAX_GALLERY} gallery images allowed` });
+      return;
+    }
+
+    const url = imageUrl(req.file.filename);
+    const [newImg] = await db
+      .insert(postGalleryImagesTable)
+      .values({ postId: id, imageUrl: url, displayOrder: existing.length })
+      .returning();
+
+    res.status(201).json(galleryShape(newImg));
+  },
+);
+
+// DELETE /blog/:id/gallery-image/:imageId — remove a gallery image
+router.delete(
+  "/blog/:id/gallery-image/:imageId",
+  requireAuth,
+  async (req: Request, res: Response): Promise<void> => {
+    const postId = parseInt(req.params.id as string, 10);
+    const imageId = parseInt(req.params.imageId as string, 10);
+    if (isNaN(postId) || isNaN(imageId)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+
+    const [img] = await db
+      .select()
+      .from(postGalleryImagesTable)
+      .where(eq(postGalleryImagesTable.id, imageId));
+
+    if (!img || img.postId !== postId) {
+      res.status(404).json({ error: "Gallery image not found" });
+      return;
+    }
+
+    deleteUploadFile(path.basename(img.imageUrl));
+    await db.delete(postGalleryImagesTable).where(eq(postGalleryImagesTable.id, imageId));
+    res.status(204).send();
   },
 );
 

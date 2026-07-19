@@ -16,4 +16,5 @@ export interface PostUpdate {
   contentAr?: string;
   contentEn?: string;
   isPublished?: boolean;
+  featuredImagePosition?: string | null;
 }

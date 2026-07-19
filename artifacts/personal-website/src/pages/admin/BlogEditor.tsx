@@ -21,6 +21,10 @@ import {
   Eye,
   EyeOff,
   FileCode2,
+  Copy,
+  Check,
+  Plus,
+  ImageIcon,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -35,7 +39,96 @@ function slugify(text: string) {
 }
 
 type ContentLang = "ar" | "en";
+type ImagePosition = "top" | "center" | "bottom";
 
+const MAX_GALLERY = 6;
+
+interface GalleryImage {
+  id: number;
+  imageUrl: string;
+  displayOrder: number;
+}
+
+// ── Position picker ───────────────────────────────────────────────────────
+function PositionPicker({
+  value,
+  onChange,
+}: {
+  value: ImagePosition;
+  onChange: (pos: ImagePosition) => void;
+}) {
+  const options: { value: ImagePosition; label: string }[] = [
+    { value: "top", label: "Top" },
+    { value: "center", label: "Center" },
+    { value: "bottom", label: "Bottom" },
+  ];
+  return (
+    <div className="flex items-center gap-1 bg-muted rounded-md p-1 w-fit">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+            value === opt.value
+              ? "bg-background shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Gallery image card ────────────────────────────────────────────────────
+function GalleryCard({
+  image,
+  onRemove,
+  onCopy,
+  copied,
+}: {
+  image: GalleryImage;
+  onRemove: () => void;
+  onCopy: () => void;
+  copied: boolean;
+}) {
+  return (
+    <div className="group relative rounded-lg border border-border overflow-hidden aspect-video bg-muted">
+      <img
+        src={image.imageUrl}
+        alt=""
+        className="w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+        <Button
+          size="sm"
+          variant="secondary"
+          className="h-7 px-2 gap-1.5 text-xs"
+          onClick={onCopy}
+        >
+          {copied ? (
+            <Check className="w-3 h-3" />
+          ) : (
+            <Copy className="w-3 h-3" />
+          )}
+          {copied ? "Copied!" : "Copy URL"}
+        </Button>
+        <Button
+          size="sm"
+          variant="destructive"
+          className="h-7 px-2 gap-1.5 text-xs"
+          onClick={onRemove}
+        >
+          <Trash2 className="w-3 h-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────
 export default function BlogEditor() {
   const params = useParams<{ id: string }>();
   const rawId = params.id;
@@ -56,15 +149,21 @@ export default function BlogEditor() {
   const [contentEn, setContentEn] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(null);
+  const [featuredImagePosition, setFeaturedImagePositionState] =
+    useState<ImagePosition>("center");
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [contentTab, setContentTab] = useState<ContentLang>("en");
   const [savedId, setSavedId] = useState<number | null>(postId);
   const [saveError, setSaveError] = useState("");
   const [saved, setSaved] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch existing post data
+  // Fetch existing post
   const { data: existingPost, isLoading: postLoading } = useGetPost(
     postId as number,
     {
@@ -78,7 +177,6 @@ export default function BlogEditor() {
   const createPost = useCreatePost();
   const updatePost = useUpdatePost();
 
-  // Populate form when post data loads
   useEffect(() => {
     if (existingPost) {
       setTitleAr(existingPost.titleAr);
@@ -91,21 +189,30 @@ export default function BlogEditor() {
       setContentEn(existingPost.contentEn);
       setIsPublished(existingPost.isPublished);
       setFeaturedImageUrl(existingPost.featuredImageUrl ?? null);
+      const pos = existingPost.featuredImagePosition;
+      if (pos === "top" || pos === "center" || pos === "bottom") {
+        setFeaturedImagePositionState(pos);
+      }
+      setGalleryImages(
+        (existingPost.galleryImages ?? []).map((g) => ({
+          id: g.id,
+          imageUrl: g.imageUrl,
+          displayOrder: g.displayOrder,
+        })),
+      );
       setSavedId(existingPost.id);
     }
   }, [existingPost]);
 
-  // Auto-generate slugs from English title (only when creating new)
   const handleTitleEnChange = (val: string) => {
     setTitleEn(val);
     if (isNew) {
       const s = slugify(val);
       setSlugEn(s);
-      setSlugAr(s); // default Arabic slug to same; admin can customise
+      setSlugAr(s);
     }
   };
 
-  // Import HTML from file
   const handleImportHtml = (lang: ContentLang) => {
     const input = document.createElement("input");
     input.type = "file";
@@ -123,7 +230,24 @@ export default function BlogEditor() {
     input.click();
   };
 
-  // Upload featured image
+  // ── Featured image position ─────────────────────────────────────────────
+  const handlePositionChange = async (pos: ImagePosition) => {
+    setFeaturedImagePositionState(pos);
+    if (!savedId) return;
+    try {
+      await fetch(`/api/blog/${savedId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ featuredImagePosition: pos }),
+      });
+      queryClient.invalidateQueries({ queryKey: getGetPostQueryKey(savedId) });
+    } catch {
+      // non-critical — position is still reflected in local state
+    }
+  };
+
+  // ── Featured image upload ───────────────────────────────────────────────
   const handleFeaturedImageSelect = async (file: File) => {
     if (!savedId) {
       setSaveError("Save the post first before uploading a featured image.");
@@ -139,10 +263,7 @@ export default function BlogEditor() {
         body: formData,
         credentials: "include",
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Upload failed");
-      }
+      if (!res.ok) throw new Error((await res.json()).error || "Upload failed");
       const updated = await res.json();
       setFeaturedImageUrl(updated.featuredImageUrl ?? null);
       queryClient.invalidateQueries({ queryKey: getGetPostQueryKey(savedId) });
@@ -153,7 +274,6 @@ export default function BlogEditor() {
     }
   };
 
-  // Delete featured image
   const handleDeleteFeaturedImage = async () => {
     if (!savedId) return;
     setSaveError("");
@@ -169,7 +289,72 @@ export default function BlogEditor() {
     }
   };
 
-  // Save (create or update)
+  // ── Gallery image upload ────────────────────────────────────────────────
+  const handleGalleryImageSelect = async (file: File) => {
+    if (!savedId) {
+      setSaveError("Save the post first before uploading gallery images.");
+      return;
+    }
+    if (galleryImages.length >= MAX_GALLERY) {
+      setSaveError(`You can upload a maximum of ${MAX_GALLERY} gallery images.`);
+      return;
+    }
+    setUploadingGallery(true);
+    setSaveError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/blog/${savedId}/gallery-image`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Upload failed");
+      const newImg: GalleryImage = await res.json();
+      setGalleryImages((prev) => [...prev, newImg]);
+      queryClient.invalidateQueries({ queryKey: getGetPostQueryKey(savedId) });
+    } catch (e: unknown) {
+      setSaveError(e instanceof Error ? e.message : "Gallery upload failed");
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
+  const handleRemoveGalleryImage = async (imageId: number) => {
+    if (!savedId) return;
+    setSaveError("");
+    try {
+      const res = await fetch(`/api/blog/${savedId}/gallery-image/${imageId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to remove gallery image");
+      setGalleryImages((prev) => prev.filter((g) => g.id !== imageId));
+      queryClient.invalidateQueries({ queryKey: getGetPostQueryKey(savedId) });
+    } catch (e: unknown) {
+      setSaveError(e instanceof Error ? e.message : "Failed to remove gallery image");
+    }
+  };
+
+  const handleCopyUrl = async (img: GalleryImage) => {
+    try {
+      await navigator.clipboard.writeText(img.imageUrl);
+      setCopiedId(img.id);
+      setTimeout(() => setCopiedId(null), 1800);
+    } catch {
+      // fallback
+      const el = document.createElement("textarea");
+      el.value = img.imageUrl;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      setCopiedId(img.id);
+      setTimeout(() => setCopiedId(null), 1800);
+    }
+  };
+
+  // ── Save ──────────────────────────────────────────────────────────────
   const handleSave = () => {
     setSaveError("");
     if (!slugEn.trim() || !slugAr.trim()) {
@@ -177,7 +362,7 @@ export default function BlogEditor() {
       return;
     }
 
-    const data = {
+    const baseData = {
       titleAr,
       titleEn,
       slugAr: slugAr.trim(),
@@ -191,7 +376,7 @@ export default function BlogEditor() {
 
     if (isNew) {
       createPost.mutate(
-        { data },
+        { data: baseData },
         {
           onSuccess: (post) => {
             setSavedId(post.id);
@@ -201,15 +386,13 @@ export default function BlogEditor() {
             setLocation(`/admin/blog/${post.id}`);
           },
           onError: (err: unknown) => {
-            const msg =
-              err instanceof Error ? err.message : "Failed to create post";
-            setSaveError(msg);
+            setSaveError(err instanceof Error ? err.message : "Failed to create post");
           },
         },
       );
     } else {
       updatePost.mutate(
-        { id: savedId as number, data },
+        { id: savedId as number, data: { ...baseData, featuredImagePosition } },
         {
           onSuccess: () => {
             setSaved(true);
@@ -218,9 +401,7 @@ export default function BlogEditor() {
             queryClient.invalidateQueries({ queryKey: getGetPostQueryKey(savedId as number) });
           },
           onError: (err: unknown) => {
-            const msg =
-              err instanceof Error ? err.message : "Failed to save post";
-            setSaveError(msg);
+            setSaveError(err instanceof Error ? err.message : "Failed to save post");
           },
         },
       );
@@ -245,48 +426,27 @@ export default function BlogEditor() {
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setLocation("/admin/blog")}
-              className="shrink-0"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setLocation("/admin/blog")} className="shrink-0">
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-xl font-bold">
-                {isNew ? "New Post" : "Edit Post"}
-              </h1>
-              {!isNew && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  ID: {savedId}
-                </p>
-              )}
+              <h1 className="text-xl font-bold">{isNew ? "New Post" : "Edit Post"}</h1>
+              {!isNew && <p className="text-xs text-muted-foreground mt-0.5">ID: {savedId}</p>}
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {saved && (
-              <span className="text-sm text-green-600 font-medium">✓ Saved</span>
-            )}
+            {saved && <span className="text-sm text-green-600 font-medium">✓ Saved</span>}
             <Button
               variant={isPublished ? "default" : "outline"}
               size="sm"
               className="gap-2"
               onClick={() => setIsPublished(!isPublished)}
             >
-              {isPublished ? (
-                <Eye className="w-3.5 h-3.5" />
-              ) : (
-                <EyeOff className="w-3.5 h-3.5" />
-              )}
+              {isPublished ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
               {isPublished ? "Published" : "Draft"}
             </Button>
             <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {isNew ? "Create Post" : "Save"}
             </Button>
           </div>
@@ -300,80 +460,44 @@ export default function BlogEditor() {
 
         {/* Titles & Slugs */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Titles & Slugs</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">Titles & Slugs</CardTitle></CardHeader>
           <CardContent className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Title (English)</Label>
-              <Input
-                value={titleEn}
-                onChange={(e) => handleTitleEnChange(e.target.value)}
-                placeholder="My First Blog Post"
-              />
+              <Input value={titleEn} onChange={(e) => handleTitleEnChange(e.target.value)} placeholder="My First Blog Post" />
             </div>
             <div className="space-y-2">
               <Label>العنوان (عربي)</Label>
-              <Input
-                value={titleAr}
-                onChange={(e) => setTitleAr(e.target.value)}
-                placeholder="أول مقال في المدونة"
-                dir="rtl"
-              />
+              <Input value={titleAr} onChange={(e) => setTitleAr(e.target.value)} placeholder="أول مقال في المدونة" dir="rtl" />
             </div>
             <div className="space-y-2">
               <Label className="flex items-center justify-between">
                 <span>Slug (EN) — used in /en/blog/…</span>
                 <span className="text-xs text-muted-foreground font-normal">URL-safe</span>
               </Label>
-              <Input
-                value={slugEn}
-                onChange={(e) => setSlugEn(e.target.value.toLowerCase().replace(/\s/g, "-"))}
-                placeholder="my-first-blog-post"
-                className="font-mono"
-              />
+              <Input value={slugEn} onChange={(e) => setSlugEn(e.target.value.toLowerCase().replace(/\s/g, "-"))} placeholder="my-first-blog-post" className="font-mono" />
             </div>
             <div className="space-y-2">
               <Label className="flex items-center justify-between">
                 <span>Slug (AR) — used in /blog/…</span>
                 <span className="text-xs text-muted-foreground font-normal">URL-safe</span>
               </Label>
-              <Input
-                value={slugAr}
-                onChange={(e) => setSlugAr(e.target.value.toLowerCase().replace(/\s/g, "-"))}
-                placeholder="my-first-blog-post"
-                className="font-mono"
-              />
+              <Input value={slugAr} onChange={(e) => setSlugAr(e.target.value.toLowerCase().replace(/\s/g, "-"))} placeholder="my-first-blog-post" className="font-mono" />
             </div>
           </CardContent>
         </Card>
 
         {/* Excerpts */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Excerpts (optional summary shown on blog index)</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">Excerpts (optional summary shown on blog index)</CardTitle></CardHeader>
           <CardContent className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Excerpt (English)</Label>
-              <textarea
-                value={excerptEn}
-                onChange={(e) => setExcerptEn(e.target.value)}
-                placeholder="A short summary of this post…"
-                rows={3}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              <textarea value={excerptEn} onChange={(e) => setExcerptEn(e.target.value)} placeholder="A short summary of this post…" rows={3} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="space-y-2">
               <Label>المقتطف (عربي)</Label>
-              <textarea
-                value={excerptAr}
-                onChange={(e) => setExcerptAr(e.target.value)}
-                placeholder="ملخص قصير للمقال…"
-                rows={3}
-                dir="rtl"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              <textarea value={excerptAr} onChange={(e) => setExcerptAr(e.target.value)} placeholder="ملخص قصير للمقال…" rows={3} dir="rtl" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
           </CardContent>
         </Card>
@@ -383,44 +507,66 @@ export default function BlogEditor() {
           <CardHeader>
             <CardTitle className="text-base">Featured Image</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             {!savedId && (
-              <p className="text-sm text-muted-foreground mb-3">
+              <p className="text-sm text-muted-foreground">
                 Save the post first, then you can upload a featured image.
               </p>
             )}
+
             {featuredImageUrl ? (
-              <div className="space-y-3">
-                <div className="rounded-lg overflow-hidden border border-border w-full max-w-md aspect-video bg-muted">
+              <div className="space-y-4">
+                {/* Preview with live position */}
+                <div
+                  className="rounded-lg overflow-hidden border border-border w-full max-w-md aspect-video bg-muted"
+                >
                   <img
                     src={featuredImageUrl}
                     alt="Featured"
                     className="w-full h-full object-cover"
+                    style={{ objectPosition: featuredImagePosition }}
                   />
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 text-destructive hover:text-destructive"
-                  onClick={handleDeleteFeaturedImage}
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Remove Image
-                </Button>
+
+                {/* Position picker */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">
+                    Crop anchor — where to pin the image in the hero frame
+                  </Label>
+                  <PositionPicker
+                    value={featuredImagePosition}
+                    onChange={handlePositionChange}
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    disabled={!savedId || uploadingImage}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {uploadingImage ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    Replace
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 text-destructive hover:text-destructive"
+                    onClick={handleDeleteFeaturedImage}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Remove
+                  </Button>
+                </div>
               </div>
             ) : (
               <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleFeaturedImageSelect(file);
-                    e.target.value = "";
-                  }}
-                />
                 <Button
                   variant="outline"
                   className="gap-2"
@@ -436,6 +582,103 @@ export default function BlogEditor() {
                 </Button>
               </div>
             )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFeaturedImageSelect(file);
+                e.target.value = "";
+              }}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Gallery Images */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Gallery Images</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Up to {MAX_GALLERY} images · hover a thumbnail to copy its URL or remove it
+                </p>
+              </div>
+              <span className="text-sm font-medium tabular-nums text-muted-foreground">
+                {galleryImages.length} / {MAX_GALLERY}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!savedId && (
+              <p className="text-sm text-muted-foreground">
+                Save the post first, then you can add gallery images.
+              </p>
+            )}
+
+            {galleryImages.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {galleryImages.map((img) => (
+                  <GalleryCard
+                    key={img.id}
+                    image={img}
+                    onRemove={() => handleRemoveGalleryImage(img.id)}
+                    onCopy={() => handleCopyUrl(img)}
+                    copied={copiedId === img.id}
+                  />
+                ))}
+              </div>
+            )}
+
+            {galleryImages.length === 0 && savedId && (
+              <div className="flex flex-col items-center justify-center border border-dashed border-border rounded-lg py-10 text-muted-foreground gap-2">
+                <ImageIcon className="w-8 h-8 opacity-30" />
+                <p className="text-sm">No gallery images yet</p>
+              </div>
+            )}
+
+            {savedId && galleryImages.length < MAX_GALLERY && (
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  disabled={uploadingGallery}
+                  onClick={() => galleryInputRef.current?.click()}
+                >
+                  {uploadingGallery ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  {uploadingGallery ? "Uploading…" : "Add Image"}
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  {MAX_GALLERY - galleryImages.length} slot{MAX_GALLERY - galleryImages.length !== 1 ? "s" : ""} remaining
+                </span>
+              </div>
+            )}
+
+            {savedId && galleryImages.length >= MAX_GALLERY && (
+              <p className="text-xs text-muted-foreground">
+                Gallery is full ({MAX_GALLERY}/{MAX_GALLERY}). Remove an image to add a new one.
+              </p>
+            )}
+
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleGalleryImageSelect(file);
+                e.target.value = "";
+              }}
+            />
           </CardContent>
         </Card>
 
@@ -445,26 +688,10 @@ export default function BlogEditor() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Content (HTML)</CardTitle>
               <div className="flex items-center gap-1 bg-muted rounded-md p-1">
-                <button
-                  type="button"
-                  onClick={() => setContentTab("en")}
-                  className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                    contentTab === "en"
-                      ? "bg-background shadow-sm text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
+                <button type="button" onClick={() => setContentTab("en")} className={`px-3 py-1 text-xs font-medium rounded transition-colors ${contentTab === "en" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                   English
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setContentTab("ar")}
-                  className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                    contentTab === "ar"
-                      ? "bg-background shadow-sm text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
+                <button type="button" onClick={() => setContentTab("ar")} className={`px-3 py-1 text-xs font-medium rounded transition-colors ${contentTab === "ar" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                   العربية
                 </button>
               </div>
@@ -473,15 +700,9 @@ export default function BlogEditor() {
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                Raw HTML — paste or type content directly, or import from a{" "}
-                <code>.html</code> file.
+                Raw HTML — paste or type content directly, or import from a <code>.html</code> file.
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => handleImportHtml(contentTab)}
-              >
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => handleImportHtml(contentTab)}>
                 <FileCode2 className="w-3.5 h-3.5" />
                 Import HTML
               </Button>
@@ -500,7 +721,7 @@ export default function BlogEditor() {
               <textarea
                 value={contentAr}
                 onChange={(e) => setContentAr(e.target.value)}
-                placeholder="<p>ابدأ كتابة محتوى المقال بالعربية هنا…</p>"
+                placeholder="<p>ابدأ بكتابة محتوى مقالتك بالعربية هنا…</p>"
                 rows={18}
                 dir="rtl"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-ring"
@@ -509,26 +730,6 @@ export default function BlogEditor() {
             )}
           </CardContent>
         </Card>
-
-        {/* Bottom save bar */}
-        <div className="flex items-center justify-between pb-8">
-          <div>
-            {saveError && (
-              <p className="text-sm text-destructive">{saveError}</p>
-            )}
-            {saved && (
-              <p className="text-sm text-green-600 font-medium">✓ Changes saved</p>
-            )}
-          </div>
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            {isNew ? "Create Post" : "Save Changes"}
-          </Button>
-        </div>
       </div>
     </AdminLayout>
   );
