@@ -5,6 +5,7 @@
  * Bilingual personal website + CMS API
  * OpenAPI spec version: 0.1.0
  */
+import type { BrandingSettingsDefaultLanguage } from './brandingSettingsDefaultLanguage';
 
 export interface BrandingSettings {
   /** Hex color for the primary theme color (e.g. #0e1a2a) */
@@ -19,4 +20,6 @@ export interface BrandingSettings {
   cta2BgColor: string;
   /** Hex text color for the secondary hero button */
   cta2TextColor: string;
+  /** Default language shown to new visitors */
+  defaultLanguage: BrandingSettingsDefaultLanguage;
 }

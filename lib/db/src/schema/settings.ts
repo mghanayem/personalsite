@@ -13,6 +13,8 @@ export const settingsTable = pgTable("settings", {
   cta1TextColor: text("cta1_text_color").notNull().default("#ffffff"),
   cta2BgColor: text("cta2_bg_color").notNull().default("#ffffff"),
   cta2TextColor: text("cta2_text_color").notNull().default("#0e1a2a"),
+  // Site language default for new visitors
+  defaultLanguage: text("default_language").notNull().default("ar"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()

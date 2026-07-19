@@ -19,4 +19,6 @@ export interface ContactRequest {
      * @maxLength 5000
      */
   message: string;
+  /** Honeypot field — must be empty; bots that fill it are silently rejected. */
+  website?: string;
 }

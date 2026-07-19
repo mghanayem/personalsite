@@ -22,18 +22,41 @@ const queryClient = new QueryClient({
   }
 });
 
-/** Fetches branding colors from the API and injects them as CSS vars at startup. */
+/**
+ * Fetches branding settings from the API on first mount.
+ * - Applies color CSS vars immediately.
+ * - Redirects the bare root path to /en when English is the stored default language.
+ *   Uses window.location.replace so the back button is not polluted.
+ */
 function BrandingLoader() {
   useEffect(() => {
+    // Snapshot the path before the async fetch so we don't act on a stale value.
+    const snapshotHref = window.location.pathname;
+
     fetch('/api/settings/branding')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data?.primaryColor) {
-          applyBrandingColors(data);
+        if (!data) return;
+
+        // Apply colors
+        if (data.primaryColor) applyBrandingColors(data);
+
+        // Language redirect — only for new visitors landing on the root
+        if (data.defaultLanguage === 'en') {
+          const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+          // Wouter-relative path: strip the vite BASE_URL prefix
+          const rel = snapshotHref.startsWith(base)
+            ? snapshotHref.slice(base.length) || '/'
+            : snapshotHref;
+          // Only redirect if they're on the bare root (Arabic default path)
+          if (rel === '/' || rel === '') {
+            window.location.replace(base + '/en');
+          }
         }
       })
-      .catch(() => { /* fallback to CSS defaults */ });
-  }, []);
+      .catch(() => { /* silently fall back to CSS defaults */ });
+  }, []); // run once at mount
+
   return null;
 }
 

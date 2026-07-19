@@ -1,6 +1,6 @@
 import { useGetAdminSession, useAdminLogout, getGetAdminSessionQueryKey } from "@workspace/api-client-react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, Settings, LogOut, Loader2, AlertCircle, Palette, Inbox } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, LogOut, Loader2, AlertCircle, Palette, Inbox, ExternalLink } from "lucide-react";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const handleLogout = () => {
     logout.mutate(undefined, {
       onSuccess: () => {
-        // Remove the cached session so Login.tsx sees a clean unauthenticated state
         queryClient.removeQueries({ queryKey: getGetAdminSessionQueryKey() });
         setLocation("/admin");
       },
@@ -71,6 +70,17 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               {item.title}
             </Link>
           ))}
+
+          {/* Visit Site link */}
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground mt-2"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Visit Site
+          </a>
         </nav>
 
         <div className="p-4 border-t border-sidebar-border">
@@ -92,9 +102,20 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-16 border-b bg-card flex items-center justify-between px-6 md:hidden">
           <span className="font-bold">CMS Admin</span>
-          <Button variant="ghost" size="icon" onClick={handleLogout}>
-            <LogOut className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground"
+              title="Visit Site"
+            >
+              <ExternalLink className="w-5 h-5" />
+            </a>
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
         </header>
 
         <div className="flex-1 p-6 md:p-8 overflow-auto">

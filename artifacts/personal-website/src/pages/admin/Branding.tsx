@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Loader2, Save, Palette } from "lucide-react";
+import { Loader2, Save, Palette, Globe } from "lucide-react";
 import { applyBrandingColors } from "@/lib/branding";
 
 function ColorPicker({
@@ -60,6 +60,7 @@ export default function Branding() {
   const [cta1TextColor, setCta1TextColor] = useState("#ffffff");
   const [cta2BgColor, setCta2BgColor] = useState("#ffffff");
   const [cta2TextColor, setCta2TextColor] = useState("#0e1a2a");
+  const [defaultLanguage, setDefaultLanguage] = useState<"ar" | "en">("ar");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -70,12 +71,23 @@ export default function Branding() {
       setCta1TextColor(settings.cta1TextColor);
       setCta2BgColor(settings.cta2BgColor);
       setCta2TextColor(settings.cta2TextColor);
+      setDefaultLanguage(settings.defaultLanguage as "ar" | "en");
     }
   }, [settings]);
 
   const handleSave = () => {
     update.mutate(
-      { data: { primaryColor, accentColor, cta1BgColor, cta1TextColor, cta2BgColor, cta2TextColor } },
+      {
+        data: {
+          primaryColor,
+          accentColor,
+          cta1BgColor,
+          cta1TextColor,
+          cta2BgColor,
+          cta2TextColor,
+          defaultLanguage,
+        },
+      },
       {
         onSuccess: (data) => {
           applyBrandingColors(data);
@@ -105,9 +117,48 @@ export default function Branding() {
             Site Branding
           </h1>
           <p className="text-muted-foreground mt-1">
-            Choose your site's color palette. Changes apply immediately to the public site.
+            Choose your site's color palette and default language. Changes apply immediately.
           </p>
         </div>
+
+        {/* Default Language */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              Default Language
+            </CardTitle>
+            <CardDescription>
+              The language new visitors see when they open your site. They can always switch using the language toggle.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3">
+              {(["ar", "en"] as const).map((lang) => {
+                const label = lang === "ar" ? "Arabic (العربية)" : "English";
+                const isSelected = defaultLanguage === lang;
+                return (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => setDefaultLanguage(lang)}
+                    className={`flex flex-col items-center gap-2 rounded-xl border-2 px-4 py-5 text-sm font-medium transition-all cursor-pointer ${
+                      isSelected
+                        ? "border-primary bg-primary/5 text-primary shadow-sm"
+                        : "border-border bg-background text-foreground/70 hover:border-primary/40 hover:text-foreground"
+                    }`}
+                  >
+                    <span className="text-2xl">{lang === "ar" ? "🇸🇦" : "🇬🇧"}</span>
+                    <span>{label}</span>
+                    {isSelected && (
+                      <span className="text-xs font-semibold text-primary">✓ Default</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Theme Colors */}
         <Card>
@@ -211,7 +262,7 @@ export default function Branding() {
           <div>
             {saved && (
               <p className="text-sm text-green-600 font-medium">
-                ✓ Colors saved and applied to the live site
+                ✓ Settings saved and applied to the live site
               </p>
             )}
           </div>
@@ -221,7 +272,7 @@ export default function Branding() {
             ) : (
               <Save className="w-4 h-4" />
             )}
-            Save All Colors
+            Save All Settings
           </Button>
         </div>
       </div>

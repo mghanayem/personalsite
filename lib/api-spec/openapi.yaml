@@ -1126,7 +1126,7 @@ components:
     # ── Settings ──────────────────────────────────────────────────────────
     BrandingSettings:
       type: object
-      required: [primaryColor, accentColor, cta1BgColor, cta1TextColor, cta2BgColor, cta2TextColor]
+      required: [primaryColor, accentColor, cta1BgColor, cta1TextColor, cta2BgColor, cta2TextColor, defaultLanguage]
       properties:
         primaryColor:
           type: string
@@ -1146,6 +1146,10 @@ components:
         cta2TextColor:
           type: string
           description: "Hex text color for the secondary hero button"
+        defaultLanguage:
+          type: string
+          enum: [ar, en]
+          description: "Default language shown to new visitors"
 
     BrandingUpdate:
       type: object
@@ -1168,6 +1172,9 @@ components:
         cta2TextColor:
           type: string
           pattern: "^#[0-9a-fA-F]{6}$"
+        defaultLanguage:
+          type: string
+          enum: [ar, en]
 
     # ── Public ────────────────────────────────────────────────────────────
     # ── Contact ───────────────────────────────────────────────────────────────

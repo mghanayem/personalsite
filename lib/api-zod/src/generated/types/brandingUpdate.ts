@@ -5,6 +5,7 @@
  * Bilingual personal website + CMS API
  * OpenAPI spec version: 0.1.0
  */
+import type { BrandingUpdateDefaultLanguage } from './brandingUpdateDefaultLanguage';
 
 export interface BrandingUpdate {
   /** @pattern ^#[0-9a-fA-F]{6}$ */
@@ -19,4 +20,5 @@ export interface BrandingUpdate {
   cta2BgColor?: string;
   /** @pattern ^#[0-9a-fA-F]{6}$ */
   cta2TextColor?: string;
+  defaultLanguage?: BrandingUpdateDefaultLanguage;
 }

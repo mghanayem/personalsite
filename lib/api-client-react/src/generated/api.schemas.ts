@@ -222,6 +222,17 @@ export interface UsernameChange {
   currentPassword: string;
 }
 
+/**
+ * Default language shown to new visitors
+ */
+export type BrandingSettingsDefaultLanguage = typeof BrandingSettingsDefaultLanguage[keyof typeof BrandingSettingsDefaultLanguage];
+
+
+export const BrandingSettingsDefaultLanguage = {
+  ar: 'ar',
+  en: 'en',
+} as const;
+
 export interface BrandingSettings {
   /** Hex color for the primary theme color (e.g. #0e1a2a) */
   primaryColor: string;
@@ -235,7 +246,17 @@ export interface BrandingSettings {
   cta2BgColor: string;
   /** Hex text color for the secondary hero button */
   cta2TextColor: string;
+  /** Default language shown to new visitors */
+  defaultLanguage: BrandingSettingsDefaultLanguage;
 }
+
+export type BrandingUpdateDefaultLanguage = typeof BrandingUpdateDefaultLanguage[keyof typeof BrandingUpdateDefaultLanguage];
+
+
+export const BrandingUpdateDefaultLanguage = {
+  ar: 'ar',
+  en: 'en',
+} as const;
 
 export interface BrandingUpdate {
   /** @pattern ^#[0-9a-fA-F]{6}$ */
@@ -250,6 +271,7 @@ export interface BrandingUpdate {
   cta2BgColor?: string;
   /** @pattern ^#[0-9a-fA-F]{6}$ */
   cta2TextColor?: string;
+  defaultLanguage?: BrandingUpdateDefaultLanguage;
 }
 
 export interface ContactMessage {

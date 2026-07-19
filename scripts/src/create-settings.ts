@@ -18,10 +18,15 @@ await pool.query(`
   ALTER TABLE settings ADD COLUMN IF NOT EXISTS cta2_text_color text NOT NULL DEFAULT '#0e1a2a';
 `);
 
-// Step 3: ensure the singleton row exists (columns already have defaults so no need to list them)
+// Step 3: add default language column
+await pool.query(`
+  ALTER TABLE settings ADD COLUMN IF NOT EXISTS default_language text NOT NULL DEFAULT 'ar';
+`);
+
+// Step 4: ensure the singleton row exists (columns already have defaults so no need to list them)
 await pool.query(`
   INSERT INTO settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 `);
 
-console.log("✅ settings table ready (with button color columns)");
+console.log("✅ settings table ready (with button color columns + default language)");
 process.exit(0);

@@ -5,6 +5,8 @@ import { requireAuth } from "../middlewares/auth";
 const router: IRouter = Router();
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+const LANG_VALUES = ["ar", "en"] as const;
+type LangValue = typeof LANG_VALUES[number];
 
 type BrandingFields = {
   primaryColor?: string;
@@ -13,16 +15,17 @@ type BrandingFields = {
   cta1TextColor?: string;
   cta2BgColor?: string;
   cta2TextColor?: string;
+  defaultLanguage?: string;
 };
 
-const BRANDING_FIELD_LABELS: Record<keyof BrandingFields, string> = {
-  primaryColor: "primaryColor",
-  accentColor: "accentColor",
-  cta1BgColor: "cta1BgColor",
-  cta1TextColor: "cta1TextColor",
-  cta2BgColor: "cta2BgColor",
-  cta2TextColor: "cta2TextColor",
-};
+const COLOR_FIELDS: (keyof Omit<BrandingFields, "defaultLanguage">)[] = [
+  "primaryColor",
+  "accentColor",
+  "cta1BgColor",
+  "cta1TextColor",
+  "cta2BgColor",
+  "cta2TextColor",
+];
 
 /** Fetch current settings row, creating defaults on first call. */
 async function getOrCreateSettings() {
@@ -40,6 +43,7 @@ function brandingResponse(row: typeof settingsTable.$inferSelect) {
     cta1TextColor: row.cta1TextColor,
     cta2BgColor: row.cta2BgColor,
     cta2TextColor: row.cta2TextColor,
+    defaultLanguage: row.defaultLanguage as LangValue,
   };
 }
 
@@ -52,9 +56,10 @@ router.get("/settings/branding", async (_req, res): Promise<void> => {
 // PATCH /settings/branding — admin only
 router.patch("/settings/branding", requireAuth, async (req, res): Promise<void> => {
   const body = req.body as BrandingFields;
-  const updates: Partial<BrandingFields> = {};
+  const updates: Record<string, unknown> = {};
 
-  for (const key of Object.keys(BRANDING_FIELD_LABELS) as (keyof BrandingFields)[]) {
+  // Validate and collect color fields
+  for (const key of COLOR_FIELDS) {
     const val = body[key];
     if (val === undefined) continue;
     if (!HEX_RE.test(val)) {
@@ -62,6 +67,15 @@ router.patch("/settings/branding", requireAuth, async (req, res): Promise<void> 
       return;
     }
     updates[key] = val;
+  }
+
+  // Validate defaultLanguage
+  if (body.defaultLanguage !== undefined) {
+    if (!LANG_VALUES.includes(body.defaultLanguage as LangValue)) {
+      res.status(400).json({ error: "defaultLanguage must be 'ar' or 'en'" });
+      return;
+    }
+    updates.defaultLanguage = body.defaultLanguage;
   }
 
   if (Object.keys(updates).length === 0) {

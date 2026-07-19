@@ -704,7 +704,8 @@ export const GetBrandingSettingsResponse = zod.object({
   "cta1BgColor": zod.string().describe('Hex background color for the primary hero button'),
   "cta1TextColor": zod.string().describe('Hex text color for the primary hero button'),
   "cta2BgColor": zod.string().describe('Hex background color for the secondary hero button'),
-  "cta2TextColor": zod.string().describe('Hex text color for the secondary hero button')
+  "cta2TextColor": zod.string().describe('Hex text color for the secondary hero button'),
+  "defaultLanguage": zod.enum(['ar', 'en']).describe('Default language shown to new visitors')
 })
 
 
@@ -725,7 +726,8 @@ export const UpdateBrandingSettingsBody = zod.object({
   "cta1BgColor": zod.string().regex(updateBrandingSettingsBodyCta1BgColorRegExp).optional(),
   "cta1TextColor": zod.string().regex(updateBrandingSettingsBodyCta1TextColorRegExp).optional(),
   "cta2BgColor": zod.string().regex(updateBrandingSettingsBodyCta2BgColorRegExp).optional(),
-  "cta2TextColor": zod.string().regex(updateBrandingSettingsBodyCta2TextColorRegExp).optional()
+  "cta2TextColor": zod.string().regex(updateBrandingSettingsBodyCta2TextColorRegExp).optional(),
+  "defaultLanguage": zod.enum(['ar', 'en']).optional()
 })
 
 export const UpdateBrandingSettingsResponse = zod.object({
@@ -734,7 +736,8 @@ export const UpdateBrandingSettingsResponse = zod.object({
   "cta1BgColor": zod.string().describe('Hex background color for the primary hero button'),
   "cta1TextColor": zod.string().describe('Hex text color for the primary hero button'),
   "cta2BgColor": zod.string().describe('Hex background color for the secondary hero button'),
-  "cta2TextColor": zod.string().describe('Hex text color for the secondary hero button')
+  "cta2TextColor": zod.string().describe('Hex text color for the secondary hero button'),
+  "defaultLanguage": zod.enum(['ar', 'en']).describe('Default language shown to new visitors')
 })
 
 
@@ -975,7 +978,8 @@ export const submitContactFormBodyMessageMax = 5000;
 export const SubmitContactFormBody = zod.object({
   "name": zod.string().min(1).max(submitContactFormBodyNameMax),
   "email": zod.string().max(submitContactFormBodyEmailMax),
-  "message": zod.string().min(1).max(submitContactFormBodyMessageMax)
+  "message": zod.string().min(1).max(submitContactFormBodyMessageMax),
+  "website": zod.string().optional().describe('Honeypot field — must be empty; bots that fill it are silently rejected.')
 })
 
 export const SubmitContactFormResponse = zod.object({
