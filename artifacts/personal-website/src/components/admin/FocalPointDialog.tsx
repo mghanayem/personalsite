@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { GripHorizontal, X, Loader2 } from "lucide-react";
 import { FocalPointPicker } from "./FocalPointPicker";
@@ -51,9 +51,10 @@ export function FocalPointDialog({
   const dragOrigin = useRef<{ mx: number; my: number; dx: number; dy: number } | null>(null);
 
   const onHeaderPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dialogPos) return;
+    // Always read the real rendered position — works even before dialogPos is set.
+    const rect = dialogRef.current!.getBoundingClientRect();
     e.currentTarget.setPointerCapture(e.pointerId);
-    dragOrigin.current = { mx: e.clientX, my: e.clientY, dx: dialogPos.x, dy: dialogPos.y };
+    dragOrigin.current = { mx: e.clientX, my: e.clientY, dx: rect.left, dy: rect.top };
   };
 
   const onHeaderPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -87,21 +88,6 @@ export function FocalPointDialog({
   };
 
   const onResizePointerUp = () => { resizeOrigin.current = null; };
-
-  // ── Position on first paint ────────────────────────────────────────────
-  // Fixed top offset (80 px) keeps the dialog near the top of the viewport
-  // regardless of dialog height or viewport size. Horizontal centering only
-  // needs the dialog width, not height — no vertical clamping needed.
-  useEffect(() => {
-    const el = dialogRef.current;
-    if (!el) return;
-    const { width: w } = el.getBoundingClientRect();
-    const vw = window.innerWidth;
-    setDialogPos({
-      x: Math.max(16, (vw - w) / 2),
-      y: 80,
-    });
-  }, []);
 
   // ── Save ───────────────────────────────────────────────────────────────
   const handleDone = async () => {
