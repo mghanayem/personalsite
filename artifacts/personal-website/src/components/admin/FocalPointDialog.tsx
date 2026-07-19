@@ -88,16 +88,18 @@ export function FocalPointDialog({
 
   const onResizePointerUp = () => { resizeOrigin.current = null; };
 
-  // ── Center on first paint ──────────────────────────────────────────────
+  // ── Position on first paint ────────────────────────────────────────────
+  // Fixed top offset (80 px) keeps the dialog near the top of the viewport
+  // regardless of dialog height or viewport size. Horizontal centering only
+  // needs the dialog width, not height — no vertical clamping needed.
   useEffect(() => {
     const el = dialogRef.current;
     if (!el) return;
-    const { width: w, height: h } = el.getBoundingClientRect();
+    const { width: w } = el.getBoundingClientRect();
     const vw = window.innerWidth;
-    const vh = window.innerHeight;
     setDialogPos({
       x: Math.max(16, (vw - w) / 2),
-      y: Math.max(16, Math.min(vh - h - 16, (vh - h) / 2)),
+      y: 80,
     });
   }, []);
 
@@ -112,10 +114,11 @@ export function FocalPointDialog({
     }
   };
 
-  // Before measurement: CSS transform centers it; after: absolute pixel coords.
+  // Before measurement: pin to top: 80px, horizontally centered via transform.
+  // After measurement: switch to absolute pixel coords so drag works correctly.
   const posStyle: React.CSSProperties = dialogPos
     ? { left: dialogPos.x, top: dialogPos.y, transform: "none" }
-    : { left: "50%", top: "50%", transform: "translate(-50%,-50%)" };
+    : { left: "50%", top: "80px", transform: "translateX(-50%)" };
 
   const dialog = (
     <div
