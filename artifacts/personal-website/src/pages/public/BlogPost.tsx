@@ -404,7 +404,6 @@ export default function BlogPost() {
                 alt={title ?? ""}
                 style={{
                   width: "100%",
-                  maxHeight: "60vh",
                   objectFit: "contain",
                   display: "block",
                 }}
