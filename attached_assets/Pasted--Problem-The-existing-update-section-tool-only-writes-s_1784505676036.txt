@@ -1,0 +1,52 @@
+### Problem
+
+The existing `update_section` tool only writes **section-level fields** (`titleEn`, `titleAr`, `contentEn`, `contentAr`, etc.). It has no way to address **individual card items** nested inside a `cards_grid` section's `data.items[]` array.
+
+As a result, card-level fields — `descriptionEn`, `descriptionAr`, and `icon` — **cannot be written programmatically** and must be filled manually through the visual editor.
+
+---
+
+### Requested Tool
+
+Please add a new tool (or extend `update_section`) with the following signature:
+
+```json
+{
+  "name": "update_card_item",
+  "description": "Update a single card inside a cards_grid section, matched by sectionId + itemId.",
+  "parameters": {
+    "sectionId":       { "type": "number",  "required": true },
+    "itemId":          { "type": "number",  "required": true },
+    "titleEn":         { "type": "string",  "required": false },
+    "titleAr":         { "type": "string",  "required": false },
+    "descriptionEn":   { "type": "string",  "required": false },
+    "descriptionAr":   { "type": "string",  "required": false },
+    "icon":            { "type": "string",  "required": false }
+  }
+}
+```
+
+---
+
+### Why `itemId` and not position/index?
+
+Matching by **index (position 0, 1, 2…)** is fragile — if cards are reordered in the UI, the wrong card gets updated. Matching by a stable `itemId` is the safe approach.
+
+---
+
+### Nice-to-have (same request)
+
+The same gap exists for any other section type that contains nested items — for example `timeline` entries. A generic `update_section_item` tool with a `type` discriminator would future-proof this for all section types:
+
+```json
+{
+  "name": "update_section_item",
+  "description": "Update a single item inside any multi-item section (cards_grid, timeline, image_gallery, etc.).",
+  "parameters": {
+    "sectionId":   { "type": "number", "required": true },
+    "itemId":      { "type": "number", "required": true },
+    "type":        { "type": "string", "required": true, "enum": ["card", "timeline_entry", "gallery_image"] },
+    "fields":      { "type": "object", "required": true, "description": "Key-value pairs of fields to update" }
+  }
+}
+```
