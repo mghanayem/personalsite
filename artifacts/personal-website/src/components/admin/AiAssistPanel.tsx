@@ -66,7 +66,7 @@ async function streamConversationMessage(
 
 function ToolBadge({ name, success }: { name: string; success: boolean }) {
   const labels: Record<string, string> = {
-    update_section: "Updated section", add_section: "Added section",
+    update_section: "Updated section", update_section_item: "Updated item", add_section: "Added section",
     update_blog_post: "Updated post", create_blog_post: "Created post",
     update_page: "Updated page", update_branding: "Updated branding",
     get_all_pages_with_sections: "Read all pages", get_branding_settings: "Read settings",

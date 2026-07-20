@@ -60,6 +60,7 @@ function toolLabel(name: string): string {
     list_sections: "Listed sections",
     add_section: "Added section",
     update_section: "Updated section",
+    update_section_item: "Updated item",
     delete_section: "Deleted section",
     list_blog_posts: "Listed blog posts",
     create_blog_post: "Created blog post",

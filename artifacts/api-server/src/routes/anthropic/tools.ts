@@ -113,6 +113,38 @@ export const CMS_TOOLS: AnthropicTool[] = [
     },
   },
   {
+    name: "update_section_item",
+    description: "Update a single item inside a multi-item section (cards_grid, timeline, image_gallery) by its itemId. Pass only the fields you want to change. Use list_sections first to discover sectionId and the itemId values inside data.items[].",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        sectionId: { type: "number", description: "ID of the parent section" },
+        itemId: { type: "string", description: "Stable id of the item within data.items[]" },
+        titleEn: { type: "string" },
+        titleAr: { type: "string" },
+        descriptionEn: { type: "string" },
+        descriptionAr: { type: "string" },
+        subheadingEn: { type: "string" },
+        subheadingAr: { type: "string" },
+        icon: { type: "string", description: "Lucide icon name, e.g. Briefcase" },
+        date: { type: "string", description: "Date label for timeline entries" },
+        bullets: {
+          type: "array",
+          description: "Bullet points for timeline entries",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              textEn: { type: "string" },
+              textAr: { type: "string" },
+            },
+          },
+        },
+      },
+      required: ["sectionId", "itemId"],
+    },
+  },
+  {
     name: "delete_section",
     description: "Delete a section. Always confirm with the user before calling.",
     input_schema: {
@@ -251,6 +283,19 @@ export async function executeTool(name: string, input: Record<string, unknown>):
         const merged = { ...(current.data as Record<string, unknown> || {}), ...rest };
         const [section] = await db.update(sectionsTable).set({ data: merged }).where(eq(sectionsTable.id, id as number)).returning();
         return { success: true, data: { id: section!.id, type: section!.type } };
+      }
+      case "update_section_item": {
+        const { sectionId, itemId, ...fields } = input as Record<string, unknown>;
+        const [current] = await db.select().from(sectionsTable).where(eq(sectionsTable.id, sectionId as number));
+        if (!current) return { success: false, error: "Section not found" };
+        const data = (current.data as Record<string, unknown>) ?? {};
+        const items = Array.isArray(data.items) ? [...(data.items as Record<string, unknown>[])] : [];
+        const idx = items.findIndex(item => item.id === itemId);
+        if (idx === -1) return { success: false, error: `Item '${itemId as string}' not found in section ${sectionId as number}` };
+        items[idx] = { ...items[idx], ...fields };
+        const updatedData = { ...data, items };
+        const [updated] = await db.update(sectionsTable).set({ data: updatedData }).where(eq(sectionsTable.id, sectionId as number)).returning();
+        return { success: true, data: { sectionId: updated!.id, itemId, type: updated!.type } };
       }
       case "delete_section": {
         const [section] = await db.select().from(sectionsTable).where(eq(sectionsTable.id, input.id as number));
