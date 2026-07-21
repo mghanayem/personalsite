@@ -10,7 +10,7 @@ import router from "./routes";
 import seoRouter from "./routes/seo";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
-import { getUploadsDir } from "./lib/uploads";
+import { serveUpload } from "./lib/uploads";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -141,11 +141,13 @@ const contactLimiter = rateLimit({
 });
 app.use("/api/public/contact", contactLimiter);
 
-// ── Static uploads ────────────────────────────────────────────────────────
-// Served under /api/uploads so Replit's proxy routes these requests to this
-// server (the proxy only forwards /api/* to the API server).
-const uploadsDir = getUploadsDir();
-app.use("/api/uploads", express.static(uploadsDir));
+// ── Upload serving — proxied from GCS, disk fallback for pre-migration files ──
+app.get("/api/uploads/:filename", async (req: Request, res: Response): Promise<void> => {
+  const filename = Array.isArray(req.params.filename)
+    ? req.params.filename[0]
+    : req.params.filename;
+  await serveUpload(filename!, res);
+});
 
 // ── SEO utility routes (served at root, outside /api prefix) ─────────────
 app.use(seoRouter);
