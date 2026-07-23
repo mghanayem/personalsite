@@ -24,10 +24,12 @@ function AuthorCard({
   name,
   jobTitle,
   isRtl,
+  photoUrl,
 }: {
   name: string;
   jobTitle: string;
   isRtl: boolean;
+  photoUrl?: string | null;
 }) {
   const initials = name
     .split(" ")
@@ -48,6 +50,20 @@ function AuthorCard({
         borderRadius: 4,
       }}
     >
+      {photoUrl ? (
+        <img
+          src={photoUrl}
+          alt={name}
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: "50%",
+            objectFit: "cover",
+            flexShrink: 0,
+            display: "block",
+          }}
+        />
+      ) : (
       <div
         style={{
           width: 64,
@@ -66,6 +82,7 @@ function AuthorCard({
       >
         {initials}
       </div>
+      )}
       <div>
         <div
           style={{
@@ -426,7 +443,7 @@ export default function BlogPost() {
           )}
 
           {/* Author card */}
-          <AuthorCard name={authorName} jobTitle={jobTitle} isRtl={isRtl} />
+          <AuthorCard name={authorName} jobTitle={jobTitle} isRtl={isRtl} photoUrl={settings?.blogProfilePhotoUrl} />
 
           {/* Gallery images */}
           {post.galleryImages && post.galleryImages.length > 0 && (

@@ -25,6 +25,8 @@ export const settingsTable = pgTable("settings", {
   seoLinkedinUrl: text("seo_linkedin_url"),
   seoTwitterUrl: text("seo_twitter_url"),
   seoGithubUrl: text("seo_github_url"),
+  // Blog author profile photo — stored as a URL to GCS-backed upload
+  blogProfilePhotoUrl: text("blog_profile_photo_url"),
   // Site identity — editable from the admin Branding page
   siteNameEn: text("site_name_en"),
   siteNameAr: text("site_name_ar"),

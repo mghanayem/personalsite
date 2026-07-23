@@ -5,8 +5,25 @@ import { useLanguage } from "@/lib/i18n";
 import { Link } from "wouter";
 import { Loader2, PenLine } from "lucide-react";
 
-// ── Author initials avatar ────────────────────────────────────────────────
-function AuthorAvatar({ name }: { name: string }) {
+// ── Author avatar — photo if set, initials fallback ──────────────────────
+function AuthorAvatar({ name, photoUrl }: { name: string; photoUrl?: string | null }) {
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={name}
+        style={{
+          width: 120,
+          height: 120,
+          borderRadius: "50%",
+          objectFit: "cover",
+          border: "3px solid rgba(247,241,232,0.25)",
+          flexShrink: 0,
+          display: "block",
+        }}
+      />
+    );
+  }
   const initials = name
     .split(" ")
     .map((w) => w[0])
@@ -98,7 +115,7 @@ export default function Blog() {
               gap: 20,
             }}
           >
-            <AuthorAvatar name={authorName} />
+            <AuthorAvatar name={authorName} photoUrl={settings?.blogProfilePhotoUrl} />
 
             <h1
               style={{

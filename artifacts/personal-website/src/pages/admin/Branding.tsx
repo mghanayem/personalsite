@@ -9,6 +9,7 @@ import { Loader2, Save, Palette, Globe, BookOpen, Sparkles, Link2, Briefcase, Ch
 import { applyBrandingColors } from "@/lib/branding";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetAiStatusQueryKey } from "@workspace/api-client-react";
+import { BlogProfilePhoto } from "./BlogProfilePhoto";
 
 function ColorPicker({
   label,
@@ -411,6 +412,9 @@ export default function Branding() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Blog Profile Photo */}
+        <BlogProfilePhoto currentPhotoUrl={settings?.blogProfilePhotoUrl} />
 
         {/* AEO — Structured Data (Person) */}
         <Card>

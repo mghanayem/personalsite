@@ -38,6 +38,8 @@ export interface BrandingSettings {
   seoTwitterUrl?: string | null;
   /** GitHub profile URL for sameAs array */
   seoGithubUrl?: string | null;
+  /** URL of the blog author profile photo (stored in GCS) */
+  blogProfilePhotoUrl?: string | null;
   /** Site name shown in browser tab and Open Graph (English) */
   siteNameEn?: string | null;
   /** Site name shown in browser tab and Open Graph (Arabic) */

@@ -1,6 +1,8 @@
 import { Router, type IRouter } from "express";
+import path from "path";
 import { db, settingsTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
+import { upload, imageUrl, deleteUploadFile } from "../lib/uploads";
 
 const router: IRouter = Router();
 
@@ -80,6 +82,7 @@ function brandingResponse(row: typeof settingsTable.$inferSelect) {
     siteNameAr: row.siteNameAr ?? null,
     defaultDescEn: row.defaultDescEn ?? null,
     defaultDescAr: row.defaultDescAr ?? null,
+    blogProfilePhotoUrl: row.blogProfilePhotoUrl ?? null,
   };
 }
 
@@ -133,6 +136,47 @@ router.patch("/settings/branding", requireAuth, async (req, res): Promise<void> 
 
   await getOrCreateSettings(); // ensure row 1 exists
   const [updated] = await db.update(settingsTable).set(updates).returning();
+  res.json(brandingResponse(updated));
+});
+
+// POST /settings/profile-photo — admin only, multipart upload
+router.post(
+  "/settings/profile-photo",
+  requireAuth,
+  upload.single("file"),
+  async (req, res): Promise<void> => {
+    if (!req.file?.filename) {
+      res.status(400).json({ error: "No image file uploaded" });
+      return;
+    }
+    const photoUrl = imageUrl(req.file.filename);
+
+    // Delete the old photo from GCS if one exists
+    const existing = await getOrCreateSettings();
+    if (existing.blogProfilePhotoUrl) {
+      const oldFilename = path.basename(existing.blogProfilePhotoUrl);
+      deleteUploadFile(oldFilename);
+    }
+
+    const [updated] = await db
+      .update(settingsTable)
+      .set({ blogProfilePhotoUrl: photoUrl })
+      .returning();
+    res.json(brandingResponse(updated));
+  },
+);
+
+// DELETE /settings/profile-photo — admin only
+router.delete("/settings/profile-photo", requireAuth, async (_req, res): Promise<void> => {
+  const existing = await getOrCreateSettings();
+  if (existing.blogProfilePhotoUrl) {
+    const oldFilename = path.basename(existing.blogProfilePhotoUrl);
+    deleteUploadFile(oldFilename);
+  }
+  const [updated] = await db
+    .update(settingsTable)
+    .set({ blogProfilePhotoUrl: null })
+    .returning();
   res.json(brandingResponse(updated));
 });
 
