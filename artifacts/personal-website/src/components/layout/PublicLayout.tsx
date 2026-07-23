@@ -2,9 +2,49 @@ import { useGetPublicNav, useGetPublicBlogHasPosts } from "@workspace/api-client
 import { Link, useLocation } from "wouter";
 import { useLanguage } from "@/lib/i18n";
 import { Menu, X, Globe } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
+  // ONE global listener for all module iframes — registered once here, never per-instance.
+  // ONLY message type the parent page acts on from a module iframe: "module-resize".
+  // Any message with a different shape or type is silently ignored.
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      const data = e.data as { type?: unknown; height?: unknown };
+
+      // Validate message shape.
+      // Accepts both "module-resize" (canonical) and "resize" (legacy compat)
+      // so that modules written before the message-type rename continue to work.
+      // ONLY these two type values are acted on from module iframes.
+      const isResizeMsg =
+        (data?.type === "module-resize" || data?.type === "resize") &&
+        typeof data.height === "number" &&
+        data.height > 0;
+      if (!isResizeMsg) return;
+
+      const newHeight = Math.ceil(data.height);
+
+      // Find the iframe whose contentWindow matches the message sender
+      const iframes = document.querySelectorAll<HTMLIFrameElement>("iframe[data-module-id]");
+      for (const iframe of iframes) {
+        if (iframe.contentWindow === e.source) {
+          iframe.style.height = `${newHeight}px`;
+          break;
+        }
+      }
+      // If no matching iframe is found, the message is silently ignored.
+
+      // ── EXTENSION POINT ─────────────────────────────────────────────────────
+      // To handle additional message types from module iframes, add new cases
+      // here. Always validate the sender with the contentWindow check above
+      // before acting. Do not broaden what types are accepted without a
+      // deliberate security review.
+    }
+
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
   const { lang, setLang } = useLanguage();
   const [location, setLocation] = useLocation();
   const { data: navItems = [] } = useGetPublicNav();

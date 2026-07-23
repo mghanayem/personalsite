@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 
 interface ModuleFrameProps {
   moduleId: number;
-  /** Minimum height in px before content loads */
+  /**
+   * Ignored — kept for call-site compatibility.
+   * The iframe's minimum height is always 100 px; dynamic height is
+   * driven by the global module-resize listener in PublicLayout.
+   */
   minHeight?: number;
 }
 
@@ -16,15 +20,14 @@ interface ModuleFrameProps {
  *     - open popups (no allow-popups)
  *     - navigate the parent page (no allow-top-navigation)
  *
- * postMessage listener:
- *   Accepts ONLY { type: "resize", height: number } from the module iframe.
- *   All other message types are silently ignored.
- *   To extend: add additional `type` cases inside the listener below,
- *   keeping the origin check (`e.source !== iframeEl.contentWindow`) in place.
+ * Resize handling:
+ *   Height is NOT managed here. PublicLayout registers a single global
+ *   window.message listener that handles { type: "module-resize", height: number }
+ *   for all module iframes at once, writing directly to each iframe's style.height.
+ *   The `data-module-id` attribute is required so that listener can identify this
+ *   iframe by its contentWindow.
  */
-export function ModuleFrame({ moduleId, minHeight = 100 }: ModuleFrameProps) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = useState(minHeight);
+export function ModuleFrame({ moduleId }: ModuleFrameProps) {
   const [srcdoc, setSrcdoc] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +35,6 @@ export function ModuleFrame({ moduleId, minHeight = 100 }: ModuleFrameProps) {
   useEffect(() => {
     setSrcdoc(null);
     setError(null);
-    setHeight(minHeight);
 
     const controller = new AbortController();
     fetch(`/api/modules/${moduleId}/content`, { signal: controller.signal })
@@ -46,33 +48,7 @@ export function ModuleFrame({ moduleId, minHeight = 100 }: ModuleFrameProps) {
       });
 
     return () => controller.abort();
-  }, [moduleId, minHeight]);
-
-  // postMessage resize listener
-  useEffect(() => {
-    function onMessage(e: MessageEvent) {
-      const iframeEl = iframeRef.current;
-      if (!iframeEl) return;
-      // Only accept messages from our specific iframe
-      if (e.source !== iframeEl.contentWindow) return;
-
-      const data = e.data as { type?: string; height?: number };
-
-      // ── Handled message types ──────────────────────────────────────────────
-      if (data?.type === "resize" && typeof data.height === "number" && data.height > 0) {
-        setHeight(Math.ceil(data.height));
-        return;
-      }
-
-      // ── EXTENSION POINT ───────────────────────────────────────────────────
-      // Add more cases here when a specific module needs to send data out,
-      // for example: if (data?.type === "navigate") { ... }
-      // Keep the `e.source` check above so only this module's iframe is handled.
-    }
-
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, []);
+  }, [moduleId]);
 
   if (error) {
     return (
@@ -83,15 +59,21 @@ export function ModuleFrame({ moduleId, minHeight = 100 }: ModuleFrameProps) {
   }
 
   if (!srcdoc) {
-    return <div style={{ height }} className="w-full animate-pulse bg-muted/30 rounded-lg" />;
+    // Skeleton placeholder — min-height keeps it from collapsing to 0 while loading
+    return (
+      <div
+        style={{ minHeight: 100 }}
+        className="w-full animate-pulse bg-muted/30 rounded-lg"
+      />
+    );
   }
 
   return (
     <iframe
-      ref={iframeRef}
+      data-module-id={moduleId}
       srcDoc={srcdoc}
       sandbox="allow-scripts"
-      style={{ width: "100%", height, border: "none", display: "block" }}
+      style={{ width: "100%", border: "none", display: "block", minHeight: 100 }}
       title={`Module ${moduleId}`}
     />
   );
