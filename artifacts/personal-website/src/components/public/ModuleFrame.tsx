@@ -48,7 +48,7 @@ export function ModuleFrame({ moduleId }: ModuleFrameProps) {
       key={`module-${moduleId}-${lang}`}
       data-module-id={moduleId}
       src={src}
-      sandbox="allow-scripts"
+      sandbox="allow-scripts allow-top-navigation-by-user-activation"
       style={{ width: "100%", border: "none", display: "block", minHeight: 100 }}
       title={`Module ${moduleId}`}
     />
