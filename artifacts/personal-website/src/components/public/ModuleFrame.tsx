@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/lib/i18n";
 
 interface ModuleFrameProps {
   moduleId: number;
@@ -28,10 +29,20 @@ interface ModuleFrameProps {
  *   iframe by its contentWindow.
  */
 export function ModuleFrame({ moduleId }: ModuleFrameProps) {
+  const { lang } = useLanguage();
   const [srcdoc, setSrcdoc] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch the module HTML content and set it as srcdoc
+  // Fetch the module HTML content, inject the current language, then set as srcDoc.
+  //
+  // Why inject rather than use a query param?
+  // The iframe renders via srcDoc, so its document URL is "about:srcdoc" — query
+  // params on the fetch URL are never visible inside the iframe. Instead, we prepend
+  // a one-line bootstrap <script> that sets window.__lang before any module code runs.
+  // Modules read the language with: const lang = window.__lang; // "ar" | "en"
+  //
+  // Adding lang to the dependency array means a language switch re-fetches and
+  // re-injects with the updated value automatically — no per-module setup needed.
   useEffect(() => {
     setSrcdoc(null);
     setError(null);
@@ -42,13 +53,18 @@ export function ModuleFrame({ moduleId }: ModuleFrameProps) {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.text();
       })
-      .then(setSrcdoc)
+      .then((html) => {
+        // Prepend bootstrap before any module HTML so window.__lang is always set
+        // before any inline scripts in the module body execute.
+        const bootstrap = `<script>window.__lang="${lang}";</script>`;
+        setSrcdoc(bootstrap + html);
+      })
       .catch((err: Error) => {
         if (err.name !== "AbortError") setError(err.message);
       });
 
     return () => controller.abort();
-  }, [moduleId]);
+  }, [moduleId, lang]);
 
   if (error) {
     return (
