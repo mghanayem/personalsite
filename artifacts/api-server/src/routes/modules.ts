@@ -340,7 +340,21 @@ router.get("/modules/:id/content", async (req: Request, res: Response): Promise<
     // Prepend a bootstrap <script> so window.__lang is available before any
     // module code runs. Using a server-side injection means the value is baked
     // into the served document rather than relying on postMessage or srcdoc tricks.
-    const bootstrap = `<script>window.__lang="${lang}";</script>\n`;
+    //
+    // Also inject content-protection: right-click suppression and selection blocking,
+    // matching the parent PublicLayout behaviour. The iframe is an isolated document
+    // so the parent's CSS/event listeners don't reach inside it.
+    const bootstrap = [
+      `<script>window.__lang="${lang}";</script>`,
+      `<style>body{user-select:none;-webkit-user-select:none;}</style>`,
+      `<script>document.addEventListener("contextmenu",function(e){`,
+      `  var n=e.target;`,
+      `  while(n){var t=n.tagName&&n.tagName.toLowerCase();`,
+      `  if(t==="input"||t==="textarea"||t==="select")return;`,
+      `  if(n===document.body)break;n=n.parentElement;}`,
+      `  e.preventDefault();`,
+      `});</script>`,
+    ].join("\n") + "\n";
     const finalHtml = bootstrap + html;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
