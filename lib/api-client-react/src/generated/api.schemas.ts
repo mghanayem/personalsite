@@ -337,6 +337,8 @@ export interface BrandingSettings {
   defaultDescEn?: string | null;
   /** Default meta description for pages without their own (Arabic) */
   defaultDescAr?: string | null;
+  /** Site-wide default Open Graph image URL — used when a page has no per-page OG image */
+  defaultOgImageUrl?: string | null;
 }
 
 export type BrandingUpdateDefaultLanguage = typeof BrandingUpdateDefaultLanguage[keyof typeof BrandingUpdateDefaultLanguage];

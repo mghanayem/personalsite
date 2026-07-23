@@ -10,6 +10,7 @@ import { applyBrandingColors } from "@/lib/branding";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetAiStatusQueryKey } from "@workspace/api-client-react";
 import { BlogProfilePhoto } from "./BlogProfilePhoto";
+import { DefaultOgImage } from "./DefaultOgImage";
 
 function ColorPicker({
   label,
@@ -415,6 +416,9 @@ export default function Branding() {
 
         {/* Blog Profile Photo */}
         <BlogProfilePhoto currentPhotoUrl={settings?.blogProfilePhotoUrl} />
+
+        {/* Default OG Image */}
+        <DefaultOgImage currentImageUrl={settings?.defaultOgImageUrl} />
 
         {/* AEO — Structured Data (Person) */}
         <Card>

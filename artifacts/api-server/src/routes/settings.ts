@@ -83,6 +83,7 @@ function brandingResponse(row: typeof settingsTable.$inferSelect) {
     defaultDescEn: row.defaultDescEn ?? null,
     defaultDescAr: row.defaultDescAr ?? null,
     blogProfilePhotoUrl: row.blogProfilePhotoUrl ?? null,
+    defaultOgImageUrl: row.defaultOgImageUrl ?? null,
   };
 }
 
@@ -176,6 +177,47 @@ router.delete("/settings/profile-photo", requireAuth, async (_req, res): Promise
   const [updated] = await db
     .update(settingsTable)
     .set({ blogProfilePhotoUrl: null })
+    .returning();
+  res.json(brandingResponse(updated));
+});
+
+// POST /settings/default-og-image — admin only, multipart upload
+router.post(
+  "/settings/default-og-image",
+  requireAuth,
+  upload.single("file"),
+  async (req, res): Promise<void> => {
+    if (!req.file?.filename) {
+      res.status(400).json({ error: "No image file uploaded" });
+      return;
+    }
+    const ogImageUrl = imageUrl(req.file.filename);
+
+    // Delete the old image from GCS if one exists
+    const existing = await getOrCreateSettings();
+    if (existing.defaultOgImageUrl) {
+      const oldFilename = path.basename(existing.defaultOgImageUrl);
+      deleteUploadFile(oldFilename);
+    }
+
+    const [updated] = await db
+      .update(settingsTable)
+      .set({ defaultOgImageUrl: ogImageUrl })
+      .returning();
+    res.json(brandingResponse(updated));
+  },
+);
+
+// DELETE /settings/default-og-image — admin only
+router.delete("/settings/default-og-image", requireAuth, async (_req, res): Promise<void> => {
+  const existing = await getOrCreateSettings();
+  if (existing.defaultOgImageUrl) {
+    const oldFilename = path.basename(existing.defaultOgImageUrl);
+    deleteUploadFile(oldFilename);
+  }
+  const [updated] = await db
+    .update(settingsTable)
+    .set({ defaultOgImageUrl: null })
     .returning();
   res.json(brandingResponse(updated));
 });

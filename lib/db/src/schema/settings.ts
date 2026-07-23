@@ -27,6 +27,8 @@ export const settingsTable = pgTable("settings", {
   seoGithubUrl: text("seo_github_url"),
   // Blog author profile photo — stored as a URL to GCS-backed upload
   blogProfilePhotoUrl: text("blog_profile_photo_url"),
+  // Site-wide default OG image — shown when a page has no per-page OG image set
+  defaultOgImageUrl: text("default_og_image_url"),
   // Site identity — editable from the admin Branding page
   siteNameEn: text("site_name_en"),
   siteNameAr: text("site_name_ar"),
