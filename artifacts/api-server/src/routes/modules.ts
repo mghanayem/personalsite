@@ -319,6 +319,11 @@ router.get("/modules/:id/content", async (req: Request, res: Response): Promise<
     }
   }
 
+  // Inject the active language so module scripts can read window.__lang
+  // without needing to inspect the parent URL.
+  const rawLang = typeof req.query.lang === "string" ? req.query.lang : "";
+  const lang = rawLang === "en" ? "en" : "ar"; // default to Arabic
+
   try {
     const bucket = gcsClient.bucket(getBucketId());
     const file = bucket.file(`uploads/modules/${module.filePath}`);
@@ -330,9 +335,18 @@ router.get("/modules/:id/content", async (req: Request, res: Response): Promise<
     }
 
     const [data] = await file.download();
+    const html = data.toString("utf-8");
+
+    // Prepend a bootstrap <script> so window.__lang is available before any
+    // module code runs. Using a server-side injection means the value is baked
+    // into the served document rather than relying on postMessage or srcdoc tricks.
+    const bootstrap = `<script>window.__lang="${lang}";</script>\n`;
+    const finalHtml = bootstrap + html;
+
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.setHeader("Cache-Control", "no-store"); // always fresh
-    res.send(data.toString("utf-8"));
+    // Vary by lang so caches serve the correct version per language
+    res.setHeader("Cache-Control", "no-store");
+    res.send(finalHtml);
   } catch {
     res.status(500).json({ error: "Failed to retrieve module content" });
   }
