@@ -344,8 +344,23 @@ router.get("/modules/:id/content", async (req: Request, res: Response): Promise<
     const finalHtml = bootstrap + html;
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    // Vary by lang so caches serve the correct version per language
     res.setHeader("Cache-Control", "no-store");
+    // Override the global helmet CSP for this endpoint only.
+    // Module HTML is admin-uploaded and may load arbitrary CDN scripts (Chart.js,
+    // Google Fonts, etc.) — a strict CSP would break those resources.
+    // The iframe is already sandboxed in the browser (allow-scripts only), so
+    // loosening CSP here does not weaken the parent-page security posture.
+    res.setHeader(
+      "Content-Security-Policy",
+      [
+        "default-src *",
+        "script-src * 'unsafe-inline' 'unsafe-eval'",
+        "style-src * 'unsafe-inline'",
+        "font-src *",
+        "img-src * data: blob:",
+        "connect-src *",
+      ].join("; "),
+    );
     res.send(finalHtml);
   } catch {
     res.status(500).json({ error: "Failed to retrieve module content" });

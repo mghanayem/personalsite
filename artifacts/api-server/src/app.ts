@@ -1,5 +1,6 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import pinoHttp from "pino-http";
 import session from "express-session";
 import rateLimit from "express-rate-limit";
@@ -39,6 +40,39 @@ const rawOrigins = [
 // If no origin env var is present (e.g. bare local dev) fall back to allowing
 // same-origin only (credentials: false, origin: false).
 const hasConfiguredOrigin = rawOrigins.length > 0;
+
+// ── Security headers (helmet) ─────────────────────────────────────────────
+// Applied globally. The /api/modules/:id/content endpoint overrides CSP at
+// the route level (see modules.ts) because it serves admin-uploaded HTML that
+// may load arbitrary CDN scripts.
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        // GCS-proxied upload images (served through /api/uploads/:filename)
+        // and any direct GCS URLs that might appear in content.
+        imgSrc: ["'self'", "data:", "blob:", "https://storage.googleapis.com"],
+        frameSrc: ["'self'"],   // module iframes are same-origin
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'self'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    // X-Frame-Options is redundant with frame-ancestors in CSP, but belt+suspenders.
+    frameguard: { action: "sameorigin" },
+    // Referrer-Policy: only send origin on same-origin, nothing cross-origin.
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    // X-Content-Type-Options: nosniff — already helmet's default, but explicit.
+    noSniff: true,
+  }),
+);
 
 // ── Logging ───────────────────────────────────────────────────────────────
 app.use(
@@ -140,6 +174,19 @@ const contactLimiter = rateLimit({
   legacyHeaders: false,
 });
 app.use("/api/public/contact", contactLimiter);
+
+// ── Global rate limiting on all API routes ────────────────────────────────
+// Generous ceiling — normal browsing never comes close, but automated
+// scraping or enumeration at volume is slowed. Specific routes (login,
+// contact) have stricter caps applied before this one.
+const globalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300,
+  message: { error: "Too many requests, please slow down" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api", globalApiLimiter);
 
 // ── Upload serving — proxied from GCS, disk fallback for pre-migration files ──
 app.get("/api/uploads/:filename", async (req: Request, res: Response): Promise<void> => {
