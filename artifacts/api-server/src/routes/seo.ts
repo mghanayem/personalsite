@@ -20,8 +20,33 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function urlEntry(loc: string, lastmod: string, changefreq: string, priority: string): string {
-  return `  <url>\n    <loc>${escapeXml(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+/**
+ * Build a single <url> block with hreflang alternates.
+ * @param arUrl  Canonical Arabic URL
+ * @param enUrl  Canonical English URL
+ * @param lastmod  ISO date string (YYYY-MM-DD)
+ * @param changefreq  Sitemap changefreq value
+ * @param priority  Sitemap priority value
+ */
+function urlEntry(
+  arUrl: string,
+  enUrl: string,
+  lastmod: string,
+  changefreq: string,
+  priority: string,
+): string {
+  const arEscaped = escapeXml(arUrl);
+  const enEscaped = escapeXml(enUrl);
+  return [
+    "  <url>",
+    `    <loc>${arEscaped}</loc>`,
+    `    <lastmod>${lastmod}</lastmod>`,
+    `    <changefreq>${changefreq}</changefreq>`,
+    `    <priority>${priority}</priority>`,
+    `    <xhtml:link rel="alternate" hreflang="ar" href="${arEscaped}"/>`,
+    `    <xhtml:link rel="alternate" hreflang="en" href="${enEscaped}"/>`,
+    "  </url>",
+  ].join("\n");
 }
 
 seoRouter.get("/sitemap.xml", async (req: Request, res: Response): Promise<void> => {
@@ -44,38 +69,59 @@ seoRouter.get("/sitemap.xml", async (req: Request, res: Response): Promise<void>
 
   const entries: string[] = [];
 
-  // Pages — both Arabic and English URLs
+  // Pages — one <url> block per page, with ar + en alternates
   for (const p of pages) {
     const lastmod = p.updatedAt.toISOString().slice(0, 10);
     const priority = p.isHomepage ? "1.0" : "0.8";
 
     if (p.isHomepage) {
-      entries.push(urlEntry(`${prefix}/`, lastmod, "weekly", priority));
-      entries.push(urlEntry(`${prefix}/en/`, lastmod, "weekly", priority));
+      entries.push(urlEntry(`${prefix}/`, `${prefix}/en/`, lastmod, "weekly", priority));
     } else {
-      entries.push(urlEntry(`${prefix}/p/${escapeXml(p.slug)}`, lastmod, "monthly", priority));
-      entries.push(urlEntry(`${prefix}/en/p/${escapeXml(p.slug)}`, lastmod, "monthly", priority));
+      entries.push(
+        urlEntry(
+          `${prefix}/p/${escapeXml(p.slug)}`,
+          `${prefix}/en/p/${escapeXml(p.slug)}`,
+          lastmod,
+          "monthly",
+          priority,
+        ),
+      );
     }
   }
 
-  // Blog index pages (once we have posts)
+  // Blog index — one <url> block with ar + en alternates
   if (posts.length > 0) {
-    const blogLastmod = posts[0]?.publishedAt?.toISOString().slice(0, 10) ?? new Date().toISOString().slice(0, 10);
-    entries.push(urlEntry(`${prefix}/blog`, blogLastmod, "weekly", "0.7"));
-    entries.push(urlEntry(`${prefix}/en/blog`, blogLastmod, "weekly", "0.7"));
+    const blogLastmod =
+      posts[0]?.publishedAt?.toISOString().slice(0, 10) ?? new Date().toISOString().slice(0, 10);
+    entries.push(
+      urlEntry(`${prefix}/blog`, `${prefix}/en/blog`, blogLastmod, "weekly", "0.7"),
+    );
 
-    // Individual posts — both slugs
+    // Individual posts — one <url> block per post, ar slug → en slug
     for (const post of posts) {
       const lastmod = (post.publishedAt ?? post.createdAt).toISOString().slice(0, 10);
-      entries.push(urlEntry(`${prefix}/blog/${escapeXml(post.slugAr)}`, lastmod, "monthly", "0.6"));
-      entries.push(urlEntry(`${prefix}/en/blog/${escapeXml(post.slugEn)}`, lastmod, "monthly", "0.6"));
+      entries.push(
+        urlEntry(
+          `${prefix}/blog/${escapeXml(post.slugAr)}`,
+          `${prefix}/en/blog/${escapeXml(post.slugEn)}`,
+          lastmod,
+          "monthly",
+          "0.6",
+        ),
+      );
     }
   }
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join("\n")}\n</urlset>`;
+  const xml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
+    '        xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    ...entries,
+    "</urlset>",
+  ].join("\n");
 
   res.set("Content-Type", "application/xml; charset=utf-8");
-  res.set("Cache-Control", "public, max-age=3600");
+  res.set("Cache-Control", "public, max-age=60");
   res.send(xml);
 });
 
