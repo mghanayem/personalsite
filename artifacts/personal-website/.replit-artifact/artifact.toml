@@ -14,13 +14,25 @@ localPort = 19147
 run = "pnpm --filter @workspace/personal-website run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/personal-website", "run", "build" ]
-serve = "static"
-publicDir = "artifacts/personal-website/dist/public"
 
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+[services.production.build]
+args = ["pnpm", "--filter", "@workspace/personal-website", "run", "build"]
+
+[services.production.build.env]
+PORT = "19147"
+BASE_PATH = "/"
+NODE_ENV = "production"
+
+[services.production.run]
+# Express server injects per-page OG/Twitter meta tags into HTML before sending,
+# so social crawlers (LinkedIn, WhatsApp, Twitter/X) see correct metadata.
+# In production the Vite import is skipped; only express + drizzle-orm are used.
+args = ["pnpm", "--filter", "@workspace/personal-website", "run", "serve"]
+
+[services.production.run.env]
+PORT = "19147"
+NODE_ENV = "production"
+BASE_PATH = "/"
 
 [services.env]
 PORT = "19147"
