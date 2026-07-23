@@ -18,4 +18,7 @@ export interface SectionDataItem {
   date?: string;
   icon?: string;
   bullets?: BulletItem[];
+  linkType?: 'none' | 'internal' | 'external';
+  linkValue?: string;
+  linkNewTab?: boolean;
 }

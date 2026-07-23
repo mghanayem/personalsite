@@ -1,0 +1,51 @@
+TASK: The "Link" fields on Cards Grid cards (link_type, link_value, 
+link_new_tab) are not being saved. Clicking "Save Section Changes" 
+resets them back to "None" instead of persisting the selected value. 
+Debug this end-to-end and report which step was broken before fixing 
+it — don't just patch the symptom.
+
+CHECK EACH STEP IN ORDER:
+
+1. DATABASE
+   - Confirm the link_type, link_value, and link_new_tab columns 
+     actually exist on the cards table (or wherever card data is 
+     stored) — check if the migration that was supposed to add them 
+     actually ran
+   - If the columns don't exist, the save is silently failing on 
+     those fields even if everything else looks correct
+
+2. FRONTEND FORM STATE
+   - Confirm the Link dropdown, page picker, and URL field are 
+     properly bound to the section's editable state (controlled 
+     inputs), not just visually showing a value without updating the 
+     underlying data the Save button will submit
+   - Log or inspect the actual payload being sent when "Save Section 
+     Changes" is clicked — confirm link_type, link_value, and 
+     link_new_tab are present in that payload with the values I 
+     selected, not "none"/empty
+
+3. BACKEND SAVE ENDPOINT
+   - Confirm the API route handling the save actually reads 
+     link_type, link_value, and link_new_tab from the request body
+   - Confirm the database update/insert query includes these three 
+     fields — a common bug is the endpoint being updated for the 
+     original card fields (title, icon, description) but never 
+     extended to include the new link fields in the actual SQL 
+     update statement
+   - Confirm there's no schema validation step (e.g. a Zod/Joi schema) 
+     that strips unknown fields before they reach the database — if 
+     the validation schema wasn't updated when these fields were 
+     added, it may be silently dropping them
+
+4. POST-SAVE REFRESH
+   - Confirm that after saving, the admin panel re-fetches the card 
+     data from the database (not from stale local state) and that the 
+     re-fetch query actually selects the link_type/link_value/
+     link_new_tab columns — if the SELECT query wasn't updated either, 
+     it would explain why the UI shows "None" again even if the save 
+     itself worked
+
+REPORT BACK: which of these four steps was the actual point of 
+failure, and confirm with a test — set a card's link to an internal 
+page, save, refresh the admin panel page fully (not just re-open the 
+modal), and verify the link is still there.

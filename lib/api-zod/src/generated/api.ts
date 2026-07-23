@@ -499,7 +499,10 @@ export const UpdateSectionBody = zod.object({
   "id": zod.string(),
   "textAr": zod.string().optional(),
   "textEn": zod.string().optional()
-})).optional()
+})).optional(),
+  "linkType": zod.enum(["none", "internal", "external"]).optional(),
+  "linkValue": zod.string().optional(),
+  "linkNewTab": zod.boolean().optional()
 })).optional()
 })
 })
@@ -540,7 +543,10 @@ export const UpdateSectionResponse = zod.object({
   "id": zod.string(),
   "textAr": zod.string().optional(),
   "textEn": zod.string().optional()
-})).optional()
+})).optional(),
+  "linkType": zod.enum(["none", "internal", "external"]).optional(),
+  "linkValue": zod.string().optional(),
+  "linkNewTab": zod.boolean().optional()
 })).optional()
 }),
   "images": zod.array(zod.object({
