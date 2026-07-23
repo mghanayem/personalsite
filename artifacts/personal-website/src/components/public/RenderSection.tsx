@@ -1,9 +1,10 @@
 import DOMPurify from "dompurify";
 import { useLanguage } from "@/lib/i18n";
 import { SectionWithImages, useSubmitContactForm } from "@workspace/api-client-react";
-import { MapPin, Mail, Linkedin, ArrowRight, ArrowLeft, Send, CheckCircle, AlertCircle } from "lucide-react";
+import { MapPin, Mail, Linkedin, ArrowRight, ArrowLeft, Send, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { Link } from "wouter";
 
 interface ContactFormValues {
   name: string;
@@ -164,19 +165,71 @@ export function RenderSection({ section }: { section: SectionWithImages }) {
             </div>
           )}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {d.items?.map((item) => (
-              <div key={item.id} className="bg-card border border-border rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow">
-                {item.icon && (
-                  <div className="w-12 h-12 rounded-lg bg-primary/5 text-primary flex items-center justify-center mb-6 text-xl">
-                    <span className="opacity-70">{item.icon}</span>
-                  </div>
-                )}
-                <h3 className="text-xl font-bold mb-3">{t(item.titleAr, item.titleEn)}</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {t(item.descriptionAr, item.descriptionEn)}
-                </p>
-              </div>
-            ))}
+            {d.items?.map((item) => {
+              const linkType = item.linkType || "none";
+              const isLinked = linkType !== "none";
+
+              // Compute the resolved href
+              let href = "";
+              if (linkType === "internal") {
+                const slug = item.linkValue || "";
+                if (!slug) {
+                  href = lang === "en" ? "/en" : "/";
+                } else {
+                  href = lang === "en" ? `/en/${slug}` : `/${slug}`;
+                }
+              } else if (linkType === "external") {
+                href = item.linkValue || "#";
+              }
+
+              const cardBody = (
+                <>
+                  {item.icon && (
+                    <div className="w-12 h-12 rounded-lg bg-primary/5 text-primary flex items-center justify-center mb-6 text-xl">
+                      <span className="opacity-70">{item.icon}</span>
+                    </div>
+                  )}
+                  <h3 className="text-xl font-bold mb-3">{t(item.titleAr, item.titleEn)}</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {t(item.descriptionAr, item.descriptionEn)}
+                  </p>
+                  {isLinked && (
+                    <div className="mt-4 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ExternalLink className="w-4 h-4 text-primary" />
+                    </div>
+                  )}
+                </>
+              );
+
+              const baseClass = "bg-card border rounded-xl p-8 shadow-sm transition-all duration-200";
+              const staticClass = `${baseClass} border-border hover:shadow-md`;
+              const linkedClass = `${baseClass} border-border hover:shadow-lg hover:border-primary/40 hover:-translate-y-0.5 group cursor-pointer`;
+
+              if (!isLinked) {
+                return <div key={item.id} className={staticClass}>{cardBody}</div>;
+              }
+
+              if (linkType === "internal") {
+                return (
+                  <Link key={item.id} to={href} className={`block ${linkedClass}`}>
+                    {cardBody}
+                  </Link>
+                );
+              }
+
+              // external
+              return (
+                <a
+                  key={item.id}
+                  href={href}
+                  target={item.linkNewTab !== false ? "_blank" : "_self"}
+                  rel="noopener noreferrer"
+                  className={`block ${linkedClass}`}
+                >
+                  {cardBody}
+                </a>
+              );
+            })}
           </div>
         </div>
       </section>

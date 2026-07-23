@@ -4,10 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, ChevronDown, ChevronUp, Save, Sparkles } from "lucide-react";
+import { Loader2, Plus, Trash2, ChevronDown, ChevronUp, Save, Sparkles, Link2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ImageManager } from "./ImageManager";
 import { AiAssistPanel } from "@/components/admin/AiAssistPanel";
+
+interface PageOption {
+  id: number;
+  slug: string;
+  titleAr: string;
+  titleEn: string;
+  isHomepage: boolean;
+}
 
 export function SectionEditor({ section, pageId }: { section: SectionWithImages, pageId: number }) {
   const queryClient = useQueryClient();
@@ -16,11 +24,21 @@ export function SectionEditor({ section, pageId }: { section: SectionWithImages,
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [pages, setPages] = useState<PageOption[]>([]);
 
   useEffect(() => {
     setData(section.data);
     setIsDirty(false);
   }, [section.data]);
+
+  // Fetch pages for the internal link picker — only needed for cards_grid sections
+  useEffect(() => {
+    if (section.type !== "cards_grid") return;
+    fetch("/api/pages")
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((ps: PageOption[]) => setPages(ps))
+      .catch(() => { /* non-critical; leave pages empty */ });
+  }, [section.type]);
 
   const handleSave = () => {
     updateSection.mutate({ id: section.id, data: { data } }, {
@@ -267,13 +285,105 @@ export function SectionEditor({ section, pageId }: { section: SectionWithImages,
                       )}
 
                       {t === "cards_grid" && (
-                        <div className="space-y-2 max-w-xs">
-                          <Label className="text-xs">Icon (text/emoji fallback)</Label>
-                          <Input className="h-8 text-sm" value={item.icon || ""} onChange={e => {
-                            const newItems = [...(data.items || [])];
-                            newItems[idx].icon = e.target.value;
-                            updateData({ items: newItems });
-                          }} placeholder="e.g. 💼 or M" />
+                        <div className="space-y-4">
+                          {/* Icon */}
+                          <div className="space-y-2 max-w-xs">
+                            <Label className="text-xs">Icon (text/emoji fallback)</Label>
+                            <Input className="h-8 text-sm" value={item.icon || ""} onChange={e => {
+                              const newItems = [...(data.items || [])];
+                              newItems[idx].icon = e.target.value;
+                              updateData({ items: newItems });
+                            }} placeholder="e.g. 💼 or M" />
+                          </div>
+
+                          {/* Link */}
+                          <div className="space-y-3 pt-2 border-t">
+                            <div className="flex items-center gap-2">
+                              <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
+                              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Card Link</Label>
+                            </div>
+
+                            {/* Link type selector */}
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Link type</Label>
+                              <select
+                                className="w-full border border-input rounded-md text-sm px-3 h-8 bg-background"
+                                value={item.linkType || "none"}
+                                onChange={e => {
+                                  const newItems = [...(data.items || [])];
+                                  newItems[idx].linkType = e.target.value as "none" | "internal" | "external";
+                                  // Reset value when switching type
+                                  newItems[idx].linkValue = "";
+                                  if (e.target.value === "external") newItems[idx].linkNewTab = true;
+                                  updateData({ items: newItems });
+                                }}
+                              >
+                                <option value="none">None</option>
+                                <option value="internal">Link to a page on this site</option>
+                                <option value="external">Link to an external URL</option>
+                              </select>
+                            </div>
+
+                            {/* Internal: page picker */}
+                            {(item.linkType === "internal") && (
+                              <div className="space-y-1.5">
+                                <Label className="text-xs">Target page</Label>
+                                <select
+                                  className="w-full border border-input rounded-md text-sm px-3 h-8 bg-background"
+                                  value={item.linkValue || ""}
+                                  onChange={e => {
+                                    const newItems = [...(data.items || [])];
+                                    newItems[idx].linkValue = e.target.value;
+                                    updateData({ items: newItems });
+                                  }}
+                                >
+                                  <option value="">— select a page —</option>
+                                  {pages.map(p => {
+                                    const label = [p.titleEn, p.titleAr].filter(Boolean).join(" — ") || p.slug || "(untitled)";
+                                    const value = p.isHomepage ? "" : p.slug;
+                                    return <option key={p.id} value={value}>{label}</option>;
+                                  })}
+                                </select>
+                                <p className="text-xs text-muted-foreground">The correct language version will be shown to each visitor automatically.</p>
+                              </div>
+                            )}
+
+                            {/* External: URL + new-tab checkbox */}
+                            {(item.linkType === "external") && (
+                              <div className="space-y-2">
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs">URL</Label>
+                                  <Input
+                                    className="h-8 text-sm"
+                                    type="url"
+                                    placeholder="https://example.com"
+                                    value={item.linkValue || ""}
+                                    onChange={e => {
+                                      const newItems = [...(data.items || [])];
+                                      newItems[idx].linkValue = e.target.value;
+                                      updateData({ items: newItems });
+                                    }}
+                                  />
+                                  {item.linkValue && !/^https?:\/\//i.test(item.linkValue) && (
+                                    <p className="text-xs text-destructive">URL must start with http:// or https://</p>
+                                  )}
+                                </div>
+                                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                                  <input
+                                    type="checkbox"
+                                    className="rounded"
+                                    checked={item.linkNewTab !== false}
+                                    onChange={e => {
+                                      const newItems = [...(data.items || [])];
+                                      newItems[idx].linkNewTab = e.target.checked;
+                                      updateData({ items: newItems });
+                                    }}
+                                  />
+                                  Open in new tab
+                                </label>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
 

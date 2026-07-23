@@ -1,0 +1,56 @@
+TASK: Add optional linking to the existing "Cards Grid" section type, 
+so any individual card can be made clickable and point to any page 
+or URL. This must work across every existing use of Cards Grid on the 
+site (Skills, Certifications & Education, Consulting services, and 
+any future one) without breaking cards that don't have a link set.
+
+DATABASE:
+Add two new optional fields to the card data model (wherever 
+individual card fields like Title, Icon, Description currently live):
+- link_type: one of "none", "internal", "external" (default "none")
+- link_value: 
+  - if link_type is "internal", this stores a page_id or slug 
+    referencing an existing page in the pages table
+  - if link_type is "external", this stores a full URL 
+    (https://...)
+- link_new_tab: boolean, only relevant when link_type is "external" 
+  (default true for external, always false for internal)
+
+ADMIN PANEL — per card, add:
+- A "Link" dropdown: None / Link to a page on this site / Link to an 
+  external URL
+- If "Link to a page on this site" is selected: show a searchable 
+  dropdown listing all existing pages (homepage, blog posts, custom 
+  pages, both languages) by title, and save the correct URL for 
+  whichever language the card itself is being edited in (e.g. an 
+  Arabic card links to the Arabic version of the target page, English 
+  card to the English version, if the target page has both)
+- If "Link to an external URL" is selected: show a plain URL text 
+  field, with basic validation (must start with http:// or https://), 
+  plus a checkbox "Open in new tab" (checked by default)
+- Existing cards that have never set this (link_type = "none") show 
+  no link controls active by default — do not force a value
+
+FRONT-END RENDERING:
+- If a card's link_type is "none", render it exactly as it renders 
+  today — no change in appearance or behavior
+- If a card has a link set, wrap the entire card (not just the title) 
+  in a clickable element:
+  - Internal links use the site's normal client-side navigation (no 
+    full page reload if the site already avoids that elsewhere)
+  - External links use a real <a> tag with target="_blank" and 
+    rel="noopener noreferrer" when "Open in new tab" is checked, or 
+    target="_self" if unchecked
+- Add a subtle visual affordance on hover ONLY for linked cards (e.g. 
+  slight elevation, border color shift, or a small chevron/arrow icon 
+  appearing in the corner) so visitors can tell which cards are 
+  clickable without needing to click every one to find out
+- Cards without a link must NOT show this hover affordance — this is 
+  the visual signal that distinguishes clickable from static cards
+- Ensure keyboard accessibility: linked cards must be focusable and 
+  activatable with Enter/Space, not just mouse-clickable
+
+TEST: After this is built, show me one example of each state (no 
+link, internal link, external link with new tab) on the Skills 
+section so I can confirm the hover behavior and admin controls work 
+before I start assigning real links to cards.

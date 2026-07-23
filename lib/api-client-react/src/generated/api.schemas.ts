@@ -150,6 +150,12 @@ export interface SectionDataItem {
   date?: string;
   icon?: string;
   bullets?: BulletItem[];
+  /** "none" | "internal" | "external" — default "none" */
+  linkType?: "none" | "internal" | "external";
+  /** Internal: page slug. External: full URL (https://...) */
+  linkValue?: string;
+  /** External links only — open in new tab (default true for external) */
+  linkNewTab?: boolean;
 }
 
 export interface SectionData {
