@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Loader2, Save, Palette, Globe, BookOpen, Sparkles, Link2, Briefcase, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Save, Palette, Globe, BookOpen, Sparkles, Link2, Briefcase, CheckCircle2, Eye, EyeOff, Type } from "lucide-react";
 import { applyBrandingColors } from "@/lib/branding";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetAiStatusQueryKey } from "@workspace/api-client-react";
@@ -67,6 +67,12 @@ export default function Branding() {
   const [blogTextColor, setBlogTextColor] = useState("#1e293b");
   const [blogAccentColor, setBlogAccentColor] = useState("#5b91c8");
 
+  // Site identity fields
+  const [siteNameEn, setSiteNameEn] = useState("");
+  const [siteNameAr, setSiteNameAr] = useState("");
+  const [defaultDescEn, setDefaultDescEn] = useState("");
+  const [defaultDescAr, setDefaultDescAr] = useState("");
+
   // AEO / structured data fields
   const [seoPersonJobTitle, setSeoPersonJobTitle] = useState("");
   const [seoWebsiteUrl, setSeoWebsiteUrl] = useState("");
@@ -88,6 +94,10 @@ export default function Branding() {
       setBlogBgColor(settings.blogBgColor);
       setBlogTextColor(settings.blogTextColor);
       setBlogAccentColor(settings.blogAccentColor);
+      setSiteNameEn(settings.siteNameEn ?? "");
+      setSiteNameAr(settings.siteNameAr ?? "");
+      setDefaultDescEn(settings.defaultDescEn ?? "");
+      setDefaultDescAr(settings.defaultDescAr ?? "");
       setSeoPersonJobTitle(settings.seoPersonJobTitle ?? "");
       setSeoWebsiteUrl(settings.seoWebsiteUrl ?? "");
       setSeoLinkedinUrl(settings.seoLinkedinUrl ?? "");
@@ -110,6 +120,10 @@ export default function Branding() {
           blogBgColor,
           blogTextColor,
           blogAccentColor,
+          siteNameEn: siteNameEn || null,
+          siteNameAr: siteNameAr || null,
+          defaultDescEn: defaultDescEn || null,
+          defaultDescAr: defaultDescAr || null,
           seoPersonJobTitle: seoPersonJobTitle || null,
           seoWebsiteUrl: seoWebsiteUrl || null,
           seoLinkedinUrl: seoLinkedinUrl || null,
@@ -149,6 +163,82 @@ export default function Branding() {
             Customize your site's appearance. Changes apply immediately.
           </p>
         </div>
+
+        {/* Site Identity */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Type className="w-4 h-4" />
+              Site Identity
+            </CardTitle>
+            <CardDescription>
+              The site name appears in browser tab titles (e.g. <em>About | Your Name</em>) and in Open Graph / social sharing cards. The default description is shown on pages that don't have their own description set.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5 text-sm font-semibold">
+                  Site Name <span className="text-muted-foreground font-normal">(English)</span>
+                </Label>
+                <Input
+                  value={siteNameEn}
+                  placeholder="Mohammad Ghanayem"
+                  maxLength={80}
+                  onChange={e => setSiteNameEn(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">{siteNameEn.length}/80 chars</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5 text-sm font-semibold">
+                  Site Name <span className="text-muted-foreground font-normal">(Arabic)</span>
+                </Label>
+                <Input
+                  value={siteNameAr}
+                  placeholder="محمد غنايم"
+                  maxLength={80}
+                  dir="rtl"
+                  onChange={e => setSiteNameAr(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">{siteNameAr.length}/80 chars</p>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5 text-sm font-semibold">
+                  Default Description <span className="text-muted-foreground font-normal">(English)</span>
+                </Label>
+                <Input
+                  value={defaultDescEn}
+                  placeholder="Personal website of Mohammad Ghanayem."
+                  maxLength={160}
+                  onChange={e => setDefaultDescEn(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">{defaultDescEn.length}/160 chars · recommended ≤ 120 for search results</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5 text-sm font-semibold">
+                  Default Description <span className="text-muted-foreground font-normal">(Arabic)</span>
+                </Label>
+                <Input
+                  value={defaultDescAr}
+                  placeholder="الموقع الشخصي لمحمد غنايم."
+                  maxLength={160}
+                  dir="rtl"
+                  onChange={e => setDefaultDescAr(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">{defaultDescAr.length}/160 chars · يُنصح بـ 120 حرفاً أو أقل</p>
+              </div>
+            </div>
+            {(siteNameEn || siteNameAr) && (
+              <div className="rounded-lg bg-muted px-4 py-3 text-xs text-muted-foreground space-y-1">
+                <p className="font-semibold text-foreground">Browser tab preview</p>
+                {siteNameEn && <p>🇬🇧 About | <strong>{siteNameEn}</strong></p>}
+                {siteNameAr && <p dir="rtl">🇸🇦 حول | <strong>{siteNameAr}</strong></p>}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Default Language */}
         <Card>

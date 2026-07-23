@@ -277,6 +277,7 @@ export default function BlogPost() {
         type="article"
         publishedAt={post.publishedAt}
         lang={lang}
+        siteName={isRtl ? settings?.siteNameAr : settings?.siteNameEn}
       />
 
       <div

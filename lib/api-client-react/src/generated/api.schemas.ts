@@ -327,6 +327,14 @@ export interface BrandingSettings {
   seoTwitterUrl?: string | null;
   /** GitHub profile URL for sameAs array */
   seoGithubUrl?: string | null;
+  /** Site name shown in browser tab and Open Graph (English) */
+  siteNameEn?: string | null;
+  /** Site name shown in browser tab and Open Graph (Arabic) */
+  siteNameAr?: string | null;
+  /** Default meta description for pages without their own (English) */
+  defaultDescEn?: string | null;
+  /** Default meta description for pages without their own (Arabic) */
+  defaultDescAr?: string | null;
 }
 
 export type BrandingUpdateDefaultLanguage = typeof BrandingUpdateDefaultLanguage[keyof typeof BrandingUpdateDefaultLanguage];
@@ -362,6 +370,10 @@ export interface BrandingUpdate {
   seoLinkedinUrl?: string | null;
   seoTwitterUrl?: string | null;
   seoGithubUrl?: string | null;
+  siteNameEn?: string | null;
+  siteNameAr?: string | null;
+  defaultDescEn?: string | null;
+  defaultDescAr?: string | null;
 }
 
 export interface ContactMessage {

@@ -25,6 +25,11 @@ export const settingsTable = pgTable("settings", {
   seoLinkedinUrl: text("seo_linkedin_url"),
   seoTwitterUrl: text("seo_twitter_url"),
   seoGithubUrl: text("seo_github_url"),
+  // Site identity — editable from the admin Branding page
+  siteNameEn: text("site_name_en"),
+  siteNameAr: text("site_name_ar"),
+  defaultDescEn: text("default_desc_en"),
+  defaultDescAr: text("default_desc_ar"),
   // AI assistant — stored server-side only, never returned to frontend
   anthropicApiKey: text("anthropic_api_key"),
   updatedAt: timestamp("updated_at", { withTimezone: true })

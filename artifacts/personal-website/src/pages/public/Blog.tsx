@@ -72,6 +72,7 @@ export default function Blog() {
         url={canonicalUrl}
         type="website"
         lang={lang}
+        siteName={isRtl ? settings?.siteNameAr : settings?.siteNameEn}
       />
 
       <div

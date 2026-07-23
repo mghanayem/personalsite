@@ -1,4 +1,4 @@
-import { useGetPublicPage } from "@workspace/api-client-react";
+import { useGetPublicPage, useGetBrandingSettings } from "@workspace/api-client-react";
 import { Loader2 } from "lucide-react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { RenderSection } from "@/components/public/RenderSection";
@@ -18,6 +18,7 @@ export default function Page() {
       queryKey: ["getGetPublicPage", slug],
     }
   });
+  const { data: brandingSettings } = useGetBrandingSettings();
 
   if (isLoading) {
     return (
@@ -44,6 +45,9 @@ export default function Page() {
   const seoDesc = lang === "ar" ? page.seoDescAr : page.seoDescEn;
   const canonicalUrl = typeof window !== "undefined" ? window.location.href : "";
 
+  const siteName = lang === "ar" ? brandingSettings?.siteNameAr : brandingSettings?.siteNameEn;
+  const defaultDesc = lang === "ar" ? brandingSettings?.defaultDescAr : brandingSettings?.defaultDescEn;
+
   return (
     <PublicLayout>
       <PageSeo
@@ -53,6 +57,8 @@ export default function Page() {
         url={canonicalUrl}
         type="website"
         lang={lang}
+        siteName={siteName}
+        defaultDescription={defaultDesc}
       />
       <div className="flex flex-col w-full">
         {renderWithModules(page.sections, page.modulePlacements ?? []).map((item) =>

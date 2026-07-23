@@ -32,4 +32,8 @@ export interface BrandingUpdate {
   seoLinkedinUrl?: string | null;
   seoTwitterUrl?: string | null;
   seoGithubUrl?: string | null;
+  siteNameEn?: string | null;
+  siteNameAr?: string | null;
+  defaultDescEn?: string | null;
+  defaultDescAr?: string | null;
 }

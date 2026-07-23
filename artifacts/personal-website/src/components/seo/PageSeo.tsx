@@ -21,10 +21,19 @@ interface PageSeoProps {
   publishedAt?: string | null;
   /** Language of this page — sets <html lang>. */
   lang?: "ar" | "en";
+  /**
+   * Site name from branding settings (admin-configurable).
+   * Falls back to the hardcoded constant if not provided.
+   */
+  siteName?: string | null;
+  /**
+   * Default description used when no page-specific description is set.
+   * From branding settings (admin-configurable).
+   */
+  defaultDescription?: string | null;
 }
 
-const SITE_NAME = "Mohammad Ghanayem";
-const DEFAULT_TITLE = SITE_NAME;
+const FALLBACK_SITE_NAME = "Mohammad Ghanayem";
 
 export function PageSeo({
   title,
@@ -34,9 +43,12 @@ export function PageSeo({
   type = "website",
   publishedAt,
   lang = "ar",
+  siteName,
+  defaultDescription,
 }: PageSeoProps) {
-  const resolvedTitle = title ? `${title} | ${SITE_NAME}` : DEFAULT_TITLE;
-  const resolvedDesc = description || "";
+  const resolvedSiteName = siteName || FALLBACK_SITE_NAME;
+  const resolvedTitle = title ? `${title} | ${resolvedSiteName}` : resolvedSiteName;
+  const resolvedDesc = description || defaultDescription || "";
   const resolvedUrl = url || (typeof window !== "undefined" ? window.location.href : "");
 
   return (
@@ -46,7 +58,7 @@ export function PageSeo({
       {resolvedDesc && <meta name="description" content={resolvedDesc} />}
 
       {/* Open Graph */}
-      <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:site_name" content={resolvedSiteName} />
       <meta property="og:title" content={resolvedTitle} />
       {resolvedDesc && <meta property="og:description" content={resolvedDesc} />}
       <meta property="og:type" content={type} />

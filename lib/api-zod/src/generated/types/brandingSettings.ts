@@ -38,4 +38,12 @@ export interface BrandingSettings {
   seoTwitterUrl?: string | null;
   /** GitHub profile URL for sameAs array */
   seoGithubUrl?: string | null;
+  /** Site name shown in browser tab and Open Graph (English) */
+  siteNameEn?: string | null;
+  /** Site name shown in browser tab and Open Graph (Arabic) */
+  siteNameAr?: string | null;
+  /** Default meta description for pages without their own (English) */
+  defaultDescEn?: string | null;
+  /** Default meta description for pages without their own (Arabic) */
+  defaultDescAr?: string | null;
 }

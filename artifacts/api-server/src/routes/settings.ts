@@ -25,6 +25,11 @@ type BrandingUpdate = {
   seoLinkedinUrl?: string | null;
   seoTwitterUrl?: string | null;
   seoGithubUrl?: string | null;
+  // Site identity
+  siteNameEn?: string | null;
+  siteNameAr?: string | null;
+  defaultDescEn?: string | null;
+  defaultDescAr?: string | null;
 };
 
 const COLOR_FIELDS: (keyof Omit<BrandingUpdate, "defaultLanguage" | "seoPersonJobTitle" | "seoWebsiteUrl" | "seoLinkedinUrl" | "seoTwitterUrl" | "seoGithubUrl">)[] = [
@@ -71,6 +76,10 @@ function brandingResponse(row: typeof settingsTable.$inferSelect) {
     seoLinkedinUrl: row.seoLinkedinUrl ?? null,
     seoTwitterUrl: row.seoTwitterUrl ?? null,
     seoGithubUrl: row.seoGithubUrl ?? null,
+    siteNameEn: row.siteNameEn ?? null,
+    siteNameAr: row.siteNameAr ?? null,
+    defaultDescEn: row.defaultDescEn ?? null,
+    defaultDescAr: row.defaultDescAr ?? null,
   };
 }
 
@@ -108,6 +117,12 @@ router.patch("/settings/branding", requireAuth, async (req, res): Promise<void> 
   // AEO text fields (nullable strings — allow clearing with null or "")
   if ("seoPersonJobTitle" in body) updates.seoPersonJobTitle = body.seoPersonJobTitle || null;
   for (const key of URL_FIELDS) {
+    if (key in body) updates[key] = body[key] || null;
+  }
+
+  // Site identity fields
+  const IDENTITY_FIELDS = ["siteNameEn", "siteNameAr", "defaultDescEn", "defaultDescAr"] as const;
+  for (const key of IDENTITY_FIELDS) {
     if (key in body) updates[key] = body[key] || null;
   }
 

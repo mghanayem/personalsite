@@ -63,6 +63,9 @@ export default function Home() {
   const seoDesc = lang === "ar" ? page.seoDescAr : page.seoDescEn;
   const canonicalUrl = typeof window !== "undefined" ? window.location.href : "";
 
+  const siteName = lang === "ar" ? settings?.siteNameAr : settings?.siteNameEn;
+  const defaultDesc = lang === "ar" ? settings?.defaultDescAr : settings?.defaultDescEn;
+
   return (
     <PublicLayout>
       <PageSeo
@@ -72,6 +75,8 @@ export default function Home() {
         url={canonicalUrl}
         type="website"
         lang={lang}
+        siteName={siteName}
+        defaultDescription={defaultDesc}
       />
 
       {/* Person structured data (AEO) */}
