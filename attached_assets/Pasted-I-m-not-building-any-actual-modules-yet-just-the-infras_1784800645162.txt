@@ -1,0 +1,22 @@
+I'm not building any actual modules yet — just the infrastructure to upload, store, activate/deactivate, delete, and place them later. Build this as a generic container system now; I'll create the real modules (calculator, dashboard, banner, etc.) afterward using whatever upload format you set up here.
+
+RECOMMENDED FILE TYPE: a single self-contained .html file per module. The .html file should contain its own <style> and <script> tags inline (no separate .css/.js files to manage), so the entire module is one file I write and upload. This is the simplest format for me to build against later, and the easiest for you to sandbox safely now.
+
+Requirements:
+
+Add a modules table (id, name, description, file_path, is_active, created_at, updated_at) and a module_placements table (id, module_id, page_id, section_position, is_admin_only, created_at)
+Store uploaded .html files in a dedicated folder (e.g. /uploads/modules/), never in a location that gets executed as server-side code
+Validate on upload: reject anything that isn't a well-formed .html file; enforce a reasonable file size limit (e.g. 2 MB)
+Render every module inside a sandboxed <iframe> using srcdoc (loading the file's HTML content directly) with the sandbox attribute set to allow-scripts only — NOT allow-same-origin, allow-forms, allow-popups, or allow-top-navigation — so an uploaded module's JS runs, but cannot read cookies, access the admin session, escape the iframe, or navigate the parent page
+Include a small built-in postMessage listener on the parent page that only accepts one message type from module iframes — a resize request so the iframe can fit its content height — everything else is ignored by default; note this in a comment so I know where to extend it later if a specific module needs to send data out
+
+Admin panel features at /admin/modules:
+
+"Upload Module" — pick an .html file, give it a name and optional description, upload
+List all modules with Activate/Deactivate toggle and Delete button
+For each module, an "Assign" control letting me pick: which page it appears on, and either a specific section position (before/after an existing section) or "as a new section," or "admin-only" (visible only in /admin previews, never on the public site)
+A live preview button showing the module rendered in its sandboxed iframe before activating it anywhere
+Deactivated modules are hidden from the public site immediately but stay in the database for reactivation later
+Deleted modules are removed from the database, their file deleted from disk, and unassigned from any page
+
+After this phase, confirm the exact upload folder path and the iframe sandbox settings you used, so I know the constraints to write my module HTML files against later.
