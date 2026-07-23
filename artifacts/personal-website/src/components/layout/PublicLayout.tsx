@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useContentProtection } from "@/hooks/useContentProtection";
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
-  const { showProtectedToast } = useContentProtection();
+  useContentProtection();
 
   // ONE global listener for all module iframes — registered once here, never per-instance.
   // ONLY message type the parent page acts on from a module iframe: "module-resize".
@@ -90,16 +90,6 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
     <div
       className="min-h-screen bg-background flex flex-col font-sans"
     >
-      {/* Brief "Content protected" toast — appears on right-click, auto-hides after 2 s */}
-      {showProtectedToast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-[9999] px-4 py-2 rounded-lg bg-foreground/90 text-background text-sm font-medium shadow-lg pointer-events-none animate-in fade-in slide-in-from-bottom-2"
-        >
-          {lang === "ar" ? "المحتوى محمي" : "Content protected"}
-        </div>
-      )}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
           <div className="font-bold text-xl tracking-tight text-foreground flex items-center gap-2">

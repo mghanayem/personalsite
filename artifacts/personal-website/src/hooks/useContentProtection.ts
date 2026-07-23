@@ -1,17 +1,13 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 
 /**
- * Applies document-level content protection:
+ * Applies document-level content protection silently:
  * - Disables text selection across the viewport (body class `select-none`).
  * - Suppresses the browser context menu on right-click, exempting
  *   <input>, <textarea>, and <select> so editing still works.
- *
- * Returns `showProtectedToast` so the caller can render a brief feedback toast.
  * Cleans up on unmount, so the admin panel is never affected.
  */
 export function useContentProtection() {
-  const [showProtectedToast, setShowProtectedToast] = useState(false);
-
   useEffect(() => {
     document.body.classList.add("select-none");
 
@@ -24,8 +20,6 @@ export function useContentProtection() {
         node = node.parentElement;
       }
       e.preventDefault();
-      setShowProtectedToast(true);
-      setTimeout(() => setShowProtectedToast(false), 2000);
     }
 
     document.addEventListener("contextmenu", handleContextMenu);
@@ -35,6 +29,4 @@ export function useContentProtection() {
       document.removeEventListener("contextmenu", handleContextMenu);
     };
   }, []);
-
-  return { showProtectedToast };
 }
