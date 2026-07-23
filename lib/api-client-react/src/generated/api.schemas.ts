@@ -394,6 +394,12 @@ export interface NavItem {
   icon?: string | null;
 }
 
+export interface ModulePlacementPublic {
+  id: number;
+  moduleId: number;
+  sectionPosition: string;
+}
+
 export interface PublicPage {
   id: number;
   titleAr: string;
@@ -407,6 +413,7 @@ export interface PublicPage {
   seoImageUrl?: string | null;
   updatedAt: string;
   sections: SectionWithImages[];
+  modulePlacements?: ModulePlacementPublic[];
 }
 
 export interface HasPostsResponse {

@@ -1,9 +1,28 @@
 import { Router, type IRouter } from "express";
 import { eq, and, asc } from "drizzle-orm";
-import { db, pagesTable, sectionsTable, imagesTable } from "@workspace/db";
+import { db, pagesTable, sectionsTable, imagesTable, modulePlacementsTable, modulesTable } from "@workspace/db";
 import { imageUrl } from "../lib/uploads";
 
 const router: IRouter = Router();
+
+async function getActiveModulePlacements(pageId: number) {
+  const rows = await db
+    .select({
+      id: modulePlacementsTable.id,
+      moduleId: modulePlacementsTable.moduleId,
+      sectionPosition: modulePlacementsTable.sectionPosition,
+    })
+    .from(modulePlacementsTable)
+    .innerJoin(modulesTable, eq(modulePlacementsTable.moduleId, modulesTable.id))
+    .where(
+      and(
+        eq(modulePlacementsTable.pageId, pageId),
+        eq(modulePlacementsTable.isAdminOnly, false),
+        eq(modulesTable.isActive, true),
+      ),
+    );
+  return rows;
+}
 
 async function getVisibleSections(pageId: number) {
   const sections = await db
@@ -84,7 +103,10 @@ router.get("/public/homepage", async (_req, res): Promise<void> => {
     return;
   }
 
-  const sections = await getVisibleSections(homepage.id);
+  const [sections, modulePlacements] = await Promise.all([
+    getVisibleSections(homepage.id),
+    getActiveModulePlacements(homepage.id),
+  ]);
 
   res.json({
     id: homepage.id,
@@ -94,6 +116,7 @@ router.get("/public/homepage", async (_req, res): Promise<void> => {
     isHomepage: true,
     ...seoFields(homepage),
     sections,
+    modulePlacements,
   });
 });
 
@@ -112,7 +135,10 @@ router.get("/public/pages/:slug", async (req, res): Promise<void> => {
     return;
   }
 
-  const sections = await getVisibleSections(page.id);
+  const [sections, modulePlacements] = await Promise.all([
+    getVisibleSections(page.id),
+    getActiveModulePlacements(page.id),
+  ]);
 
   res.json({
     id: page.id,
@@ -122,6 +148,7 @@ router.get("/public/pages/:slug", async (req, res): Promise<void> => {
     isHomepage: page.isHomepage,
     ...seoFields(page),
     sections,
+    modulePlacements,
   });
 });
 

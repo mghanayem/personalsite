@@ -2,9 +2,11 @@ import { useGetPublicHomepage, useGetBrandingSettings } from "@workspace/api-cli
 import { Loader2 } from "lucide-react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { RenderSection } from "@/components/public/RenderSection";
+import { ModuleFrame } from "@/components/public/ModuleFrame";
 import { PageSeo } from "@/components/seo/PageSeo";
 import { useLanguage } from "@/lib/i18n";
 import { Helmet } from "react-helmet-async";
+import { renderWithModules } from "@/lib/modules";
 
 function buildPersonJsonLd(settings: {
   seoPersonJobTitle?: string | null;
@@ -82,12 +84,13 @@ export default function Home() {
       )}
 
       <div className="flex flex-col w-full">
-        {page.sections
-          .filter(s => s.isVisible)
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map(section => (
-            <RenderSection key={section.id} section={section} />
-          ))}
+        {renderWithModules(page.sections, page.modulePlacements ?? []).map((item) =>
+          item.kind === "section" ? (
+            <RenderSection key={`s-${item.section.id}`} section={item.section} />
+          ) : (
+            <ModuleFrame key={`m-${item.placement.id}`} moduleId={item.placement.moduleId} />
+          )
+        )}
       </div>
     </PublicLayout>
   );

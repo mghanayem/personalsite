@@ -2,9 +2,11 @@ import { useGetPublicPage } from "@workspace/api-client-react";
 import { Loader2 } from "lucide-react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { RenderSection } from "@/components/public/RenderSection";
+import { ModuleFrame } from "@/components/public/ModuleFrame";
 import { PageSeo } from "@/components/seo/PageSeo";
 import { useParams } from "wouter";
 import { useLanguage } from "@/lib/i18n";
+import { renderWithModules } from "@/lib/modules";
 
 export default function Page() {
   const { slug } = useParams<{ slug: string }>();
@@ -53,12 +55,13 @@ export default function Page() {
         lang={lang}
       />
       <div className="flex flex-col w-full">
-        {page.sections
-          .filter(s => s.isVisible)
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map(section => (
-            <RenderSection key={section.id} section={section} />
-          ))}
+        {renderWithModules(page.sections, page.modulePlacements ?? []).map((item) =>
+          item.kind === "section" ? (
+            <RenderSection key={`s-${item.section.id}`} section={item.section} />
+          ) : (
+            <ModuleFrame key={`m-${item.placement.id}`} moduleId={item.placement.moduleId} />
+          )
+        )}
       </div>
     </PublicLayout>
   );

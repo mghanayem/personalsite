@@ -7,3 +7,5 @@ export * from "./messages";
 export * from "./posts";
 export * from "./post-gallery-images";
 export * from "./ai-conversations";
+export * from "./modules";
+export * from "./module-placements";
