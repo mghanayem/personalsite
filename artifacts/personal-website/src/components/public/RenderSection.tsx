@@ -168,7 +168,7 @@ export function RenderSection({ section }: { section: SectionWithImages }) {
               <div key={item.id} className="bg-card border border-border rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow">
                 {item.icon && (
                   <div className="w-12 h-12 rounded-lg bg-primary/5 text-primary flex items-center justify-center mb-6 text-xl">
-                    <span className="opacity-70">{item.icon.charAt(0)}</span>
+                    <span className="opacity-70">{item.icon}</span>
                   </div>
                 )}
                 <h3 className="text-xl font-bold mb-3">{t(item.titleAr, item.titleEn)}</h3>
