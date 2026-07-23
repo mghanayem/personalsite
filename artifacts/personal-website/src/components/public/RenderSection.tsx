@@ -176,7 +176,7 @@ export function RenderSection({ section }: { section: SectionWithImages }) {
                 if (!slug) {
                   href = lang === "en" ? "/en" : "/";
                 } else {
-                  href = lang === "en" ? `/en/${slug}` : `/${slug}`;
+                  href = lang === "en" ? `/en/p/${slug}` : `/p/${slug}`;
                 }
               } else if (linkType === "external") {
                 href = item.linkValue || "#";
