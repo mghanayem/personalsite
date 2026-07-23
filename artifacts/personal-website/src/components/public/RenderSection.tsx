@@ -371,7 +371,8 @@ function ContactStripSection({ d, lang, t }: ContactStripProps) {
                 className="flex items-center gap-2 hover:text-primary transition-colors"
               >
                 <Mail className="w-4 h-4" />
-                <span>{d.email}</span>
+                {/* Email address must remain selectable so visitors can copy it */}
+                <span className="select-text">{d.email}</span>
               </a>
             )}
             {d.linkedin && (

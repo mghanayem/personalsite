@@ -5,6 +5,23 @@ import { Menu, X, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
+  const [showProtectedToast, setShowProtectedToast] = useState(false);
+
+  // Right-click suppression — public pages only.
+  // Exempts <input>, <textarea>, and <select> so browser spell-check / paste works normally.
+  // The admin panel uses AdminLayout and is never affected.
+  const handleContextMenu = (e: React.MouseEvent) => {
+    let node: HTMLElement | null = e.target as HTMLElement;
+    while (node && node !== e.currentTarget) {
+      const tag = node.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      node = node.parentElement;
+    }
+    e.preventDefault();
+    setShowProtectedToast(true);
+    setTimeout(() => setShowProtectedToast(false), 2000);
+  };
+
   // ONE global listener for all module iframes — registered once here, never per-instance.
   // ONLY message type the parent page acts on from a module iframe: "module-resize".
   // Any message with a different shape or type is silently ignored.
@@ -84,7 +101,20 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
   const allNavLinks = blogLink ? [...navLinks, blogLink] : navLinks;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
+    <div
+      className="min-h-screen bg-background flex flex-col font-sans select-none"
+      onContextMenu={handleContextMenu}
+    >
+      {/* Brief "Content protected" toast — appears on right-click, auto-hides after 2 s */}
+      {showProtectedToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-[9999] px-4 py-2 rounded-lg bg-foreground/90 text-background text-sm font-medium shadow-lg pointer-events-none animate-in fade-in slide-in-from-bottom-2"
+        >
+          {lang === "ar" ? "المحتوى محمي" : "Content protected"}
+        </div>
+      )}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
           <div className="font-bold text-xl tracking-tight text-foreground flex items-center gap-2">
