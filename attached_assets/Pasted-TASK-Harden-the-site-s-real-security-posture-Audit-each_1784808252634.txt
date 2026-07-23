@@ -1,0 +1,52 @@
+TASK: Harden the site's real security posture. Audit each item below 
+and report what was already in place vs newly fixed.
+
+1. NO SECRETS IN CLIENT-SIDE CODE
+   - Search the entire front-end bundle (everything sent to the 
+     browser) for API keys, database credentials, or admin tokens
+   - Anything sensitive must live only in server-side environment 
+     variables, never in code that ships to the browser
+   - Confirm the .env file (or equivalent) is in .gitignore and was 
+     never committed to version control
+
+2. ADMIN PANEL HARDENING
+   - Confirm /admin routes are fully protected by auth middleware, 
+     with no route accidentally left open
+   - Confirm session cookies are httpOnly and secure (HTTPS only)
+   - Add rate limiting on the login endpoint specifically (a few 
+     attempts per minute per IP) to slow down brute-force attempts
+   - Confirm the admin password is no longer the default "admin" — 
+     if it is, treat this as urgent and flag it to me immediately
+
+3. HTTPS AND HEADERS
+   - Confirm the site enforces HTTPS (no HTTP fallback)
+   - Add standard security headers: 
+     Content-Security-Policy, X-Content-Type-Options: nosniff, 
+     X-Frame-Options: SAMEORIGIN (or DENY), Referrer-Policy
+   - The Content-Security-Policy must explicitly allow the CDN 
+     domains already in use for module iframes (Chart.js, Google 
+     Fonts) — do not set a policy so strict it breaks existing 
+     features; list and test each one
+
+4. RATE LIMITING AND BOT PROTECTION
+   - Add basic rate limiting on all API endpoints (not just login) 
+     to prevent automated abuse or scraping at volume
+   - If a contact form exists, add basic spam protection (honeypot 
+     field or similar lightweight method — nothing that requires a 
+     paid service unless I approve it)
+
+5. DEPENDENCY AND INPUT SAFETY
+   - Confirm all user-submitted content (blog post content, page 
+     sections, module uploads) is sanitized before being stored or 
+     rendered, to prevent stored XSS
+   - Run a dependency audit (npm audit or equivalent) and report any 
+     high/critical vulnerabilities found in packages currently in use
+
+6. BACKUP BEFORE ANY OF THIS
+   - Before making changes, confirm a database backup exists so 
+     nothing here risks data loss
+
+REPORT BACK: a checklist of each item, marked already-secure / 
+newly-fixed / needs-my-decision (e.g. if a paid service would help), 
+plus specifically confirm whether the admin password has been 
+changed from the default.
