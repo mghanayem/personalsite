@@ -1,0 +1,80 @@
+TASK: Two confirmed bugs found by inspecting the actual server-rendered
+HTML output for /en/p/cash-flow-forecast-calculator. Fix both. These
+are NOT guesses — they're visible directly in the page source below.
+
+## BUG 1 — og:image and twitter:image are relative URLs, not absolute
+
+Current output:
+<meta property="og:image" content="/api/uploads/38ed012b-f001-4f7e-8b45-4982599db634.jpg">
+<meta name="twitter:image" content="/api/uploads/38ed012b-f001-4f7e-8b45-4982599db634.jpg">
+
+Social crawlers (WhatsApp, LinkedIn, Facebook, Twitter/X) require a
+FULLY QUALIFIED absolute URL for og:image — a relative path like this
+will silently fail to load in most crawlers, which is why previews
+show no image at all.
+
+FIX: Find wherever server.ts builds the OG_META_PLACEHOLDER content
+and ensure og:image and twitter:image are always prefixed with the
+full site origin, e.g.:
+
+  const imageUrl = page.seo_og_image.startsWith('http')
+    ? page.seo_og_image
+    : `https://mohammadghanayem.com${page.seo_og_image}`;
+
+Apply this to EVERY page type using this same OG injection logic
+(homepage, blog posts, custom /p/ pages) — this is a shared bug, not
+specific to this one calculator page. Also double check og:url is
+always absolute too (it currently is, correctly, on this page — just
+confirm that stays true everywhere).
+
+## BUG 2 — page title has "Mohammad Ghanayem" duplicated
+
+Current output:
+"Cash Flow Forecast Calculator | Mohammad Ghanayem | Mohammad Ghanayem | Contract & Project Manager"
+
+The saved SEO Title for this page is:
+"Cash Flow Forecast Calculator | Mohammad Ghanayem"
+
+Something in server.ts is appending an additional
+" | Mohammad Ghanayem | Contract & Project Manager" suffix (likely a
+site-wide title template) on top of a title that already contains the
+name — causing the duplication.
+
+FIX: Find where the final <title> and og:title/twitter:title strings
+are assembled. There are two acceptable fixes — pick whichever matches
+the existing intent:
+
+  Option A: If every page's SEO Title is meant to already be
+  "complete" on its own (as the ones I've been writing are), stop
+  appending any suffix at all — just use page.seo_title directly with
+  no concatenation.
+
+  Option B: If the intent is that admins write SHORT SEO titles (e.g.
+  just "Cash Flow Forecast Calculator") and the site always appends
+  " | Mohammad Ghanayem | Contract & Project Manager" automatically,
+  then that's fine — but the CURRENTLY SAVED SEO Title values for
+  each page need to be shortened to remove the manually-added
+  "| Mohammad Ghanayem" I included, since the template is already
+  adding it.
+
+  Tell me which of these is actually happening in the code, so I know
+  whether to leave my SEO titles as full strings or shorten them going
+  forward.
+
+## TEST AFTER FIXING
+
+1. View source on /en/p/cash-flow-forecast-calculator again and
+   confirm:
+   - og:image and twitter:image now start with https://mohammadghanayem.com
+   - <title> and og:title show "Mohammad Ghanayem" only ONCE
+
+2. Check at least 2 other pages (a blog post, the homepage) to confirm
+   both fixes apply site-wide, not just to this one page.
+
+3. Use WhatsApp's cache-busting trick to verify: share
+   https://mohammadghanayem.com/en/p/cash-flow-forecast-calculator?v=3
+   and confirm a real image and correct title now appear.
+
+REPORT BACK: which option (A or B) was actually the case for Bug 2,
+so I know whether any of the SEO titles I've already written need to
+be shortened.

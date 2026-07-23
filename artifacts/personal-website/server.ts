@@ -181,9 +181,25 @@ async function fetchOgMeta(reqPath: string): Promise<OgMeta> {
 
 // ── Build the <head> meta tag block ──────────────────────────────────────
 function buildMetaTags(meta: OgMeta, pageUrl: string): string {
-  const resolvedTitle = meta.title
-    ? `${meta.title} | ${meta.siteName}`
-    : meta.siteName;
+  // Bug 2 fix (Option A): the admin writes complete SEO titles — use them
+  // as-is. Only fall back to the site name when no per-page title exists.
+  const resolvedTitle = meta.title ?? meta.siteName;
+
+  // Bug 1 fix: social crawlers require absolute image URLs.
+  // Resolve relative paths (e.g. "/api/uploads/...") against the request origin.
+  let absImage: string | null = null;
+  if (meta.image) {
+    if (meta.image.startsWith("http://") || meta.image.startsWith("https://")) {
+      absImage = meta.image;
+    } else {
+      try {
+        const origin = new URL(pageUrl).origin;
+        absImage = `${origin}${meta.image.startsWith("/") ? "" : "/"}${meta.image}`;
+      } catch {
+        absImage = meta.image; // keep as-is if pageUrl is unparseable
+      }
+    }
+  }
 
   const lines: string[] = [
     `<title>${esc(resolvedTitle)}</title>`,
@@ -191,7 +207,7 @@ function buildMetaTags(meta: OgMeta, pageUrl: string): string {
     `<meta property="og:title" content="${esc(resolvedTitle)}" />`,
     `<meta property="og:type" content="${meta.type}" />`,
     `<meta property="og:url" content="${esc(pageUrl)}" />`,
-    `<meta name="twitter:card" content="${meta.image ? "summary_large_image" : "summary"}" />`,
+    `<meta name="twitter:card" content="${absImage ? "summary_large_image" : "summary"}" />`,
     `<meta name="twitter:title" content="${esc(resolvedTitle)}" />`,
   ];
 
@@ -207,9 +223,9 @@ function buildMetaTags(meta: OgMeta, pageUrl: string): string {
     );
   }
 
-  if (meta.image) {
-    lines.push(`<meta property="og:image" content="${esc(meta.image)}" />`);
-    lines.push(`<meta name="twitter:image" content="${esc(meta.image)}" />`);
+  if (absImage) {
+    lines.push(`<meta property="og:image" content="${esc(absImage)}" />`);
+    lines.push(`<meta name="twitter:image" content="${esc(absImage)}" />`);
   }
 
   if (meta.type === "article" && meta.publishedAt) {
@@ -237,8 +253,13 @@ function makeHtmlHandler(
     }
 
     try {
+      // In Express 5, req.path inside app.use("/{*path}", ...) is stripped
+      // to just "/". Use originalUrl and strip the query string to get the
+      // real path for OG lookups and the canonical URL.
+      const pathname = (req.originalUrl.split("?")[0]) ?? "/";
+
       const rawHtml = getIndexSource();
-      const transformed = await getRawHtml(req.originalUrl, rawHtml);
+      const transformed = await getRawHtml(pathname, rawHtml);
 
       // Build canonical og:url from forwarded headers (Replit proxy)
       const proto =
@@ -251,10 +272,10 @@ function makeHtmlHandler(
         (req.headers["x-forwarded-host"] as string | undefined) ??
         req.headers.host ??
         "localhost";
-      const pageUrl = `${proto}://${host}${req.path}`;
+      const pageUrl = `${proto}://${host}${pathname}`;
 
       // Fetch per-page OG data — fall back gracefully if DB is unavailable
-      const meta = await fetchOgMeta(req.path).catch(
+      const meta = await fetchOgMeta(pathname).catch(
         (): OgMeta => ({
           title: null,
           description: null,
