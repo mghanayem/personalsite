@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { useContentProtection } from "@/hooks/useContentProtection";
 
 export default function Login() {
+  const { showProtectedToast } = useContentProtection();
   const [location, setLocation] = useLocation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -45,6 +47,15 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4" dir="ltr" lang="en">
+      {showProtectedToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-[9999] px-4 py-2 rounded-lg bg-foreground/90 text-background text-sm font-medium shadow-lg pointer-events-none animate-in fade-in slide-in-from-bottom-2"
+        >
+          Content protected
+        </div>
+      )}
       <Card className="w-full max-w-md shadow-lg border-border/50">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-2xl font-bold">Admin Panel</CardTitle>

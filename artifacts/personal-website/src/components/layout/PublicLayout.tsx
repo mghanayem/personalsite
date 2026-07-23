@@ -3,40 +3,10 @@ import { Link, useLocation } from "wouter";
 import { useLanguage } from "@/lib/i18n";
 import { Menu, X, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useContentProtection } from "@/hooks/useContentProtection";
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [showProtectedToast, setShowProtectedToast] = useState(false);
-
-  // ── Document-level content protections ───────────────────────────────────
-  // Attached to `document` (not a React div) so they cover every element on
-  // the page regardless of SPA navigation or child CSS overrides.
-  // Cleaned up on unmount so the admin panel is never affected.
-  useEffect(() => {
-    // 1. Prevent text selection across the entire viewport.
-    document.body.classList.add("select-none");
-
-    // 2. Suppress the browser context menu on right-click.
-    //    Exempts <input>, <textarea>, and <select> so spell-check / paste work normally.
-    function handleContextMenu(e: MouseEvent) {
-      let node: HTMLElement | null = e.target as HTMLElement;
-      while (node) {
-        const tag = node.tagName?.toLowerCase();
-        if (tag === "input" || tag === "textarea" || tag === "select") return;
-        if (node === document.body) break;
-        node = node.parentElement;
-      }
-      e.preventDefault();
-      setShowProtectedToast(true);
-      setTimeout(() => setShowProtectedToast(false), 2000);
-    }
-
-    document.addEventListener("contextmenu", handleContextMenu);
-
-    return () => {
-      document.body.classList.remove("select-none");
-      document.removeEventListener("contextmenu", handleContextMenu);
-    };
-  }, []);
+  const { showProtectedToast } = useContentProtection();
 
   // ONE global listener for all module iframes — registered once here, never per-instance.
   // ONLY message type the parent page acts on from a module iframe: "module-resize".
