@@ -1,0 +1,99 @@
+CONTEXT
+This is a live Node.js + Express + SQLite app with an EJS admin panel and a 
+bilingual public site (Arabic at the root, English under /en). Do not break 
+anything currently working. Before writing code, read the codebase and match 
+its existing conventions: how routes are registered, how the admin auth 
+middleware is named and applied, how EJS layouts and partials are structured, 
+how the modules table is defined, and how modules are currently embedded and 
+sized on public pages.
+
+PROBLEM
+Modules have a Visibility setting including "Admin only", but nothing in the 
+app consumes that value. An Admin only module is hidden from the public site 
+and has no home anywhere else, so the setting does nothing.
+
+INTENT
+Admin only does not mean hidden, unpublished or under test. It means the module 
+is an internal tool that lives in the admin panel and is used there as part of 
+normal admin work, permanently. Visibility should decide WHERE a module is 
+mounted, not merely who may see a public page:
+  - Public      -> renders on the public site as it does today. No change.
+  - Admin only  -> renders inside the admin panel as a working admin page, 
+                   listed in the admin navigation, never reachable publicly.
+
+BUILD
+
+1. Admin Tools navigation
+   - Add a "Tools" section to the existing admin navigation, styled exactly 
+     like the current nav items. Do not restyle the panel.
+   - It lists every module whose visibility is Admin only, ordered by a sort 
+     order if one exists, otherwise by name.
+   - The list is generated from the database at request time, so uploading a 
+     module and setting it to Admin only makes it appear with no code change 
+     and no redeploy.
+
+2. Admin tool page
+   - New admin route per module, for example /admin/tools/:slug, protected by 
+     the SAME auth middleware already used by other admin pages. Do not invent 
+     a new auth mechanism.
+   - Renders inside the normal admin layout, with the module name as the page 
+     heading, so it looks like a native panel page rather than an embedded 
+     stranger.
+   - The module renders in an iframe using the same embed mechanism the public 
+     pages use, so behaviour is identical in both places.
+   - CRITICAL, the iframe sandbox must include: allow-scripts, allow-same-origin, 
+     allow-forms, allow-modals, allow-downloads, allow-popups. Modules contain 
+     forms, submit buttons, clipboard actions, print styles and file downloads. 
+     Omitting allow-forms silently kills submit buttons with no visible error. 
+     Omitting allow-modals kills window.print().
+   - The page must listen for postMessage events of shape 
+     { type: 'module-resize', height } and set the iframe height accordingly, 
+     reusing the public wrapper's code rather than rewriting it. The tool must 
+     never render inside a short scrolling box.
+   - Append admin=1 to the iframe src so a module can detect it is running 
+     inside the panel and suppress public-facing elements such as contact 
+     calls to action.
+   - Append the language parameter the modules already read (?lang=ar / ?lang=en), 
+     defaulting to the admin panel's own language, with a small toggle to switch it.
+
+3. Modules management list
+   - In the existing modules admin screen, show visibility as a clear badge and 
+     allow filtering by all / public / admin only.
+   - For Admin only modules, the row action opens the admin tool page from 
+     step 2. For public modules, keep whatever the row action does today.
+
+4. Access control
+   - Find the route that serves module files or module content. Admin only 
+     modules must be served to authenticated admin sessions and must remain 
+     completely unavailable to everyone else, 404 or the existing behaviour, 
+     via the public site and via any direct URL.
+   - Uploaded assets appear to be served via /api/uploads/<uuid>.<ext>. Start 
+     there when locating the route that serves module content, and confirm 
+     whether module files use the same handler before changing it.
+   - Add the admin path alongside the existing public check. Do not weaken, 
+     remove or invert any existing check.
+
+CONSTRAINTS
+- No new npm dependencies.
+- No destructive database changes. If a column is genuinely needed, for example 
+  a nav sort order, add it additively with a default and do not alter or drop 
+  existing columns or data.
+- Do not modify the public site templates, the module upload flow, the visual 
+  editor, or analytics.
+- Keep the admin panel's existing visual style, spacing and component patterns.
+- Add entries to the existing change log if the project has one.
+
+VERIFY BEFORE FINISHING
+1. A module set to Admin only appears under Tools in the admin navigation 
+   without any code change.
+2. Opening it renders a fully working tool: buttons fire, forms submit, 
+   clipboard copy works, printing works.
+3. The iframe grows to fit the module rather than clipping or scrolling.
+4. Switching a module from Public to Admin only moves it from the public site 
+   into the panel, and switching it back reverses that cleanly.
+5. Logged out, or in a private window, an Admin only module is inaccessible on 
+   the public site and via its direct URL.
+6. Every previously working admin page and public page still works.
+
+When done, list the files you created or changed with one line each explaining 
+what changed and why.
