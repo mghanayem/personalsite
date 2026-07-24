@@ -1,14 +1,9 @@
 import { useGetAdminSession, useAdminLogout, getGetAdminSessionQueryKey } from "@workspace/api-client-react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, Settings, LogOut, Loader2, AlertCircle, Palette, Inbox, ExternalLink, PenLine, Sparkles, Puzzle, Wrench } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, LogOut, Loader2, AlertCircle, Palette, Inbox, ExternalLink, PenLine, Sparkles, Puzzle, Wrench, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-
-interface AdminTool {
-  id: number;
-  name: string;
-}
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -18,10 +13,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       retry: false,
     },
   });
-  
+
   const logout = useAdminLogout();
   const queryClient = useQueryClient();
-  const [tools, setTools] = useState<AdminTool[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && (isError || !session)) {
@@ -29,15 +24,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isLoading, isError, session, setLocation]);
 
-  // Fetch admin-only modules for the Tools nav section.
-  // Fetched once when the session is confirmed; silently ignored on failure.
+  // Close mobile drawer on route change
   useEffect(() => {
-    if (!session) return;
-    fetch("/api/admin/tools")
-      .then((r) => (r.ok ? (r.json() as Promise<AdminTool[]>) : []))
-      .then(setTools)
-      .catch(() => { /* silently render nothing */ });
-  }, [session]);
+    setSidebarOpen(false);
+  }, [location]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -64,89 +54,116 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { title: "Branding", href: "/admin/branding", icon: Palette },
     { title: "AI Assistant", href: "/admin/ai", icon: Sparkles },
     { title: "Modules", href: "/admin/modules", icon: Puzzle },
+    { title: "Tools", href: "/admin/tools", icon: Wrench },
     { title: "Account Settings", href: "/admin/account", icon: Settings },
   ];
 
+  const isActive = (href: string) =>
+    href === "/admin/tools"
+      ? location === "/admin/tools" || location.startsWith("/admin/tools/")
+      : location.startsWith(href);
+
+  const SidebarContent = () => (
+    <>
+      <div className="h-16 flex items-center px-6 border-b border-sidebar-border shrink-0">
+        <span className="font-bold text-lg tracking-tight">CMS Admin</span>
+        {/* Close button — mobile only */}
+        <button
+          className="ml-auto md:hidden text-sidebar-foreground/70 hover:text-sidebar-foreground"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
+        {nav.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+              isActive(item.href)
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            }`}
+          >
+            <item.icon className="w-4 h-4" />
+            {item.title}
+          </Link>
+        ))}
+
+        {/* Visit Site link */}
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground mt-2"
+        >
+          <ExternalLink className="w-4 h-4" />
+          Visit Site
+        </a>
+      </nav>
+
+      <div className="p-4 border-t border-sidebar-border shrink-0">
+        <div className="mb-4 px-2 text-sm text-sidebar-foreground/70">
+          Logged in as <strong>{session.username}</strong>
+        </div>
+        <Button
+          variant="outline"
+          className="w-full justify-start gap-2 bg-transparent text-sidebar-foreground hover:bg-sidebar-accent border-sidebar-border"
+          onClick={handleLogout}
+          disabled={logout.isPending}
+        >
+          {logout.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+          Logout
+        </Button>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-muted/20 flex font-sans" dir="ltr" lang="en">
-      <aside className="w-64 bg-sidebar border-r border-sidebar-border hidden md:flex flex-col text-sidebar-foreground">
-        <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
-          <span className="font-bold text-lg tracking-tight">CMS Admin</span>
-        </div>
-        
-        <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                location.startsWith(item.href) 
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground" 
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-              }`}
-            >
-              <item.icon className="w-4 h-4" />
-              {item.title}
-            </Link>
-          ))}
 
-          {/* Tools section — admin-only modules, data-driven */}
-          {tools.length > 0 && (
-            <div className="pt-4">
-              <p className="px-3 mb-1 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-                Tools
-              </p>
-              {tools.map((tool) => {
-                const href = `/admin/tools/${tool.id}`;
-                return (
-                  <Link
-                    key={tool.id}
-                    href={href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                      location.startsWith(href)
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                    }`}
-                  >
-                    <Wrench className="w-4 h-4" />
-                    {tool.name}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+      {/* ── Mobile backdrop ─────────────────────────────────────────────────── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
-          {/* Visit Site link */}
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground mt-2"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Visit Site
-          </a>
-        </nav>
-
-        <div className="p-4 border-t border-sidebar-border">
-          <div className="mb-4 px-2 text-sm text-sidebar-foreground/70">
-            Logged in as <strong>{session.username}</strong>
-          </div>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start gap-2 bg-transparent text-sidebar-foreground hover:bg-sidebar-accent border-sidebar-border"
-            onClick={handleLogout}
-            disabled={logout.isPending}
-          >
-            {logout.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
-            Logout
-          </Button>
-        </div>
+      {/* ── Sidebar ──────────────────────────────────────────────────────────
+          Desktop: always visible in normal flow (md:relative md:translate-x-0 md:flex).
+          Mobile:  fixed, slides in from the left when sidebarOpen is true.
+      ──────────────────────────────────────────────────────────────────────── */}
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-30 w-64 flex flex-col
+          bg-sidebar border-r border-sidebar-border text-sidebar-foreground
+          transition-transform duration-200 ease-in-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          md:relative md:translate-x-0 md:flex
+        `}
+      >
+        <SidebarContent />
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 border-b bg-card flex items-center justify-between px-6 md:hidden">
-          <span className="font-bold">CMS Admin</span>
+        {/* ── Mobile header ───────────────────────────────────────────────── */}
+        <header className="h-16 border-b bg-card flex items-center justify-between px-4 md:hidden">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+            <span className="font-bold">CMS Admin</span>
+          </div>
           <div className="flex items-center gap-2">
             <a
               href="/"
