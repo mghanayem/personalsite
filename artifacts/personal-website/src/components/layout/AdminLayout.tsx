@@ -1,9 +1,14 @@
 import { useGetAdminSession, useAdminLogout, getGetAdminSessionQueryKey } from "@workspace/api-client-react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, Settings, LogOut, Loader2, AlertCircle, Palette, Inbox, ExternalLink, PenLine, Sparkles, Puzzle } from "lucide-react";
-import { useEffect } from "react";
+import { LayoutDashboard, FileText, Settings, LogOut, Loader2, AlertCircle, Palette, Inbox, ExternalLink, PenLine, Sparkles, Puzzle, Wrench } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+
+interface AdminTool {
+  id: number;
+  name: string;
+}
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -16,12 +21,23 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   
   const logout = useAdminLogout();
   const queryClient = useQueryClient();
+  const [tools, setTools] = useState<AdminTool[]>([]);
 
   useEffect(() => {
     if (!isLoading && (isError || !session)) {
       setLocation("/admin");
     }
   }, [isLoading, isError, session, setLocation]);
+
+  // Fetch admin-only modules for the Tools nav section.
+  // Fetched once when the session is confirmed; silently ignored on failure.
+  useEffect(() => {
+    if (!session) return;
+    fetch("/api/admin/tools")
+      .then((r) => (r.ok ? (r.json() as Promise<AdminTool[]>) : []))
+      .then(setTools)
+      .catch(() => { /* silently render nothing */ });
+  }, [session]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -58,7 +74,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <span className="font-bold text-lg tracking-tight">CMS Admin</span>
         </div>
         
-        <nav className="flex-1 py-6 px-4 space-y-1">
+        <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
           {nav.map((item) => (
             <Link
               key={item.href}
@@ -73,6 +89,32 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               {item.title}
             </Link>
           ))}
+
+          {/* Tools section — admin-only modules, data-driven */}
+          {tools.length > 0 && (
+            <div className="pt-4">
+              <p className="px-3 mb-1 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                Tools
+              </p>
+              {tools.map((tool) => {
+                const href = `/admin/tools/${tool.id}`;
+                return (
+                  <Link
+                    key={tool.id}
+                    href={href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                      location.startsWith(href)
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    }`}
+                  >
+                    <Wrench className="w-4 h-4" />
+                    {tool.name}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
 
           {/* Visit Site link */}
           <a

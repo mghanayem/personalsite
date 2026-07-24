@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, asc, sql } from "drizzle-orm";
 import { db, modulesTable, modulePlacementsTable, pagesTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
 import multer from "multer";
@@ -69,6 +69,8 @@ function moduleShape(row: typeof modulesTable.$inferSelect) {
     description: row.description ?? null,
     filePath: row.filePath,
     isActive: row.isActive,
+    visibility: row.visibility,
+    sortOrder: row.sortOrder ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -159,7 +161,7 @@ router.get("/modules/:id", requireAuth, async (req: Request, res: Response): Pro
   res.json(moduleShape(module));
 });
 
-// PATCH /modules/:id — update name / description
+// PATCH /modules/:id — update name / description / visibility / sortOrder
 router.patch("/modules/:id", requireAuth, async (req: Request, res: Response): Promise<void> => {
   const id = parseInt(req.params.id as string, 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
@@ -167,10 +169,12 @@ router.patch("/modules/:id", requireAuth, async (req: Request, res: Response): P
   const [existing] = await db.select().from(modulesTable).where(eq(modulesTable.id, id));
   if (!existing) { res.status(404).json({ error: "Module not found" }); return; }
 
-  const body = req.body as { name?: string; description?: string };
+  const body = req.body as { name?: string; description?: string; visibility?: string; sortOrder?: number | null };
   const updates: Partial<typeof modulesTable.$inferInsert> = {};
   if (typeof body.name === "string" && body.name.trim()) updates.name = body.name.trim();
   if (typeof body.description === "string") updates.description = body.description.trim() || null;
+  if (body.visibility === "public" || body.visibility === "admin_only") updates.visibility = body.visibility;
+  if ("sortOrder" in body) updates.sortOrder = body.sortOrder == null ? null : Number(body.sortOrder);
 
   if (Object.keys(updates).length === 0) { res.json(moduleShape(existing)); return; }
 
@@ -269,6 +273,19 @@ router.delete("/module-placements/:id", requireAuth, async (req: Request, res: R
   res.status(204).send();
 });
 
+// GET /admin/tools — list admin-only modules for the sidebar nav
+router.get("/admin/tools", requireAuth, async (_req, res): Promise<void> => {
+  const tools = await db
+    .select()
+    .from(modulesTable)
+    .where(eq(modulesTable.visibility, "admin_only"))
+    .orderBy(
+      asc(sql`${modulesTable.sortOrder} NULLS LAST`),
+      asc(modulesTable.name),
+    );
+  res.json(tools.map(moduleShape));
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTENT ENDPOINT
 //
@@ -293,6 +310,13 @@ router.get("/modules/:id/content", async (req: Request, res: Response): Promise<
   const isAdmin = Boolean(req.session?.adminId);
 
   if (!isAdmin) {
+    // Admin-only modules are never served to unauthenticated requests,
+    // regardless of placement state. Check this before the placement query.
+    if (module.visibility === "admin_only") {
+      res.status(403).json({ error: "Module is restricted to admin sessions" });
+      return;
+    }
+
     // Inactive modules are never public
     if (!module.isActive) {
       res.status(403).json({ error: "Module is inactive" });
@@ -324,6 +348,11 @@ router.get("/modules/:id/content", async (req: Request, res: Response): Promise<
   const rawLang = typeof req.query.lang === "string" ? req.query.lang : "";
   const lang = rawLang === "en" ? "en" : "ar"; // default to Arabic
 
+  // Inject window.__admin when the request is from an authenticated admin
+  // and the admin=1 query param is present. This lets modules suppress
+  // public-facing elements (e.g. contact CTAs) when running in the panel.
+  const isAdminContext = isAdmin && req.query.admin === "1";
+
   try {
     const bucket = gcsClient.bucket(getBucketId());
     const file = bucket.file(`uploads/modules/${module.filePath}`);
@@ -345,7 +374,7 @@ router.get("/modules/:id/content", async (req: Request, res: Response): Promise<
     // matching the parent PublicLayout behaviour. The iframe is an isolated document
     // so the parent's CSS/event listeners don't reach inside it.
     const bootstrap = [
-      `<script>window.__lang="${lang}";</script>`,
+      `<script>window.__lang="${lang}";${isAdminContext ? "window.__admin=true;" : ""}</script>`,
       `<style>body{user-select:none;-webkit-user-select:none;}</style>`,
       `<script>document.addEventListener("contextmenu",function(e){`,
       `  var n=e.target;`,

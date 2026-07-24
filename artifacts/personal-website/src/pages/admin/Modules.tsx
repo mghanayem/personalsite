@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { ModuleFrame } from "@/components/public/ModuleFrame";
 import {
   Upload, Trash2, Eye, EyeOff, Plus, Loader2, Puzzle,
-  Link as LinkIcon, X, Monitor
+  Link as LinkIcon, X, Monitor, Wrench
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -18,6 +19,8 @@ interface Module {
   description: string | null;
   filePath: string;
   isActive: boolean;
+  visibility: string;
+  sortOrder: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,8 +41,6 @@ interface Page {
 
 // ── Fetcher helpers (direct fetch, consistent with ImageManager pattern) ───────
 
-const MODULES_KEY = ["modules"];
-
 async function fetchModules(): Promise<Module[]> {
   const r = await fetch("/api/modules");
   if (!r.ok) throw new Error("Failed to load modules");
@@ -58,16 +59,35 @@ async function fetchPages(): Promise<Page[]> {
   return r.json() as Promise<Page[]>;
 }
 
+// ── Visibility badge ───────────────────────────────────────────────────────
+
+function VisibilityBadge({ visibility }: { visibility: string }) {
+  if (visibility === "admin_only") {
+    return (
+      <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+        Admin only
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+      Public
+    </span>
+  );
+}
+
 // ── Main component ─────────────────────────────────────────────────────────
 
 export default function Modules() {
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [modules, setModules] = useState<Module[] | null>(null);
   const [loadingModules, setLoadingModules] = useState(true);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [previewId, setPreviewId] = useState<number | null>(null);
   const [assigningId, setAssigningId] = useState<number | null>(null);
+  const [visibilityFilter, setVisibilityFilter] = useState<"all" | "public" | "admin_only">("all");
   const [error, setError] = useState<string | null>(null);
 
   // Load modules on mount
@@ -122,6 +142,27 @@ export default function Modules() {
     }
   };
 
+  const handleSetVisibility = async (mod: Module, visibility: "public" | "admin_only") => {
+    try {
+      const r = await fetch(`/api/modules/${mod.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visibility }),
+      });
+      if (!r.ok) throw new Error("Update failed");
+      reload();
+      queryClient.invalidateQueries();
+    } catch {
+      setError("Failed to update visibility");
+    }
+  };
+
+  // Client-side filtered list
+  const filteredModules = (modules ?? []).filter((m) => {
+    if (visibilityFilter === "all") return true;
+    return m.visibility === visibilityFilter;
+  });
+
   return (
     <AdminLayout>
       <div className="space-y-8">
@@ -130,7 +171,7 @@ export default function Modules() {
           <div>
             <h1 className="text-2xl font-bold">Modules</h1>
             <p className="text-muted-foreground mt-1">
-              Upload self-contained HTML modules and place them on any page.
+              Upload self-contained HTML modules and place them on any page or use them as admin tools.
             </p>
           </div>
         </div>
@@ -145,6 +186,25 @@ export default function Modules() {
         {/* Upload form */}
         <UploadForm onSuccess={reload} />
 
+        {/* Visibility filter */}
+        {!loadingModules && modules && modules.length > 0 && (
+          <div className="flex items-center gap-2">
+            {(["all", "public", "admin_only"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setVisibilityFilter(f)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  visibilityFilter === f
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {f === "all" ? "All" : f === "public" ? "Public" : "Admin only"}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Module list */}
         {loadingModules ? (
           <div className="flex justify-center py-16">
@@ -156,6 +216,10 @@ export default function Modules() {
             <p className="font-semibold mb-1">No modules yet</p>
             <p className="text-sm text-muted-foreground">Upload your first .html module above.</p>
           </div>
+        ) : filteredModules.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border p-12 text-center">
+            <p className="text-sm text-muted-foreground">No modules match this filter.</p>
+          </div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden">
             <table className="w-full text-sm">
@@ -163,12 +227,13 @@ export default function Modules() {
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Module</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Visibility</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">Uploaded</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {(modules ?? []).map((mod) => (
+                {filteredModules.map((mod) => (
                   <tr
                     key={mod.id}
                     className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
@@ -190,30 +255,67 @@ export default function Modules() {
                         {mod.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
+                    <td className="px-4 py-3">
+                      <VisibilityBadge visibility={mod.visibility} />
+                    </td>
                     <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground text-xs">
                       {new Date(mod.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1 justify-end flex-wrap">
-                        {/* Preview */}
+                        {mod.visibility === "admin_only" ? (
+                          /* Admin-only: open tool page */
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8"
+                            title="Open tool"
+                            onClick={() => setLocation(`/admin/tools/${mod.id}`)}
+                          >
+                            <Wrench className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          /* Public: preview in-page */
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8"
+                            title="Preview"
+                            onClick={() => setPreviewId(previewId === mod.id ? null : mod.id)}
+                          >
+                            <Monitor className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {/* Assign to page (public only) */}
+                        {mod.visibility !== "admin_only" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8"
+                            title="Assign to page"
+                            onClick={() => setAssigningId(assigningId === mod.id ? null : mod.id)}
+                          >
+                            <LinkIcon className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {/* Toggle visibility */}
                         <Button
                           variant="ghost"
                           size="icon"
                           className="w-8 h-8"
-                          title="Preview"
-                          onClick={() => setPreviewId(previewId === mod.id ? null : mod.id)}
+                          title={mod.visibility === "admin_only" ? "Make public" : "Make admin only"}
+                          onClick={() =>
+                            handleSetVisibility(
+                              mod,
+                              mod.visibility === "admin_only" ? "public" : "admin_only",
+                            )
+                          }
                         >
-                          <Monitor className="w-4 h-4" />
-                        </Button>
-                        {/* Assign to page */}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8"
-                          title="Assign to page"
-                          onClick={() => setAssigningId(assigningId === mod.id ? null : mod.id)}
-                        >
-                          <LinkIcon className="w-4 h-4" />
+                          {mod.visibility === "admin_only" ? (
+                            <Eye className="w-4 h-4" />
+                          ) : (
+                            <EyeOff className="w-4 h-4" />
+                          )}
                         </Button>
                         {/* Toggle active */}
                         <Button
@@ -256,7 +358,7 @@ export default function Modules() {
           </div>
         )}
 
-        {/* Live preview panel */}
+        {/* Live preview panel (public modules only) */}
         {previewId !== null && (
           <div className="rounded-xl border border-border overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 bg-muted/40 border-b border-border">
@@ -393,7 +495,8 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
         <p className="text-xs text-muted-foreground">
           Single self-contained .html file with inline &lt;style&gt; and &lt;script&gt;. Max 2 MB.
-          Modules run in a sandboxed iframe with <code>sandbox="allow-scripts"</code> only.
+          Public modules run in a sandboxed iframe with <code>sandbox="allow-scripts"</code>.
+          Admin-only modules also allow forms, modals, downloads, and popups.
         </p>
       </div>
 
@@ -475,7 +578,7 @@ function AssignPanel({
       <div className="flex items-center justify-between px-4 py-2.5 bg-muted/40 border-b border-border">
         <span className="text-sm font-medium">Assign "{moduleName}" to a page</span>
         <Button variant="ghost" size="icon" className="w-7 h-7" onClick={onClose}>
-          <X className="w-4 h-4" />
+          <X className="w-3 h-3" />
         </Button>
       </div>
 

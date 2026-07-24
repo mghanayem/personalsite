@@ -21,6 +21,7 @@ import BlogList from '@/pages/admin/BlogList';
 import BlogEditor from '@/pages/admin/BlogEditor';
 import AiChat from '@/pages/admin/AiChat';
 import Modules from '@/pages/admin/Modules';
+import AdminTool from '@/pages/admin/AdminTool';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -92,6 +93,7 @@ function Router() {
       <Route path="/admin/blog/:id" component={BlogEditor} />
       <Route path="/admin/ai" component={AiChat} />
       <Route path="/admin/modules" component={Modules} />
+      <Route path="/admin/tools/:id" component={AdminTool} />
 
       {/* Public English Routes */}
       <Route path="/en" component={Home} />

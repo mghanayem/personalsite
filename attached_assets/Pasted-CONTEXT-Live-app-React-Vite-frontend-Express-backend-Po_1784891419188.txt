@@ -1,0 +1,69 @@
+CONTEXT
+Live app: React + Vite frontend, Express backend, PostgreSQL with Drizzle ORM. 
+Bilingual public site (Arabic at root, English under /en) plus an admin panel. 
+Do not break anything currently working.
+
+Before writing code, read the codebase and find:
+  - where the server injects per-page meta tags into the HTML shell, since each 
+    page already returns its own og:title and meta description
+  - the settings table or equivalent in the Drizzle schema, and whether a Google 
+    Analytics or GA4 measurement ID field already exists from an earlier build
+  - the admin settings screen and how existing settings are read and saved
+  - the router in use and how the current location is observed
+
+GOAL
+Add a Google tag to every PUBLIC page of the site, controlled from the admin 
+panel, excluded from the admin panel itself, and counting client-side navigation 
+correctly.
+
+BUILD
+
+1. Setting
+   - A Google tag ID setting stored in the database and editable in the existing 
+     admin settings screen, following the patterns already used there.
+   - If a GA4 measurement ID setting already exists, reuse it. Do not create a 
+     duplicate.
+   - Accept a GA4 ID (G-XXXXXXX) or a GTM container ID (GTM-XXXXXXX) and load 
+     the correct snippet for whichever is entered.
+   - Blank means no tag is injected anywhere. This is the default and must be 
+     safe.
+
+2. Injection
+   - Inject the tag server side, in the same place per-page meta tags are already 
+     injected, so every public page gets it including pages created later.
+   - Do NOT inject on any /admin route.
+   - Escape the ID before it goes into the HTML. It comes from user input.
+   - Configure the tag with send_page_view: false, because this is a single page 
+     app and the automatic page view would only ever fire on the first load.
+
+3. Client-side page views
+   - On the public site only, send a page_view event whenever the router location 
+     changes, including the initial load, with the current path and document title.
+   - Do this in one place, near the public layout root, not scattered per page.
+   - Clean up any effect listeners on unmount.
+   - No page_view events from admin routes.
+
+CONSTRAINTS
+- No new npm dependencies. Load Google's script from its own CDN, do not install 
+  a React analytics wrapper.
+- Database changes must be purely additive: a new nullable column or a new 
+  settings row. Never drop, rename or retype an existing column. If a Drizzle 
+  push or migration offers to drop or alter anything, STOP and report it.
+- Do not modify public page templates, modules, the module upload flow, or the 
+  visual editor.
+- Keep the existing admin visual style.
+- TypeScript must compile with no new errors, and no `any` used to silence it.
+- Add an entry to the change log if the project has one.
+
+VERIFY BEFORE FINISHING
+1. With the setting blank, no Google script appears in the HTML of any page.
+2. With an ID set, view source on an Arabic page and an English page and confirm 
+   the tag is present in both.
+3. View source on an /admin page and confirm the tag is absent.
+4. Navigate between several public pages without reloading and confirm a separate 
+   page_view fires for each, with the correct path.
+5. Navigating within the admin panel fires no events.
+6. Every previously working page still works, no console errors.
+
+When done, list files created or changed with one line each, and state explicitly 
+whether any database schema change was made.
