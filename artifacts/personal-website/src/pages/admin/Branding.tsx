@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Loader2, Save, Palette, Globe, BookOpen, Sparkles, Link2, Briefcase, CheckCircle2, Eye, EyeOff, Type } from "lucide-react";
+import { Loader2, Save, Palette, Globe, BookOpen, Sparkles, Link2, Briefcase, CheckCircle2, Eye, EyeOff, Type, BarChart2 } from "lucide-react";
 import { applyBrandingColors } from "@/lib/branding";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetAiStatusQueryKey } from "@workspace/api-client-react";
@@ -75,6 +75,9 @@ export default function Branding() {
   const [defaultDescEn, setDefaultDescEn] = useState("");
   const [defaultDescAr, setDefaultDescAr] = useState("");
 
+  // Google Tag ID
+  const [googleTagId, setGoogleTagId] = useState("");
+
   // AEO / structured data fields
   const [seoPersonJobTitle, setSeoPersonJobTitle] = useState("");
   const [seoWebsiteUrl, setSeoWebsiteUrl] = useState("");
@@ -105,6 +108,7 @@ export default function Branding() {
       setSeoLinkedinUrl(settings.seoLinkedinUrl ?? "");
       setSeoTwitterUrl(settings.seoTwitterUrl ?? "");
       setSeoGithubUrl(settings.seoGithubUrl ?? "");
+      setGoogleTagId(settings.googleTagId ?? "");
     }
   }, [settings]);
 
@@ -131,6 +135,7 @@ export default function Branding() {
           seoLinkedinUrl: seoLinkedinUrl || null,
           seoTwitterUrl: seoTwitterUrl || null,
           seoGithubUrl: seoGithubUrl || null,
+          googleTagId: googleTagId.trim() || null,
         },
       },
       {
@@ -501,6 +506,39 @@ export default function Branding() {
                   }, null, 2)}
                 </pre>
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Google Analytics / Tag Manager */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart2 className="w-4 h-4" />
+              Google Analytics / Tag Manager
+            </CardTitle>
+            <CardDescription>
+              Add a Google tag to every public page. Enter a GA4 Measurement ID (<code className="text-xs bg-muted px-1 py-0.5 rounded">G-XXXXXXX</code>) or a GTM Container ID (<code className="text-xs bg-muted px-1 py-0.5 rounded">GTM-XXXXXXX</code>). Leave blank to disable tracking entirely.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Tag ID</Label>
+              <Input
+                value={googleTagId}
+                placeholder="G-XXXXXXX or GTM-XXXXXXX"
+                onChange={(e) => setGoogleTagId(e.target.value)}
+                className="font-mono"
+                maxLength={30}
+              />
+              <p className="text-xs text-muted-foreground">
+                The tag is injected server-side and never appears on admin pages. Leave blank to disable.
+              </p>
+            </div>
+            {googleTagId.trim() !== "" && !/^(G-|GTM-)[A-Z0-9]+$/i.test(googleTagId.trim()) && (
+              <p className="text-sm text-amber-600 font-medium">
+                ID should start with <code>G-</code> (Analytics) or <code>GTM-</code> (Tag Manager).
+              </p>
             )}
           </CardContent>
         </Card>

@@ -29,6 +29,8 @@ export const settingsTable = pgTable("settings", {
   blogProfilePhotoUrl: text("blog_profile_photo_url"),
   // Site-wide default OG image — shown when a page has no per-page OG image set
   defaultOgImageUrl: text("default_og_image_url"),
+  // Google Analytics / Tag Manager — G-XXXXXXX or GTM-XXXXXXX; null disables injection
+  googleTagId: text("google_tag_id"),
   // Site identity — editable from the admin Branding page
   siteNameEn: text("site_name_en"),
   siteNameAr: text("site_name_ar"),

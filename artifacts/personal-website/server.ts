@@ -237,6 +237,34 @@ function buildMetaTags(meta: OgMeta, pageUrl: string): string {
   return lines.join("\n    ");
 }
 
+// ── Google tag snippet builder ────────────────────────────────────────────
+// Returns an empty string when id is blank — safe to embed as-is in <head>.
+// The id is always passed through esc() before interpolation.
+function buildGoogleTagSnippet(id: string | null | undefined): string {
+  const trimmed = id?.trim();
+  if (!trimmed) return "";
+  const safeId = esc(trimmed);
+
+  if (trimmed.toUpperCase().startsWith("GTM-")) {
+    // Google Tag Manager — head <script> only (noscript body tag unnecessary in SPA context)
+    return [
+      `<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':`,
+      `new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],`,
+      `j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=`,
+      `'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);`,
+      `})(window,document,'script','dataLayer','${safeId}');</script>`,
+    ].join("\n");
+  }
+
+  // GA4 Measurement ID — send_page_view:false because the SPA fires page_view itself
+  return [
+    `<script async src="https://www.googletagmanager.com/gtag/js?id=${safeId}"></script>`,
+    `<script>window.dataLayer=window.dataLayer||[];`,
+    `function gtag(){window.dataLayer.push(arguments);}`,
+    `gtag('js',new Date());gtag('config','${safeId}',{send_page_view:false});</script>`,
+  ].join("\n");
+}
+
 // ── Shared HTML handler ───────────────────────────────────────────────────
 function makeHtmlHandler(
   getRawHtml: (url: string, rawHtml: string) => Promise<string>,
@@ -287,7 +315,29 @@ function makeHtmlHandler(
       );
 
       const metaTags = buildMetaTags(meta, pageUrl);
-      const html = transformed.replace("<!-- OG_META_PLACEHOLDER -->", metaTags);
+
+      // Determine whether this request is for an admin route.
+      // Strip BASE_PATH first so the check works in both dev and production.
+      let spaRoute = pathname;
+      if (BASE_PATH && spaRoute.startsWith(BASE_PATH)) {
+        spaRoute = spaRoute.slice(BASE_PATH.length) || "/";
+      }
+      if (!spaRoute.startsWith("/")) spaRoute = "/" + spaRoute;
+      const isAdminRoute = spaRoute === "/admin" || spaRoute.startsWith("/admin/");
+
+      // Fetch the Google Tag ID from the settings row (lightweight single-column select).
+      // Falls back silently to null on any DB error.
+      const tagRow = await db
+        .select({ googleTagId: settingsTable.googleTagId })
+        .from(settingsTable)
+        .then((rows) => rows[0] ?? { googleTagId: null })
+        .catch(() => ({ googleTagId: null }));
+
+      const googleTagHtml = isAdminRoute ? "" : buildGoogleTagSnippet(tagRow.googleTagId);
+
+      const html = transformed
+        .replace("<!-- OG_META_PLACEHOLDER -->", metaTags)
+        .replace("<!-- GOOGLE_TAG_PLACEHOLDER -->", googleTagHtml);
 
       res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (e) {

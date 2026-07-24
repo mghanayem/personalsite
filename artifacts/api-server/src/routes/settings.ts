@@ -32,6 +32,8 @@ type BrandingUpdate = {
   siteNameAr?: string | null;
   defaultDescEn?: string | null;
   defaultDescAr?: string | null;
+  // Google tag
+  googleTagId?: string | null;
 };
 
 const COLOR_FIELDS: (keyof Omit<BrandingUpdate, "defaultLanguage" | "seoPersonJobTitle" | "seoWebsiteUrl" | "seoLinkedinUrl" | "seoTwitterUrl" | "seoGithubUrl">)[] = [
@@ -84,6 +86,7 @@ function brandingResponse(row: typeof settingsTable.$inferSelect) {
     defaultDescAr: row.defaultDescAr ?? null,
     blogProfilePhotoUrl: row.blogProfilePhotoUrl ?? null,
     defaultOgImageUrl: row.defaultOgImageUrl ?? null,
+    googleTagId: row.googleTagId ?? null,
   };
 }
 
@@ -128,6 +131,16 @@ router.patch("/settings/branding", requireAuth, async (req, res): Promise<void> 
   const IDENTITY_FIELDS = ["siteNameEn", "siteNameAr", "defaultDescEn", "defaultDescAr"] as const;
   for (const key of IDENTITY_FIELDS) {
     if (key in body) updates[key] = body[key] || null;
+  }
+
+  // Google Tag ID — accept G-... and GTM-... IDs; blank clears the setting
+  if ("googleTagId" in body) {
+    const rawId = (body.googleTagId ?? "").trim();
+    if (rawId && !/^(G-|GTM-)[A-Z0-9]+$/i.test(rawId)) {
+      res.status(400).json({ error: "googleTagId must start with G- (Analytics) or GTM- (Tag Manager), or be empty to disable" });
+      return;
+    }
+    updates.googleTagId = rawId || null;
   }
 
   if (Object.keys(updates).length === 0) {

@@ -280,7 +280,7 @@ router.get("/admin/tools", requireAuth, async (_req, res): Promise<void> => {
     .from(modulesTable)
     .where(eq(modulesTable.visibility, "admin_only"))
     .orderBy(
-      asc(sql`${modulesTable.sortOrder} NULLS LAST`),
+      sql`${modulesTable.sortOrder} ASC NULLS LAST`,
       asc(modulesTable.name),
     );
   res.json(tools.map(moduleShape));

@@ -50,4 +50,6 @@ export interface BrandingSettings {
   defaultDescAr?: string | null;
   /** Site-wide default Open Graph image URL — used when a page has no per-page OG image */
   defaultOgImageUrl?: string | null;
+  /** Google Analytics Measurement ID (G-XXXXXXX) or GTM Container ID (GTM-XXXXXXX); null/omit to disable */
+  googleTagId?: string | null;
 }

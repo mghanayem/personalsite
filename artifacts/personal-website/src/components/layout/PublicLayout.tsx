@@ -5,6 +5,14 @@ import { Menu, X, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useContentProtection } from "@/hooks/useContentProtection";
 
+// Ambient declaration for the optional Google gtag function.
+// Optional chaining (window.gtag?.()) is a no-op when no tag is loaded.
+declare global {
+  interface Window {
+    gtag?(...args: unknown[]): void;
+  }
+}
+
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   useContentProtection();
 
@@ -19,11 +27,15 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       // Accepts both "module-resize" (canonical) and "resize" (legacy compat)
       // so that modules written before the message-type rename continue to work.
       // ONLY these two type values are acted on from module iframes.
-      const isResizeMsg =
-        (data?.type === "module-resize" || data?.type === "resize") &&
-        typeof data.height === "number" &&
-        data.height > 0;
-      if (!isResizeMsg) return;
+      // Validate message shape.
+      // Accepts both "module-resize" (canonical) and "resize" (legacy compat)
+      // so that modules written before the message-type rename continue to work.
+      // ONLY these two type values are acted on from module iframes.
+      if (
+        (data?.type !== "module-resize" && data?.type !== "resize") ||
+        typeof data.height !== "number" ||
+        data.height <= 0
+      ) return;
 
       const newHeight = Math.ceil(data.height);
 
@@ -50,6 +62,16 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
 
   const { lang, setLang } = useLanguage();
   const [location, setLocation] = useLocation();
+
+  // Fire a page_view event on every client-side navigation, including initial load.
+  // Uses optional chaining so the call is silently skipped when no Google tag is loaded.
+  useEffect(() => {
+    window.gtag?.("event", "page_view", {
+      page_path: location,
+      page_title: document.title,
+    });
+  }, [location]);
+
   const { data: navItems = [] } = useGetPublicNav();
   const { data: blogMeta } = useGetPublicBlogHasPosts();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
