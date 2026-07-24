@@ -1,0 +1,82 @@
+CONTEXT
+This is a live app: React + Vite frontend, Express backend, PostgreSQL with 
+Drizzle ORM. The admin panel is part of the React app. Do not break anything 
+currently working.
+
+Before writing code, read the codebase and match its existing conventions:
+  - the Drizzle schema file and how tables and types are declared and exported
+  - how the client fetches data (fetch wrapper, React Query, or similar) and 
+    how errors and loading states are handled
+  - the router in use (react-router, wouter, or other) and how admin routes are 
+    declared and guarded on the client
+  - the Express admin auth middleware, its exact name, and how it is applied to 
+    existing admin API routes
+  - how the session or token is carried on requests (cookie, header) and 
+    whether fetches send credentials
+  - how public pages currently embed a module and set its height
+Follow those patterns. Do not introduce a second way of doing any of them.
+
+PROBLEM
+Modules have a Visibility setting including "Admin only", but nothing in the 
+app consumes that value. An Admin only module is hidden from the public site 
+and has no home anywhere else, so the setting does nothing.
+
+INTENT
+Admin only does not mean hidden, unpublished or under test. It means the module 
+is an internal tool that lives in the admin panel and is used there as part of 
+normal admin work, permanently. Visibility decides WHERE a module is mounted, 
+not merely who may see a public page:
+  - Public      -> renders on the public site as it does today. No change.
+  - Admin only  -> renders inside the admin panel as a working admin page, 
+                   listed in the admin navigation, never reachable publicly.
+
+BUILD
+
+1. API
+   - GET /api/admin/modules
+       Behind the existing admin auth middleware. Returns all modules with their 
+       visibility so the panel can list and filter them.
+   - GET /api/admin/modules/:slug
+       Behind the same middleware. Returns the metadata for one module.
+   - A route that serves the module's HTML content for the iframe, behind the 
+     same middleware, returning text/html.
+   - Reuse existing Drizzle query patterns. Do not write raw SQL if the codebase 
+     uses the query builder.
+   - Type the responses using the types already inferred from the Drizzle schema. 
+     Do not hand-write duplicate interfaces.
+
+2. Access control, server side
+   - The React nav and routes are cosmetic. Enforcement happens in Express.
+   - Find the route that currently serves module content to public pages. Admin 
+     only modules must be served to authenticated admin sessions and remain 
+     completely unavailable to everyone else, keeping the existing behaviour, 
+     404 or omitted, for unauthenticated requests.
+   - Add the admin path alongside the existing public check. Do not weaken, 
+     remove or invert any existing check.
+   - Verify by requesting the module URL directly with curl and no session 
+     cookie. It must not return the module.
+
+3. Admin Tools navigation
+   - Add a "Tools" section to the existing admin nav component, using the same 
+     component patterns and styling as current nav items. Do not restyle.
+   - It renders from GET /api/admin/modules filtered to visibility = admin only, 
+     ordered by a sort order column if one exists, otherwise by name.
+   - Driven by data, so uploading a module and setting it to Admin only makes it 
+     appear with no code change and no redeploy.
+
+4. Admin tool page
+   - New client route, for example /admin/tools/:slug, inside the existing admin 
+     layout and behind the existing client-side admin guard.
+   - The module name is the page heading, so the page reads as native to the 
+     panel rather than an embedded stranger.
+   - The module renders in an iframe whose src points at the admin module content 
+     route from step 1.
+   - CRITICAL, the iframe sandbox must include: allow-scripts, allow-same-origin, 
+     allow-forms, allow-modals, allow-downloads, allow-popups. Modules contain 
+     forms, submit buttons, clipboard actions, print styles and downloads. 
+     Omitting allow-forms silently kills submit buttons with no visible error. 
+     Omitting allow-modals kills window.print().
+   - Height handling: a useEffect that adds a window message listener for events 
+     of shape { type: 'module-resize', height }, sets the iframe height via a 
+     ref, and REMOVES the listener on cleanup. Ignore messages whose origin is 
+     not this app's own origin. Reuse the public wrapper's logic rather than
