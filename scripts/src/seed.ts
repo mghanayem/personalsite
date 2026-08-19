@@ -2,7 +2,7 @@
  * Seed script: initial admin user + homepage sections for Mohammad Ghanayem's website.
  * Run once: pnpm --filter @workspace/scripts run seed
  */
-import bcrypt from "bcrypt";
+import bcryptjs from "bcryptjs";
 import { db, usersTable, pagesTable, sectionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
@@ -12,7 +12,7 @@ async function main() {
   // ── Admin user ─────────────────────────────────────────────────────────
   const existing = await db.select().from(usersTable);
   if (existing.length === 0) {
-    const hash = await bcrypt.hash("admin", 12);
+    const hash = await bcryptjs.hash("admin", 12);
     await db.insert(usersTable).values({ username: "Admin", passwordHash: hash });
     console.log("✅ Created admin user (username: Admin, password: admin)");
   } else {
