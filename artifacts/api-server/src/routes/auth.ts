@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import bcrypt from "bcrypt";
+import bcryptjs from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { AdminLoginBody } from "@workspace/api-zod";
@@ -23,7 +23,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const valid = await bcrypt.compare(password, user.passwordHash);
+  const valid = await bcryptjs.compare(password, user.passwordHash);
   if (!valid) {
     res.status(401).json({ error: "Invalid credentials" });
     return;
@@ -57,7 +57,7 @@ router.get("/auth/session", requireAuth, async (req, res): Promise<void> => {
   }
 
   // Detect default password by checking if hash matches "admin"
-  const isDefaultPassword = await bcrypt.compare("admin", user.passwordHash);
+  const isDefaultPassword = await bcryptjs.compare("admin", user.passwordHash);
 
   res.json({
     id: user.id,
