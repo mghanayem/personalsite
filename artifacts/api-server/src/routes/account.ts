@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import bcrypt from "bcrypt";
+import bcrypts from "bcrypts";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { ChangePasswordBody, ChangeUsernameBody } from "@workspace/api-zod";
@@ -22,13 +22,13 @@ router.patch("/account/password", requireAuth, async (req, res): Promise<void> =
     return;
   }
 
-  const valid = await bcrypt.compare(parsed.data.currentPassword, user.passwordHash);
+  const valid = await bcrypts.compare(parsed.data.currentPassword, user.passwordHash);
   if (!valid) {
     res.status(401).json({ error: "Current password is incorrect" });
     return;
   }
 
-  const newHash = await bcrypt.hash(parsed.data.newPassword, 12);
+  const newHash = await bcrypts.hash(parsed.data.newPassword, 12);
   await db.update(usersTable).set({ passwordHash: newHash }).where(eq(usersTable.id, userId));
 
   res.json({ message: "Password changed successfully" });
@@ -49,7 +49,7 @@ router.patch("/account/username", requireAuth, async (req, res): Promise<void> =
     return;
   }
 
-  const valid = await bcrypt.compare(parsed.data.currentPassword, user.passwordHash);
+  const valid = await bcrypts.compare(parsed.data.currentPassword, user.passwordHash);
   if (!valid) {
     res.status(401).json({ error: "Current password is incorrect" });
     return;
